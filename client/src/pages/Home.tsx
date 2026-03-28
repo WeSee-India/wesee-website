@@ -129,6 +129,8 @@ export default function Home() {
     };
   }, []);
 
+
+
   return (
     <>
       {/* ══════════════════════════ HERO ══════════════════════════ */}
@@ -857,6 +859,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Chat Widget Container */}
+      <div 
+        data-chat-widget 
+        data-widget-id="69c3c8de13ad14083e68d64e" 
+        data-location-id="OIRFdfJ7D2iWr89PB0hz"  
+      />
     </>
   );
 }

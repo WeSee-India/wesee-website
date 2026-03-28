@@ -1,7 +1,20 @@
+import { useEffect } from "react";
 import ParticleWrapper from "@/components/ParticleWrapper";
 import HoverParticles from "@/components/HoverParticles";
 
 export default function BookCall() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://link.msgsndr.com/js/form_embed.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
   return (
     <section
       className="section-pad page-enter"
@@ -266,6 +279,47 @@ export default function BookCall() {
                   </a>
                 </div>
               </div>
+            </div>
+
+            {/* Right: LeadConnector iframe */}
+            <div
+              className="fade-up"
+              style={{
+                background: "rgba(255,255,255,0.85)",
+                borderRadius: 18,
+                border: "1px solid rgba(17,19,23,0.06)",
+                boxShadow: "0 14px 40px rgba(17,19,23,0.06)",
+                padding: "20px",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                animationDelay: "0.25s",
+                display: "flex",
+                flexDirection: "column",
+                minHeight: "665px"
+              }}
+            >
+              <iframe
+                src="https://api.leadconnectorhq.com/widget/form/14xBiRHft1TRyKrSRlev"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                  borderRadius: "3px"
+                }}
+                id="inline-14xBiRHft1TRyKrSRlev" 
+                data-layout="{'id':'INLINE'}"
+                data-trigger-type="alwaysShow"
+                data-trigger-value=""
+                data-activation-type="alwaysActivated"
+                data-activation-value=""
+                data-deactivation-type="neverDeactivate"
+                data-deactivation-value=""
+                data-form-name="WeSee Discovery Call Form"
+                data-height="665"
+                data-layout-iframe-id="inline-14xBiRHft1TRyKrSRlev"
+                data-form-id="14xBiRHft1TRyKrSRlev"
+                title="WeSee Discovery Call Form"
+              />
             </div>
           </div>
         </div>
