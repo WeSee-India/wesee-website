@@ -316,56 +316,6 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    let nextIdx = 0;
-    let t: number | null = null;
-
-    if (!clientsSectionInView || clientsRevealStartedRef.current) return;
-    clientsRevealStartedRef.current = true;
-
-    const tick = () => {
-      if (cancelled) return;
-      if (nextIdx >= clientRevealOrder.length) return;
-
-      const clientIdx = clientRevealOrder[nextIdx];
-      nextIdx += 1;
-
-      setRevealedClients((prev) => {
-        if (prev[clientIdx]) return prev;
-        const copy = prev.slice();
-        copy[clientIdx] = true;
-        return copy;
-      });
-
-      const delay = 400 + Math.floor(Math.random() * 301); // 400–700ms
-      t = window.setTimeout(tick, delay);
-    };
-
-    // Start slightly after mount so layout is stable
-    t = window.setTimeout(tick, 450);
-
-    return () => {
-      cancelled = true;
-      if (t) window.clearTimeout(t);
-    };
-  }, [clientRevealOrder, clientsSectionInView]);
-
-  useEffect(() => {
-    const el = clientsSectionRef.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry?.isIntersecting) setClientsSectionInView(true);
-      },
-      { root: null, threshold: 0.25 }
-    );
-
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   return (
     <div className="home-page">
@@ -432,10 +382,10 @@ export default function Home() {
             if (!isTouchDevice) setIsHeroLogoHovered(true);
           }}
           style={{
-          position: "relative", zIndex: 1,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          textAlign: "center",
-        }}>
+            position: "relative", zIndex: 1,
+            display: "flex", flexDirection: "column", alignItems: "center",
+            textAlign: "center",
+          }}>
           {/* Pill badge */}
           {!isTouchDevice && (
             <div
@@ -481,9 +431,9 @@ export default function Home() {
           >
             {/* "WeSee your [word] systems." — on mobile: word on second line, slot always reserved */}
             <span className="hero-text-line">
-             
-                WeSee
-             {" "}
+
+              WeSee
+              {" "}
               your{" "}
               <br className="hero-br-mobile" aria-hidden="true" />
               {/* Word slot: min-width reserves space so layout never jumps when word is empty */}
@@ -1160,7 +1110,7 @@ export default function Home() {
             fontSize: 16, color: "rgba(255,255,255,0.35)",
             marginTop: 22, maxWidth: 500, marginInline: "auto", lineHeight: 1.80,
           }}>
-AI-powered workflows designed to remove bottlenecks and unlock scale for your business.          </p>
+            AI-powered workflows designed to remove bottlenecks and unlock scale for your business.          </p>
 
           <div className="sr" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
             <ParticleWrapper>
@@ -1215,6 +1165,13 @@ AI-powered workflows designed to remove bottlenecks and unlock scale for your bu
           </div>
         </div>
       </section>
+
+      {/* Chat Widget Container */}
+      <div
+        data-chat-widget
+        data-widget-id="69c3c8de13ad14083e68d64e"
+        data-location-id="OIRFdfJ7D2iWr89PB0hz"
+      />
     </div>
   );
 }
