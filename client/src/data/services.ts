@@ -48,7 +48,7 @@ export const services: Service[] = [
   },
   {
     id: 2, slug: "ai-customer-support-bot", name: "AI Customer Support Bot", category: "AI Agents & Conversational AI", categoryId: 1,
-    shortDescription: "Intelligent support agent handling queries across all channels.",
+    shortDescription: "Resolves 80% of support tickets instantly across chat, email, and social — escalating only what truly needs a human.",
     fullDescription: "An intelligent support agent that handles customer queries, resolves common issues, processes returns, tracks orders, and escalates complex problems — through chat or voice.",
     benefits: "Handles 70–80% of repetitive queries instantly. Response times drop from hours to seconds, CSAT goes up, and your human team focuses on complex issues only.",
     automationPoints: ["24/7 instant resolution", "Automatic ticket creation", "Order tracking integration", "Sentiment detection", "Knowledge base integration"],
@@ -58,7 +58,7 @@ export const services: Service[] = [
   },
   {
     id: 3, slug: "ai-receptionist", name: "AI Receptionist & Scheduler", category: "AI Agents & Conversational AI", categoryId: 1,
-    shortDescription: "Virtual receptionist that books appointments and answers FAQs.",
+    shortDescription: "Greets callers, answers FAQs, and books appointments directly into your calendar  zero hold music.",
     fullDescription: "A virtual receptionist that greets customers, answers FAQs about your business, and books appointments directly into your calendar — via WhatsApp, phone, or web chat.",
     benefits: "Zero missed appointments, no need for a full-time receptionist, and a professional first impression for every customer interaction.",
     automationPoints: ["Instant appointment booking", "Confirmation & reminder messages", "Pre-appointment intake forms", "Waitlist management", "Multi-language support"],
@@ -68,7 +68,7 @@ export const services: Service[] = [
   },
   {
     id: 4, slug: "internal-ai-assistant", name: "Internal AI Assistant", category: "AI Agents & Conversational AI", categoryId: 1,
-    shortDescription: "AI helpdesk for HR, IT, and internal knowledge base queries.",
+    shortDescription: "A Slack- or Teams-based assistant trained on your SOPs, policies, and wikis — so employees get instant answers.",
     fullDescription: "An AI-powered internal helpdesk that answers employee questions about policies, leave, IT troubleshooting, onboarding, and more — trained on your documents and SOPs.",
     benefits: "Frees HR and IT to focus on strategic work, reduces onboarding time, and ensures consistent answers for every employee.",
     automationPoints: ["Instant policy answers 24/7", "Automated IT troubleshooting", "Guided onboarding", "Leave management via chat", "Document retrieval"],
@@ -89,7 +89,7 @@ export const services: Service[] = [
   // Category 2 — Workflow & Business Process Automation
   {
     id: 6, slug: "no-code-workflow", name: "No-Code Workflow Automation", category: "Workflow & Business Process Automation", categoryId: 2,
-    shortDescription: "Custom automated workflows connecting all your business tools.",
+    shortDescription: "Connect CRMs, email, payments, and spreadsheets with n8n, Make, or Zapier — no developer needed.",
     fullDescription: "Custom automated workflows that connect your business tools and make them work together without manual intervention. When X happens, Y and Z are done automatically.",
     benefits: "Save 10–20 hours per week per team, reduce human error to near-zero, and scale operations without hiring more people.",
     automationPoints: ["Eliminate repetitive processes", "Real-time data sync", "Error-free execution", "Instant notifications", "Scalable infrastructure"],
@@ -99,7 +99,7 @@ export const services: Service[] = [
   },
   {
     id: 7, slug: "document-invoice-automation", name: "Document & Invoice Automation", category: "Workflow & Business Process Automation", categoryId: 2,
-    shortDescription: "Auto-generate proposals, invoices, and contracts from templates.",
+    shortDescription: "Auto-generate proposals, invoices, and contracts the moment a deal closes — and chase late payments automatically.",
     fullDescription: "Automated systems that generate proposals, invoices, contracts, and reports from templates — pulling data from your CRM or forms — and sending them automatically.",
     benefits: "Get paid faster, look more professional, and never forget to send an invoice again. Complete audit trail for compliance.",
     automationPoints: ["Event-triggered generation", "Zero manual data entry", "Multi-channel delivery", "Payment tracking", "Audit trail"],
@@ -108,8 +108,8 @@ export const services: Service[] = [
     serviceType: "Workflow Automation", status: "Live", engagementSize: "Starter"
   },
   {
-    id: 8, slug: "lead-routing", name: "Lead Routing & Smart Assignment", category: "Workflow & Business Process Automation", categoryId: 2,
-    shortDescription: "Intelligent lead distribution based on rules and availability.",
+    id: 8, slug: "lead-routing", name: "Smart Lead Routing & Assignment", category: "Workflow & Business Process Automation", categoryId: 2,
+    shortDescription: "Instantly distribute leads by geography, deal size, or availability — with auto-escalation if a rep goes silent.",
     fullDescription: "Intelligent systems that automatically distribute incoming leads to the right salesperson based on geography, language, product interest, deal size, or availability.",
     benefits: "Faster response times, fair workload distribution, and significantly higher conversion rates.",
     automationPoints: ["Instant lead assignment", "Rule-based routing", "Round-robin distribution", "Auto-escalation", "Performance visibility"],
@@ -119,7 +119,7 @@ export const services: Service[] = [
   },
   {
     id: 9, slug: "erp-integration", name: "ERP & Multi-Tool Integration", category: "Workflow & Business Process Automation", categoryId: 2,
-    shortDescription: "Connect ERPs, CRMs, and e-commerce platforms seamlessly.",
+    shortDescription: "Bridge Tally, SAP, Shopify, and everything in between so data flows in real time — zero copy-pasting.",
     fullDescription: "Custom integrations connecting ERPs (Tally, SAP, Oracle), CRMs, e-commerce platforms, accounting tools, and communication apps for seamless data flow.",
     benefits: "Single source of truth, eliminate duplicate data entry, and automate reconciliation between all business systems.",
     automationPoints: ["Real-time data sync", "Eliminate duplicate entry", "Single source of truth", "Automated reconciliation", "Custom API connections"],
@@ -140,7 +140,7 @@ export const services: Service[] = [
   // Category 3 — Performance Marketing
   {
     id: 11, slug: "meta-ads", name: "Meta Ads (Facebook + Instagram)", category: "Performance Marketing & Paid Advertising", categoryId: 3,
-    shortDescription: "Full-funnel advertising on Facebook and Instagram.",
+    shortDescription: "Full-funnel campaigns from awareness to conversion — with AI-assisted creative testing that finds winners 3× faster.",
     fullDescription: "Full-funnel advertising on Facebook and Instagram — from awareness to conversion. Strategy, audience research, creative production, A/B testing, and daily optimization.",
     benefits: "Proper campaign architectures with cold audiences at top, retargeting in middle, and conversion at bottom — so every rupee works harder.",
     automationPoints: ["Audience segmentation", "Creative A/B testing", "Retargeting automation", "Budget optimization", "Performance reporting"],
@@ -150,7 +150,7 @@ export const services: Service[] = [
   },
   {
     id: 12, slug: "google-ads", name: "Google Ads (Search + Display + YouTube)", category: "Performance Marketing & Paid Advertising", categoryId: 3,
-    shortDescription: "Intent-based advertising across Google's entire ecosystem.",
+    shortDescription: "Capture high-intent buyers the moment they search — with precision targeting that eliminates wasted spend.",
     fullDescription: "Search, Display, Shopping, and YouTube campaigns targeting high-intent users actively searching for your products or services.",
     benefits: "Capture demand at the moment of intent. Every click is from someone actively looking for what you sell.",
     automationPoints: ["Keyword research & bidding", "Ad copy optimization", "Quality Score improvement", "Conversion tracking", "Automated rules"],
@@ -159,8 +159,8 @@ export const services: Service[] = [
     serviceType: "Paid Ads", status: "Live", engagementSize: "Growth"
   },
   {
-    id: 13, slug: "linkedin-ads", name: "LinkedIn Ads (B2B)", category: "Performance Marketing & Paid Advertising", categoryId: 3,
-    shortDescription: "B2B advertising targeting decision-makers by title and company.",
+    id: 13, slug: "linkedin-ads", name: "LinkedIn B2B Campaigns", category: "Performance Marketing & Paid Advertising", categoryId: 3,
+    shortDescription: "Reach decision-makers by title, company, and seniority — and fill your pipeline with qualified B2B leads.",
     fullDescription: "B2B advertising on LinkedIn targeting decision-makers by job title, company size, industry, and seniority — for lead generation, brand awareness, and thought leadership.",
     benefits: "Reach the exact people who make buying decisions. No other platform offers this level of B2B targeting precision.",
     automationPoints: ["Account-based targeting", "Lead gen forms", "Retargeting campaigns", "Content promotion", "InMail automation"],
@@ -179,8 +179,8 @@ export const services: Service[] = [
     serviceType: "Paid Ads", status: "In Progress", engagementSize: "Enterprise"
   },
   {
-    id: 15, slug: "retargeting", name: "Retargeting & Remarketing Campaigns", category: "Performance Marketing & Paid Advertising", categoryId: 3,
-    shortDescription: "Re-engage visitors who didn't convert the first time.",
+    id: 15, slug: "retargeting", name: "Retargeting & Programmatic", category: "Performance Marketing & Paid Advertising", categoryId: 3,
+    shortDescription: "Follow your warmest prospects across the web and bring them back to convert — the highest-ROI media spend.",
     fullDescription: "Cross-platform retargeting campaigns that re-engage website visitors, cart abandoners, and past customers with personalized ads.",
     benefits: "Retargeted visitors are 70% more likely to convert. Recover lost revenue from people who already showed interest.",
     automationPoints: ["Pixel-based retargeting", "Dynamic product ads", "Sequential messaging", "Cross-platform sync", "Frequency management"],
@@ -201,7 +201,7 @@ export const services: Service[] = [
   },
   {
     id: 17, slug: "content-seo", name: "Content Strategy & SEO Writing", category: "SEO, Content & Organic Growth", categoryId: 4,
-    shortDescription: "Keyword-driven content that ranks and converts.",
+    shortDescription: "A research-backed editorial engine that ranks on Google and positions your brand as the go-to expert.",
     fullDescription: "Keyword research, content planning, and SEO-optimized article writing that ranks on Google and converts readers into leads.",
     benefits: "Build a content engine that generates organic traffic month after month, compounding over time.",
     automationPoints: ["Keyword research automation", "Content calendar", "AI-assisted writing", "Internal linking", "Performance tracking"],
@@ -211,7 +211,7 @@ export const services: Service[] = [
   },
   {
     id: 18, slug: "local-seo", name: "Local SEO & Google Business Profile", category: "SEO, Content & Organic Growth", categoryId: 4,
-    shortDescription: "Dominate local search results and Google Maps.",
+    shortDescription: "Dominate near me searches and Google Maps — more walk-ins, more calls, more bookings from free traffic.",
     fullDescription: "Optimize your Google Business Profile, build local citations, manage reviews, and rank in the local pack for your service area.",
     benefits: "Appear in Google Maps and local search results when nearby customers search for your services.",
     automationPoints: ["GBP optimization", "Review management", "Citation building", "Local content", "Rank tracking"],
@@ -242,7 +242,7 @@ export const services: Service[] = [
   // Category 5 — Messaging & Communication
   {
     id: 21, slug: "whatsapp-business", name: "WhatsApp Business API Automation", category: "Messaging, Email & Communication", categoryId: 5,
-    shortDescription: "Automated WhatsApp messaging for marketing, sales, and support.",
+    shortDescription: "Broadcasts, drip sequences, AI chatbots, catalogues, and payments — all inside the app your customers already use.",
     fullDescription: "Full WhatsApp Business API setup and automation — broadcast campaigns, drip sequences, order notifications, support routing, and interactive catalogs.",
     benefits: "WhatsApp has 98% open rates in India. Reach customers where they already are, with messages they actually read.",
     automationPoints: ["Broadcast campaigns", "Drip sequences", "Order notifications", "Interactive catalogs", "Support routing"],
@@ -252,7 +252,7 @@ export const services: Service[] = [
   },
   {
     id: 22, slug: "email-marketing", name: "Email Marketing & Drip Campaigns", category: "Messaging, Email & Communication", categoryId: 5,
-    shortDescription: "Automated email sequences that nurture leads and drive sales.",
+    shortDescription: "Segmented, behaviour-triggered sequences that nurture, recover carts, and drive repeat purchases on autopilot.",
     fullDescription: "Email marketing strategy, template design, automation setup, and campaign management — from welcome sequences to re-engagement campaigns.",
     benefits: "Email delivers $42 for every $1 spent. Build automated sequences that nurture leads while you sleep.",
     automationPoints: ["Welcome sequences", "Behavioral triggers", "Segmentation", "A/B testing", "Deliverability optimization"],
@@ -282,7 +282,7 @@ export const services: Service[] = [
   },
   {
     id: 25, slug: "omnichannel-inbox", name: "Omnichannel Inbox & Routing", category: "Messaging, Email & Communication", categoryId: 5,
-    shortDescription: "Unified inbox for all customer conversations across channels.",
+    shortDescription: "WhatsApp, Instagram, email, web chat, and SMS — all in one screen, with full context and team collaboration.",
     fullDescription: "A single unified inbox that aggregates messages from WhatsApp, email, Instagram, Facebook, web chat, and SMS — with intelligent routing and assignment.",
     benefits: "Never miss a customer message again. One inbox, all channels, intelligent routing to the right team member.",
     automationPoints: ["Channel aggregation", "Smart routing", "Auto-assignment", "SLA tracking", "Canned responses"],
@@ -293,7 +293,7 @@ export const services: Service[] = [
   // Category 6 — Web Design, Branding & Creative
   {
     id: 26, slug: "website-design", name: "Business Website Design", category: "Web Design, Branding & Creative", categoryId: 6,
-    shortDescription: "Custom-designed, mobile-responsive business websites.",
+    shortDescription: "Custom-built on Webflow, Framer, or Next.js — fast, beautiful, and engineered to convert.",
     fullDescription: "Custom-designed, mobile-responsive business websites built on modern platforms — optimized for speed, SEO, and lead generation.",
     benefits: "A well-designed website builds trust, communicates value clearly, and converts visitors into leads or customers.",
     automationPoints: ["Responsive design", "SEO optimization", "Speed optimization", "CMS integration", "Analytics setup"],
@@ -303,7 +303,7 @@ export const services: Service[] = [
   },
   {
     id: 27, slug: "landing-pages", name: "Landing Page Design & Optimization", category: "Web Design, Branding & Creative", categoryId: 6,
-    shortDescription: "High-converting landing pages for campaigns and funnels.",
+    shortDescription: "Single-purpose pages built for ad campaigns — with continuous A/B testing to squeeze every percent of conversion.",
     fullDescription: "Conversion-optimized landing pages designed for specific campaigns, offers, or funnels — with A/B testing and analytics built in.",
     benefits: "A dedicated landing page converts 2–5x better than sending traffic to your homepage.",
     automationPoints: ["A/B testing", "Heatmap tracking", "Form optimization", "Speed optimization", "Conversion tracking"],
@@ -313,7 +313,7 @@ export const services: Service[] = [
   },
   {
     id: 28, slug: "brand-identity", name: "Brand Identity & Visual Design", category: "Web Design, Branding & Creative", categoryId: 6,
-    shortDescription: "Complete brand identity from logo to visual language.",
+    shortDescription: "Logo, colour, typography, templates, and guidelines — a complete visual language that commands premium pricing.",
     fullDescription: "Complete brand identity design — logo, color palette, typography, brand guidelines, business cards, and social media templates.",
     benefits: "A strong brand identity builds recognition, trust, and premium perception. It's the foundation of all marketing.",
     automationPoints: ["Brand audit", "Competitor analysis", "Design system creation", "Template automation", "Asset management"],
@@ -333,7 +333,7 @@ export const services: Service[] = [
   },
   {
     id: 30, slug: "ui-ux-design", name: "UI/UX Design & Prototyping", category: "Web Design, Branding & Creative", categoryId: 6,
-    shortDescription: "User-centered interface design and interactive prototypes.",
+    shortDescription: "User-centred interfaces for apps, dashboards, and SaaS products — wireframed, prototyped, and tested.",
     fullDescription: "User research, wireframing, UI design, and interactive prototyping for web and mobile applications — focused on usability and conversion.",
     benefits: "Every $1 invested in UX returns $100. Good design isn't just pretty — it directly impacts revenue.",
     automationPoints: ["User research", "Wireframing", "Design system", "Prototype testing", "Handoff automation"],
@@ -354,7 +354,7 @@ export const services: Service[] = [
   },
   {
     id: 32, slug: "marketplace-management", name: "Marketplace Management", category: "E-Commerce & Marketplace Growth", categoryId: 7,
-    shortDescription: "Sell on Amazon, Flipkart, and other marketplaces efficiently.",
+    shortDescription: "Get listed, optimised, and selling on Amazon, Flipkart, Meesho, and more — with managed ads and inventory sync.",
     fullDescription: "Multi-marketplace management — listing optimization, inventory sync, pricing strategy, advertising, and review management across Amazon, Flipkart, and more.",
     benefits: "Expand your reach to millions of marketplace shoppers while maintaining control over pricing, inventory, and brand.",
     automationPoints: ["Listing optimization", "Inventory sync", "Price monitoring", "Review management", "Ad optimization"],
@@ -385,7 +385,7 @@ export const services: Service[] = [
   // Category 8 — Sales, CRM & Revenue
   {
     id: 35, slug: "crm-setup", name: "CRM Setup & Sales Pipeline", category: "Sales, CRM & Revenue Operations", categoryId: 8,
-    shortDescription: "Full CRM implementation and sales pipeline optimization.",
+    shortDescription: "HubSpot, Zoho, Salesforce, or Pipedrive — configured so every lead is tracked, followed up, and never lost.",
     fullDescription: "Full CRM implementation and optimization — platform selection, pipeline configuration, automation rules, and team training.",
     benefits: "Every lead tracked from first touch to closed deal. Follow-ups happen automatically, and management has real-time visibility.",
     automationPoints: ["Pipeline automation", "Lead scoring", "Follow-up sequences", "Reporting automation", "Integration sync"],
@@ -395,7 +395,7 @@ export const services: Service[] = [
   },
   {
     id: 36, slug: "sales-funnel", name: "Sales Funnel Automation", category: "Sales, CRM & Revenue Operations", categoryId: 8,
-    shortDescription: "End-to-end automated sales funnels from lead to close.",
+    shortDescription: "Automated journeys from first click to payment — landing pages, nurture sequences, upsells, and cart recovery.",
     fullDescription: "Complete sales funnel design and automation — from lead capture to nurturing to conversion, with every step tracked and optimized.",
     benefits: "Turn your sales process into a predictable machine. Know exactly how many leads become customers and where to improve.",
     automationPoints: ["Lead capture", "Nurture sequences", "Scoring & qualification", "Handoff automation", "Conversion tracking"],
@@ -405,7 +405,7 @@ export const services: Service[] = [
   },
   {
     id: 37, slug: "lead-generation", name: "Lead Generation Systems", category: "Sales, CRM & Revenue Operations", categoryId: 8,
-    shortDescription: "Multi-channel lead generation engines that fill your pipeline.",
+    shortDescription: "SEO, lead magnets, cold email, LinkedIn outreach, and data scraping — a predictable top-of-funnel machine.",
     fullDescription: "Multi-channel lead generation systems combining content, ads, SEO, referrals, and outbound to create a consistent flow of qualified leads.",
     benefits: "Never worry about where the next customer is coming from. Build a predictable lead generation engine.",
     automationPoints: ["Multi-channel capture", "Lead scoring", "Qualification automation", "Pipeline enrichment", "Attribution tracking"],
@@ -415,7 +415,7 @@ export const services: Service[] = [
   },
   {
     id: 38, slug: "referral-loyalty", name: "Referral & Loyalty Programs", category: "Sales, CRM & Revenue Operations", categoryId: 8,
-    shortDescription: "Automated referral and loyalty systems that drive repeat business.",
+    shortDescription: "Points, tiers, referral codes, and win-back campaigns — because keeping a customer costs 5× less than finding one.",
     fullDescription: "Automated referral programs and loyalty systems that incentivize existing customers to bring new ones and keep coming back.",
     benefits: "Referred customers have 37% higher retention. Turn your best customers into your best salespeople.",
     automationPoints: ["Referral tracking", "Reward automation", "Points management", "Tier progression", "Analytics"],
@@ -436,7 +436,7 @@ export const services: Service[] = [
   // Category 9 — Business Operations & Infrastructure
   {
     id: 40, slug: "analytics-dashboards", name: "Analytics & BI Dashboards", category: "Business Operations & Infrastructure", categoryId: 9,
-    shortDescription: "Custom dashboards that turn data into actionable insights.",
+    shortDescription: "Live dashboards in Looker Studio, Metabase, or Tableau — KPIs, marketing ROI, and sales metrics at a glance.",
     fullDescription: "Custom analytics dashboards and BI solutions that consolidate data from all sources into clear, actionable visualizations for decision-making.",
     benefits: "Stop guessing, start knowing. See your entire business performance in one place, updated in real-time.",
     automationPoints: ["Data consolidation", "Real-time updates", "Custom visualizations", "Automated reports", "Alert triggers"],
@@ -456,7 +456,7 @@ export const services: Service[] = [
   },
   {
     id: 42, slug: "hr-recruitment", name: "HR & Recruitment Automation", category: "Business Operations & Infrastructure", categoryId: 9,
-    shortDescription: "Automate hiring, onboarding, and HR operations.",
+    shortDescription: "AI resume screening, auto-scheduling, candidate comms, and day-1-to-30 onboarding — hire faster, onboard smoother.",
     fullDescription: "End-to-end HR automation — job posting distribution, applicant tracking, interview scheduling, onboarding workflows, and employee management.",
     benefits: "Reduce time-to-hire by 50%, automate onboarding, and free HR to focus on people instead of paperwork.",
     automationPoints: ["Job distribution", "Resume screening", "Interview scheduling", "Onboarding automation", "Employee self-service"],

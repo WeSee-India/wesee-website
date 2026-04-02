@@ -26,7 +26,7 @@ const articles = [
     category: "Workflow Automation",
     date: "Jan 2026",
     excerpt: "Most businesses underestimate how much manual work costs them. We break down the real numbers — and show why automation ROI compounds over time.",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+    image: "/cost.jpg",
   },
   {
     slug: "meta-ads-2025-ai-optimization",
@@ -34,7 +34,7 @@ const articles = [
     category: "Performance Marketing",
     date: "Dec 2025",
     excerpt: "From Advantage+ campaigns to AI-generated creatives, Meta's ad platform is evolving fast. Here's what marketers need to know.",
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
+    image: "/metaad.jpg",
   },
   {
     slug: "building-first-ai-chatbot-indian-smes",
@@ -42,7 +42,7 @@ const articles = [
     category: "AI Agents",
     date: "Nov 2025",
     excerpt: "A practical, no-jargon guide to building and deploying your first AI chatbot — tailored for Indian small and medium businesses.",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
+    image: "/chatbot.jpg",
   },
 ];
 
@@ -78,10 +78,38 @@ export default function Blog() {
   const grid = articles.filter(a => !a.featured);
 
   return (
-    <div style={{ paddingTop: 64 }}>
-      <div style={{ paddingTop: 80, paddingBottom: 40 }}>
+    <div className="blog-route" style={{ paddingTop: 44 }}>
+      <div style={{ paddingTop: 30, paddingBottom: 40 }}>
         <div className="container">
-          <SectionLabel number="01" title="BLOG" />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+            }}
+          >
+            <span
+              className="hidden md:inline-block"
+              style={{
+                width: 24,
+                height: 1,
+                background: "#C9A84C",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#999999",
+              }}
+            >
+              (01) BLOG
+            </span>
+          </div>
           <TextReveal as="h1" style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
             Insights & ideas.
           </TextReveal>
@@ -90,7 +118,7 @@ export default function Blog() {
       </div>
 
       {featured && (
-        <section style={{ paddingTop: 0, paddingBottom: 80 }}>
+        <section style={{ paddingTop: 0, paddingBottom: 30 }}>
           <div className="container blog-featured">
             <Link href={`/blog/${featured.slug}`} className="block">
               <div className="blog-featured-reveal img-hover-zoom overflow-hidden rounded-2xl" style={{ height: "clamp(250px, 45vh, 400px)", borderRadius: 16 }}>
@@ -116,7 +144,7 @@ export default function Blog() {
         </section>
       )}
 
-      <section style={{ paddingTop: 48, paddingBottom: 80, borderTop: "1px solid #EEEEEE" }}>
+      <section style={{ paddingTop: 10, paddingBottom: 40, borderTop: "1px solid #EEEEEE" }}>
         <div className="container">
           <StaggerReveal stagger={0.15} y={30}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: 32 }}>
@@ -164,6 +192,7 @@ export default function Blog() {
                           </span>
                         </div>
                         <h3
+                          className="blog-card-title group-hover:translate-x-2"
                           style={{
                             fontSize: 20,
                             fontWeight: 600,
@@ -172,7 +201,6 @@ export default function Blog() {
                             marginTop: 8,
                             transition: "transform 0.3s ease",
                           }}
-                          className="group-hover:translate-x-2"
                         >
                           {article.title}
                         </h3>

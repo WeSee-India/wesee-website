@@ -3,11 +3,12 @@ import { Link, useSearch } from "wouter";
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
 import { services, categories } from "@/data/services";
 import SectionLabel from "@/components/SectionLabel";
-import CircularGallery from "@/components/CircularGallery";
+
 import RotorGallery from "@/components/RotorGallery";
-import TextReveal from "@/components/TextReveal";
-import TiltCard from "@/components/TiltCard";
+
 import ParticleWrapper from "@/components/ParticleWrapper";
+import CustomCursor from "@/components/CustomCursor";
+import { useFinePointer } from "@/hooks/useFinePointer";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -18,49 +19,49 @@ gsap.registerPlugin(ScrollTrigger);
  * Each category has a pool of relevant images that cycle through services in that category
  */
 const SERVICE_IMAGES: string[] = [
-  "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80", // 0  robot
-  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80", // 1  circuit
-  "https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=600&q=80", // 2  ai lab
-  "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&q=80", // 3  tech
-  "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80", // 4  server
-  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80", // 5  analytics
-  "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&q=80", // 6  office
-  "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80", // 7  charts
-  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80", // 8  workspace
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80", // 9  abstract data
-  "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=600&q=80", // 10 laptop
-  "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&q=80", // 11 social media
-  "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=600&q=80", // 12 marketing
-  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80", // 13 coding
-  "https://images.unsplash.com/photo-1512756290469-ec264b7fbf87?w=600&q=80", // 14 content
-  "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=600&q=80", // 15 writing
-  "https://images.unsplash.com/photo-1542435503-956c469947f6?w=600&q=80", // 16 blog
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80", // 17 email
-  "https://images.unsplash.com/photo-1577563908411-5077b6dc7624?w=600&q=80", // 18 message
-  "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=600&q=80", // 19 chat
-  "https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=600&q=80", // 20 communication
-  "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&q=80", // 21 design desk
-  "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&q=80", // 22 branding
-  "https://images.unsplash.com/photo-1545235617-9465d2a55698?w=600&q=80", // 23 web ui
-  "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80", // 24 design tool
-  "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=600&q=80", // 25 creative
-  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80", // 26 ecommerce
-  "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600&q=80", // 27 shopping
-  "https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=600&q=80", // 28 marketplace
-  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80", // 29 store
-  "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&q=80", // 30 packaging
-  "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=600&q=80", // 31 sales office
-  "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600&q=80", // 32 crm
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80", // 33 team meeting
-  "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=600&q=80", // 34 revenue
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80", // 35 cloud infra
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80", // 36 data center
-  "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80", // 37 operations
-  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80", // 38 hr team
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80", // 39 person laptop
-  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=600&q=80", // 40 code screen
-  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80", // 41 matrix
-  "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80", // 42 macbook code
+  "/services/ailab.jpg",
+  "/services/codescreen.jpg",
+  "/services/ailab.jpg",
+  "/services/laptop.jpg",
+  "/services/cloudinfra.jpg",
+  "/services/abstractdata.png",
+  "/services/office.jpg",
+  "/services/revenue.jpg",
+  "/services/workspace.jpg",
+  "/services/abstractdata.png",
+  "/services/laptop.jpg",
+  "/services/socialmedia.jpg",
+  "/services/marketing.jpg",
+  "/services/coding.jpg",
+  "/services/content.jpg",
+  "/services/blog.jpg",
+  "/services/blog.jpg",
+  "/services/email.jpg",
+  "/services/message.jpg",
+  "/services/chat.jpg",
+  "/services/communication.jpg",
+  "/services/designdesk.jpg",
+  "/services/branding.jpg",
+  "/services/webui.jpg",
+  "/services/designtool.jpg",
+  "/services/creative.jpg",
+  "/services/ecommerce.png",
+  "/services/shopping.jpg",
+  "/services/marketplace.jpg",
+  "/services/store.jpg",
+  "/services/packing.jpg",
+  "/services/salesoffice.jpg",
+  "/services/crm.jpg",
+  "/services/teammeeting.jpg",
+  "/services/revenue.jpg",
+  "/services/cloudinfra.jpg",
+  "/services/datacenter.jpg",
+  "/services/operations.jpg",
+  "/services/hrteam.jpg",
+  "/services/personlaptop.jpg",
+  "/services/codescreen.jpg",
+  "/services/codescreen.jpg",
+  "/services/macbookcode.jpg",
 ];
 
 /**
@@ -127,7 +128,7 @@ const engagementSizes = ["Starter", "Growth", "Enterprise"];
 const statuses = ["Live", "In Progress", "Case Study"];
 
 type ColumnProps = {
-  images: Array<{ src: string; title?: string; subtitle?: string }>;
+  images: Array<{ src: string; title?: string; subtitle?: string; href?: string }>;
   y: MotionValue<number>;
   isMobile?: boolean;
 };
@@ -142,22 +143,46 @@ const Column = ({ images, y, isMobile = false }: ColumnProps) => {
       }}
     >
       {images.map((item, i) => {
-        const minHeight = isMobile ? "600px" : "500px";
-        return (
-          <div key={i} className={`relative w-full overflow-hidden group ${isMobile ? '' : 'flex-1'}`} style={{ minHeight: isMobile ? undefined : undefined, flex: isMobile ? "0 0 auto" : "1 1 auto", display: isMobile ? "block" : "flex", alignItems: isMobile ? "normal" : "center", justifyContent: isMobile ? "normal" : "center", marginBottom: isMobile ? "0" : undefined }}>
+        const tileStyle = {
+          flex: isMobile ? "0 0 auto" : "1 1 auto",
+          display: isMobile ? "block" : "flex",
+          alignItems: isMobile ? "normal" : "center",
+          justifyContent: isMobile ? "normal" : "center",
+          marginBottom: isMobile ? "0" : undefined,
+        } as const;
+        const linkShell =
+          "relative w-full min-h-0 overflow-hidden group outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 " +
+          (isMobile ? "block" : "flex h-full flex-1 flex-col");
+        const inner = (
+          <>
             <img
               src={item.src}
-              alt="image"
+              alt={item.title ? `${item.title} — service` : "Service"}
               className={`pointer-events-none w-full ${isMobile ? "object-contain" : "object-cover"}`}
               style={{ height: isMobile ? "auto" : "100%", minHeight: isMobile ? undefined : undefined, maxHeight: isMobile ? "none" : "none", display: "block", width: "100%" }}
             />
             {item.title && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
                 <div className="text-white">
                   <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{item.title}</div>
                   {item.subtitle && <div style={{ fontSize: 12, fontWeight: 400, opacity: 0.9 }}>{item.subtitle}</div>}
                 </div>
               </div>
+            )}
+          </>
+        );
+        return (
+          <div key={i} style={tileStyle} className={isMobile ? "w-full" : "min-w-0 flex-1"}>
+            {item.href ? (
+              <Link
+                href={item.href}
+                className={linkShell}
+                aria-label={item.title ? `Open ${item.title}` : "Open service"}
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div className={linkShell}>{inner}</div>
             )}
           </div>
         );
@@ -166,7 +191,7 @@ const Column = ({ images, y, isMobile = false }: ColumnProps) => {
   );
 };
 
-const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string; name: string; category: string }> }) => {
+const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string; name: string; category: string; slug: string }> }) => {
   const gallery = useRef<HTMLDivElement>(null);
   const [dimension, setDimension] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
@@ -198,17 +223,22 @@ const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string
   const totalServices = services.length;
   
   // Create columns by distributing services evenly
-  const col1: Array<{ src: string; title: string; subtitle: string }> = [];
-  const col2: Array<{ src: string; title: string; subtitle: string }> = [];
-  const col3: Array<{ src: string; title: string; subtitle: string }> = [];
-  const col4: Array<{ src: string; title: string; subtitle: string }> = [];
+  const col1: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
+  const col2: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
+  const col3: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
+  const col4: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
   
   // Mobile columns (2 columns with all images)
-  const mobileCol1: Array<{ src: string; title: string; subtitle: string }> = [];
-  const mobileCol2: Array<{ src: string; title: string; subtitle: string }> = [];
+  const mobileCol1: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
+  const mobileCol2: Array<{ src: string; title: string; subtitle: string; href: string }> = [];
   
   services.forEach((service, index) => {
-    const item = { src: service.image, title: service.name, subtitle: service.category };
+    const item = {
+      src: service.image,
+      title: service.name,
+      subtitle: service.category,
+      href: `/services/${service.slug}`,
+    };
     
     // Desktop: Distribute evenly across 4 columns
     const columnIndex = index % 4;
@@ -287,10 +317,13 @@ const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string
             <p className="body-text" style={{ maxWidth: "min(640px, 100%)", fontSize: "clamp(14px, 1.8vw, 16px)", color: "#3A3A3A", lineHeight: 1.6 }}>
               9 categories, 43 services — everything your business needs to automate, grow, and scale intelligently.
             </p>
+            <div className="md:hidden" style={{ marginTop: 14 }}>
+              <SectionLabel number="01" title="SERVICES" />
+            </div>
           </div>
         </div>
         <div className="absolute left-1/2 bottom-[10%] grid -translate-x-1/2 content-start justify-items-center gap-6 text-center text-black">
-          <span className="relative max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:from-white after:to-black after:content-['']">
+          <span className="services-scroll-hint-text relative max-w-[18ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:from-white after:to-black after:content-['']">
             scroll down to see
           </span>
         </div>
@@ -323,16 +356,415 @@ const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string
   );
 };
 
+// ─── tiny easing helpers (deck: ease-in lift from back, ease-out scale) ─
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeInCubic(t: number): number {
+  return t * t * t;
+}
+
+// ─── types ────────────────────────────────────────────────────────────────────
+interface ServiceCard {
+  image: string;
+  name: string;
+  category: string;
+  slug: string;
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
+const ServicesBottomDeck = ({ services }: { services: ServiceCard[] }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const flyingCardRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  const [viewport, setViewport] = useState({ vh: 800, vw: 1024, isMobile: false });
+
+  // Avoid an extremely tall sticky section when there are many services.
+  const deckServices = useMemo(() => {
+    const maxCards = viewport.isMobile ? 7 : 9;
+    if (services.length <= maxCards) return services;
+
+    const sampled: ServiceCard[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < maxCards; i++) {
+      const idx = Math.round((i * (services.length - 1)) / (maxCards - 1));
+      const s = services[idx];
+      if (!seen.has(s.slug)) {
+        sampled.push(s);
+        seen.add(s.slug);
+      }
+    }
+    return sampled;
+  }, [services, viewport.isMobile]);
+
+  // ── viewport tracking ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const update = () =>
+      setViewport({
+        vh: window.innerHeight,
+        vw: window.innerWidth,
+        isMobile: window.innerWidth < 768,
+      });
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // ── layout constants ──────────────────────────────────────────────────────
+  const PX_PER_CARD = viewport.isMobile ? 300 : 250;
+  const DECK_PEEK = viewport.isMobile ? 10 : 12;       // px each background card peeks
+  const DECK_SIDE_PEEK = viewport.isMobile ? 6 : 9;    // px horizontal offset per depth
+  const TOP_DECK_PEEK = viewport.isMobile ? 7 : 9;     // px peek between landed cards
+  const TOP_DECK_SIDE_PEEK = viewport.isMobile ? 4 : 6; // px side offset between landed cards
+  // Bottom-deck flight depth cues only (keeps top deck logic unchanged).
+  const FLIGHT_BACK_OFFSET_Y = viewport.isMobile ? 18 : 24;
+  const FLIGHT_BACK_OFFSET_X = viewport.isMobile ? 8 : 12;
+  const FLIGHT_BACK_SCALE = viewport.isMobile ? 0.95 : 0.94;
+  // Back of deck = largest; front (toward viewer) = smallest — depth via scale only
+  const DECK_SCALE_MIN = viewport.isMobile ? 0.86 : 0.88;
+  const DECK_SCALE_MAX = 1;
+
+  const totalN = deckServices.length;
+  // Total scroll height: one full viewport to "enter" + each card gets PX_PER_CARD to animate
+  const scrollHeight = viewport.vh + totalN * PX_PER_CARD + 300;
+
+  // ── GSAP setup ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || totalN === 0) return;
+
+    const cards = cardRefs.current
+      .slice(0, totalN)
+      .filter(Boolean) as HTMLDivElement[];
+    const flyingCards = flyingCardRefs.current
+      .slice(0, totalN)
+      .filter(Boolean) as HTMLDivElement[];
+    if (cards.length !== totalN || flyingCards.length !== totalN) return;
+
+    const { vh, vw, isMobile } = viewport;
+
+    // ── card dimensions ──────────────────────────────────────────────────
+    const isTablet = !isMobile && vw < 1024;
+    const isLaptop = vw >= 1024 && vw < 1440;
+    const isDesktop = vw >= 1024;
+    const desktopWidthScale = isDesktop ? 0.72 : 1;
+    const desktopHeightScale = isDesktop ? 0.6 : 1;
+
+    // Responsive sizing across all screens:
+    // - mobile: compact
+    // - tablet: wider but still stacked comfortably
+    // - laptop/desktop: slightly smaller than before
+    // - large monitor: balanced max width
+    const baseCardW = isMobile
+      ? Math.min(vw * 0.92, 390)
+      : isTablet
+        ? Math.min(vw * 0.9, 860)
+        : isLaptop
+          ? Math.min(vw * 0.76, 980)
+          : Math.min(vw * 0.72, 1100);
+
+    const baseCardH = isMobile ? 280 : isTablet ? 360 : isLaptop ? 380 : 400;
+    const cardW = baseCardW * desktopWidthScale;
+    const cardH = baseCardH * desktopHeightScale;
+
+    // The deck rests at the bottom-center of the viewport.
+    // card[0] is the FRONT (smallest); card[totalN-1] is the BACK (largest).
+    // Scroll order: back leaves first (index totalN-1), front last (index 0).
+    // "deckBottomY" = translateY that places the card's center near the bottom of the screen.
+    // "landedTopY"  = translateY that places the card's center near the top of the screen.
+    //
+    // All positions are relative to the sticky container's center (50% / 50%).
+    // Position cards so their edges are closer to the viewport bounds.
+    // We keep image sizing/cropping the same; only the deck offsets change.
+    const bottomMargin = isMobile ? 10 : 14;
+    // Keep landed cards clear of the fixed header so top content isn't clipped.
+    // Mobile previously used a very small margin, which caused the top card to get cut.
+    const topMargin = isMobile ? 76 : 88;
+
+    // With `top: 50%` + `yPercent: -50`, `y` is the pixel offset of the card center.
+    // cardTop = vh/2 + y - cardH/2
+    // cardBottom = vh/2 + y + cardH/2
+    // => y = vh/2 - cardH/2 - bottomMargin (resting deck)
+    // => y = -vh/2 + cardH/2 + topMargin (landed top)
+    const deckBottomY = vh * 0.5 - cardH * 0.5 - bottomMargin;
+    const landedTopY = -vh * 0.5 + cardH * 0.5 + topMargin;
+
+    const deckRestingScale = (d: number, remainingInDeck: number): number => {
+      if (remainingInDeck <= 1) return DECK_SCALE_MAX;
+      const maxD = remainingInDeck - 1;
+      return DECK_SCALE_MIN + (d / maxD) * (DECK_SCALE_MAX - DECK_SCALE_MIN);
+    };
+
+    // ── initialise all cards ─────────────────────────────────────────────
+    // card[0] = front of deck (smallest), card[totalN-1] = back (largest)
+    cards.forEach((el, i) => {
+      const remainingInDeck = totalN;
+      const d = i;
+      const initialScale = deckRestingScale(d, remainingInDeck);
+      gsap.set(el, {
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        xPercent: -50,
+        yPercent: -50,
+        width: cardW,
+        height: cardH,
+        // card[0] is on top → highest zIndex
+        zIndex: totalN - i,
+        // Each card in the deck peeks below and slightly to the side.
+        y: deckBottomY + i * DECK_PEEK,
+        x: -i * DECK_SIDE_PEEK,
+        scale: initialScale,
+        transformOrigin: "center bottom",
+        willChange: "transform",
+        borderRadius: 22,
+        overflow: "hidden",
+      });
+    });
+
+    flyingCards.forEach((el, i) => {
+      const remainingInDeck = totalN;
+      const d = i;
+      const initialScale = deckRestingScale(d, remainingInDeck);
+      gsap.set(el, {
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        xPercent: -50,
+        yPercent: -50,
+        width: cardW,
+        height: cardH,
+        y: deckBottomY + i * DECK_PEEK,
+        x: -i * DECK_SIDE_PEEK,
+        scale: initialScale,
+        transformOrigin: "center bottom",
+        willChange: "transform",
+        borderRadius: 22,
+        overflow: "hidden",
+        zIndex: 3000,
+        opacity: 0,
+        pointerEvents: "none",
+      });
+    });
+
+    const st = ScrollTrigger.create({
+      trigger: wrapper,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: 0.8,
+      onUpdate: (self) => {
+        // rawProgress goes 0 → totalN (one unit per card, back → front)
+        const rawProgress = self.progress * totalN;
+        const landedCount = gsap.utils.clamp(0, totalN, Math.floor(rawProgress));
+
+        cards.forEach((el, i) => {
+          const flyingEl = flyingCards[i];
+          if (!flyingEl) return;
+          // localP: 0 when this card hasn't started yet, 1 when fully landed at top.
+          // Segment order: i = totalN-1 first (rawProgress 0→1), …, i = 0 last.
+          const localP = gsap.utils.clamp(0, 1, rawProgress - (totalN - 1 - i));
+          // Lift from the back: stay low in the stack first, then move up.
+          const pMotion = easeInCubic(localP);
+          const pScale = easeOutCubic(localP);
+
+          // With back-first removal, indices 0..i-1 always stay above i until i’s turn.
+          const cardsAboveInDeck = i;
+
+          const remainingInDeck = totalN - Math.floor(rawProgress);
+
+          // Resting position for this card while still in deck
+          const restingY = deckBottomY + cardsAboveInDeck * DECK_PEEK;
+          const restingX = -cardsAboveInDeck * DECK_SIDE_PEEK;
+          const restingScale = deckRestingScale(i, remainingInDeck);
+          const landingOrder = totalN - 1 - i; // 0 = first landed, grows as more cards land
+          const isLanded = localP >= 1 && landingOrder < landedCount;
+          const isFlying = localP > 0 && localP < 1;
+          // Older landed cards get pushed back/down so newest appears on top/front.
+          const landedDepth = isLanded ? landedCount - 1 - landingOrder : 0;
+          const landedX = landedDepth * TOP_DECK_SIDE_PEEK;
+          const landedY = landedTopY + landedDepth * TOP_DECK_PEEK;
+
+          const deckZ = totalN - i;
+          const landedZ = 2000 + landingOrder;
+
+          // Base layer: only deck + landed stack; active moving card is hidden here.
+          const baseX = isLanded ? landedX : restingX;
+          const baseY = isLanded ? landedY : restingY;
+          const baseScale = isLanded ? 1 : restingScale;
+          const baseZ = isLanded ? landedZ : deckZ;
+          gsap.set(el, { x: baseX, y: baseY, scale: baseScale, zIndex: baseZ, opacity: isFlying ? 0 : 1 });
+
+          // Overlay layer: add subtle "from back" depth before coming forward.
+          const backDepth = 1 - pMotion;
+          const flightStartX = restingX - FLIGHT_BACK_OFFSET_X * backDepth;
+          const flightStartY = restingY + FLIGHT_BACK_OFFSET_Y * backDepth;
+          const flightStartScale = restingScale * (FLIGHT_BACK_SCALE + (1 - FLIGHT_BACK_SCALE) * pScale);
+          const flyingX = flightStartX + (landedX - flightStartX) * (pMotion * 0.2);
+          const flyingY = flightStartY + (landedY - flightStartY) * pMotion;
+          const flyingScale = flightStartScale + (1 - flightStartScale) * pScale;
+          gsap.set(flyingEl, {
+            x: flyingX,
+            y: flyingY,
+            scale: flyingScale,
+            zIndex: 3000,
+            opacity: isFlying ? 1 : 0,
+          });
+        });
+      },
+    });
+
+    return () => {
+      st.kill();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckServices, viewport.vh, viewport.vw, viewport.isMobile]);
+
+  const renderServiceCard = (service: ServiceCard) => (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        borderRadius: 22,
+        overflow: "hidden",
+        background: "#F3F4F6",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.14)",
+        border: "1px solid rgba(17,19,23,0.08)",
+        display: "flex",
+        flexDirection: viewport.isMobile ? "column" : "row",
+        alignItems: "stretch",
+        gap: viewport.isMobile ? 10 : 14,
+        padding: viewport.isMobile ? 10 : 12,
+      }}
+    >
+      <div
+        style={{
+          flex: viewport.isMobile ? "0 0 54%" : "0 0 56%",
+          minWidth: 0,
+          borderRadius: 16,
+          overflow: "hidden",
+          background: "#0f1115",
+          position: "relative",
+        }}
+      >
+        <img
+          src={service.image}
+          alt={`${service.name} — service`}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.02) 55%, transparent 100%)",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: viewport.isMobile ? "4px 4px 6px" : "2px 8px 2px 4px",
+        }}
+      >
+        <div
+          style={{
+            color: "#0B0E14",
+            fontSize: viewport.isMobile ? "clamp(18px,4.8vw,22px)" : "clamp(22px,2.05vw,34px)",
+            fontWeight: 700,
+            lineHeight: 1.08,
+            letterSpacing: "-0.02em",
+            marginBottom: viewport.isMobile ? 10 : 16,
+          }}
+        >
+          {service.name}
+        </div>
+        <div
+          style={{
+            color: "rgba(17,19,23,0.86)",
+            fontSize: viewport.isMobile ? "clamp(12px,3.2vw,15px)" : "clamp(14px,1.2vw,22px)",
+            fontWeight: 450,
+            lineHeight: 1.28,
+            letterSpacing: "-0.005em",
+            maxWidth: "30ch",
+          }}
+        >
+          {service.category}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div ref={wrapperRef} style={{ height: scrollHeight, position: "relative", width: "100%" }}>
+      {/* Sticky container — stays in view while parent scrolls */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          width: "100%",
+          overflow: "hidden",
+        }}
+      >
+        {/* Card stack */}
+        {deckServices.map((service, i) => (
+          <div
+            key={service.slug}
+            ref={(el) => {
+              cardRefs.current[i] = el;
+            }}
+          >
+            <Link
+              href={`/services/${service.slug}`}
+              aria-label={`Open ${service.name}`}
+              style={{ display: "block", width: "100%", height: "100%", textDecoration: "none" }}
+            >
+              {renderServiceCard(service)}
+            </Link>
+          </div>
+        ))}
+
+        {/* Flying overlay cards: decoupled from deck and landed stacking. */}
+        {deckServices.map((service, i) => (
+          <div
+            key={`${service.slug}-flying`}
+            ref={(el) => {
+              flyingCardRefs.current[i] = el;
+            }}
+            aria-hidden
+            style={{ pointerEvents: "none" }}
+          >
+            {renderServiceCard(service)}
+          </div>
+        ))}
+
+      
+      </div>
+    </div>
+  );
+};
+
 export default function Services() {
+  const finePointer = useFinePointer();
   const search = useSearch();
   const params = new URLSearchParams(search);
+  const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
+  const initialCategoryParam = params.get("category");
 
-  const isMobileDevice = typeof window !== "undefined" && window.innerWidth < 768;
-  const [viewMode, setViewMode] = useState<"ring" | "grid">(
-    params.get("view") === "grid" || isMobileDevice ? "grid" : "ring"
-  );
+  const [viewMode, setViewMode] = useState<"ring" | "grid">("ring");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(params.get("category") ? Number(params.get("category")) : null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(
+    !isMobileViewport && initialCategoryParam ? Number(initialCategoryParam) : null
+  );
   const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -345,9 +777,34 @@ export default function Services() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = filterOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [filterOpen]);
+    if (typeof window === "undefined") return;
+    const body = document.body;
+    const html = document.documentElement;
+
+    const applyScrollLock = () => {
+      const isMobile = window.innerWidth < 768;
+      const shouldLock = filterOpen || (viewMode === "ring" && isMobile);
+      const overflowValue = shouldLock ? "hidden" : "";
+      body.style.overflow = overflowValue;
+      html.style.overflow = overflowValue;
+    };
+
+    applyScrollLock();
+    window.addEventListener("resize", applyScrollLock, { passive: true });
+    return () => {
+      window.removeEventListener("resize", applyScrollLock);
+      body.style.overflow = "";
+      html.style.overflow = "";
+    };
+  }, [filterOpen, viewMode]);
+
+  useEffect(() => {
+    const shouldOpenFilter = params.get("openFilter") === "1";
+    if (!shouldOpenFilter) return;
+    if (typeof window === "undefined" || window.innerWidth >= 768) return;
+    setViewMode("ring");
+    setFilterOpen(true);
+  }, [search]);
 
   // GSAP reveal for grid view
   useEffect(() => {
@@ -393,6 +850,13 @@ export default function Services() {
     setSelectedStatus(null);
   };
 
+  const handleFilterOptionSelect = (onSelect: (value: any) => void, value: any) => {
+    onSelect(value);
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setFilterOpen(false);
+    }
+  };
+
   // Prepare ring items - duplicate to reach 90 items
   const ringItems = useMemo(() => {
     const baseItems = filtered.map((s, i) => ({
@@ -432,8 +896,16 @@ export default function Services() {
     return catPositions;
   }, [filtered]);
 
+  const pageCursor =
+    !finePointer
+      ? "auto"
+      : viewMode === "grid" && typeof window !== "undefined" && window.innerWidth >= 768
+        ? "auto"
+        : "none";
+
   return (
-    <>
+    <div style={{ cursor: pageCursor }}>
+      {finePointer && viewMode !== "grid" ? <CustomCursor /> : null}
       {/* ═══ FILTER PANEL — slides from LEFT with staggered items ═══ */}
       <div
         className="w-full sm:w-80 lg:w-96 pt-20"
@@ -463,7 +935,7 @@ export default function Services() {
           <ParticleWrapper>
             <button
               onClick={() => setFilterOpen(false)}
-              style={{ fontSize: "clamp(20px, 4vw, 24px)", color: "#1A1A1A", padding: "clamp(6px, 1.5vw, 8px)", transition: "transform 0.3s ease", cursor: "none" }}
+              style={{ fontSize: "clamp(20px, 4vw, 24px)", color: "#1A1A1A", padding: "clamp(6px, 1.5vw, 8px)", transition: "transform 0.3s ease", cursor: finePointer ? "none" : "pointer" }}
               onMouseEnter={e => e.currentTarget.style.transform = "rotate(90deg)"}
               onMouseLeave={e => e.currentTarget.style.transform = "rotate(0)"}
             >
@@ -483,7 +955,7 @@ export default function Services() {
               <button
                 onClick={() => setExpandedFilter(expandedFilter === group.key ? null : group.key)}
                 className="w-full flex items-center justify-between"
-                style={{ padding: "clamp(12px, 2vw, 16px) 0", fontSize: "clamp(10px, 1.8vw, 11px)", fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888", cursor: "none" }}
+                style={{ padding: "clamp(12px, 2vw, 16px) 0", fontSize: "clamp(10px, 1.8vw, 11px)", fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888", cursor: finePointer ? "none" : "pointer" }}
               >
                 {group.label}
                 <span style={{ fontSize: "clamp(14px, 2.5vw, 16px)", transition: "transform 0.3s ease", transform: expandedFilter === group.key ? "rotate(45deg)" : "rotate(0)" }}>+</span>
@@ -500,7 +972,7 @@ export default function Services() {
                 {group.items.map((item, i) => (
                   <ParticleWrapper key={i}>
                     <button
-                      onClick={() => group.onSelect(item.value)}
+                      onClick={() => handleFilterOptionSelect(group.onSelect, item.value)}
                       className="block w-full text-left service-row-hover"
                       style={{
                         padding: "clamp(6px, 1.5vw, 8px) 0",
@@ -508,7 +980,7 @@ export default function Services() {
                         fontWeight: group.selected === item.value ? 600 : 400,
                         color: group.selected === item.value ? "#1A1A1A" : "#3A3A3A",
                         transition: "all 0.3s ease",
-                        cursor: "none",
+                        cursor: finePointer ? "none" : "pointer",
                       }}
                     >
                       {item.label}
@@ -538,8 +1010,8 @@ export default function Services() {
 
       {/* ═══ RING VIEW ═══ */}
       {viewMode === "ring" && (
-        <div style={{ position: "relative",paddingBottom: "10px",paddingTop: "18px"}}>
-          <div className="fixed top-12 sm:top-16 md:top-20 left-3 sm:left-4 md:left-6 lg:left-8 z-[60]">
+        <div style={{ position: "relative", height: "100dvh", overflow: "hidden" }}>
+          <div className="fixed top-20 sm:top-20 md:top-24 left-3 sm:left-4 md:left-6 lg:left-8 z-[60]">
             <ParticleWrapper>
               <button
                 onClick={() => setFilterOpen(true)}
@@ -547,14 +1019,14 @@ export default function Services() {
                 style={{ 
                   fontSize: "clamp(10px, 2vw, 13px)",
                   padding: "clamp(4px, 1vw, 6px) clamp(10px, 2.5vw, 16px)",
-                  cursor: "none"
+                  cursor: finePointer ? "none" : "pointer",
                 }}
               >
                 Filter Services +
               </button>
             </ParticleWrapper>
           </div>
-          <div className="fixed top-12 sm:top-16 md:top-20 right-3 sm:right-4 md:right-6 lg:right-8 z-[60]">
+          <div className="fixed top-20 sm:top-20 md:top-24 right-3 sm:right-4 md:right-6 lg:right-8 z-[60]">
             <ParticleWrapper>
               <button
                 onClick={() => setViewMode("grid")}
@@ -562,10 +1034,10 @@ export default function Services() {
                 style={{ 
                   fontSize: "clamp(10px, 2vw, 13px)",
                   padding: "clamp(4px, 1vw, 6px) clamp(10px, 2.5vw, 16px)",
-                  cursor: "none"
+                  cursor: finePointer ? "none" : "pointer",
                 }}
               >
-                Grid view ⊞
+               Grid view
               </button>
             </ParticleWrapper>
           </div>
@@ -573,7 +1045,7 @@ export default function Services() {
             <RotorGallery 
               items={ringItems} 
               gapPx={500}
-              speedSec={31}
+              speedSec={45}
               camY={5}
               categoryLabels={ringCategoryLabels}
             />
@@ -581,10 +1053,10 @@ export default function Services() {
         </div>
       )}
 
-      {/* ═══ GRID VIEW — Enhanced with TiltCard and stagger ═══ */}
+      {/* ═══ BOTTOM DECK VIEW ═══ */}
       {viewMode === "grid" && (
         <div className="pt-10 sm:pt-12 md:pt-16 lg:pt-20">
-          <div className="fixed top-12 sm:top-16 md:top-20 right-3 sm:right-4 md:right-6 lg:right-8 z-[60]">
+          <div className="fixed top-20 sm:top-20 md:top-24 right-3 sm:right-4 md:right-6 lg:right-8 z-[60]">
             <ParticleWrapper>
               <button
                 onClick={() => setViewMode("ring")}
@@ -592,7 +1064,7 @@ export default function Services() {
                 style={{ 
                   fontSize: "clamp(10px, 2vw, 13px)",
                   padding: "clamp(4px, 1vw, 6px) clamp(10px, 2.5vw, 16px)",
-                  cursor: "none"
+                  cursor: finePointer ? "none" : "pointer",
                 }}
               >
                 Ring view ○
@@ -602,26 +1074,25 @@ export default function Services() {
 
           <div className="section-padding">
             <div className="container">
-              <div className="gsap-reveal">
-                <SectionLabel number="01" title="SERVICES" />
-              </div>
-
               <ParticleWrapper>
                 <button onClick={() => setFilterOpen(true)} className="md:hidden cta-link" style={{ marginTop: "clamp(16px, 3vw, 24px)", fontSize: "clamp(12px, 2.2vw, 14px)" }}>
                   Filter Services +
                 </button>
               </ParticleWrapper>
 
-              {/* Parallax gallery with service images */}
-              <ServicesParallaxGallery services={filtered.map((service, i) => ({
-                image: getServiceImage(service, i, filtered),
-                name: service.name,
-                category: service.category
-              }))} />
+              {/* Scroll-driven bottom deck of service cards */}
+              <ServicesBottomDeck
+                services={filtered.map((service, i) => ({
+                  image: getServiceImage(service, i, filtered),
+                  name: service.name,
+                  category: service.category,
+                  slug: service.slug,
+                }))}
+              />
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

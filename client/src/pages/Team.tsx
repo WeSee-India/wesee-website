@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
-import SectionLabel from "@/components/SectionLabel";
 import TextReveal from "@/components/TextReveal";
 import TiltCard from "@/components/TiltCard";
 import StaggerReveal from "@/components/StaggerReveal";
@@ -13,38 +12,30 @@ gsap.registerPlugin(ScrollTrigger);
 
 const directors = [
   {
-    name: "Rahul Purohit",
+    name: "Harsh khanna",
     title: "Founder & CEO",
-    bio: "Rahul founded WeSee in 2023 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
-    email: "rahul@wesee.in",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-    linkedin: "https://linkedin.com/in/rahulpurohit",
+    bio: "Harsh founded WeSee in 2024 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
+    email: "harsh.khanna@weseegpt.com",
+    photo: "/client/harsh.webp",
+    linkedin: "https://www.linkedin.com/in/harshkhanna96/",
   },
   {
-    name: "Priya Sharma",
+    name: "Takeshi",
     title: "Head of AI Engineering",
-    bio: "Priya leads WeSee's AI engineering team, overseeing the development of conversational AI agents, workflow automation systems, and custom integrations. With deep expertise in LangChain, OpenAI, and enterprise AI architecture, she ensures every solution is production-ready.",
-    email: "priya@wesee.in",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
-    linkedin: "https://linkedin.com/company/wesee",
+    bio: "Takeshi  leads WeSee's AI engineering team, overseeing the development of conversational AI agents, workflow automation systems, and custom integrations. With deep expertise in LangChain, OpenAI, and enterprise AI architecture, she ensures every solution is production-ready.",
+      email: "takeshi.shoyama@weseegpt.com",
+      photo: "/client/takeshi.webp",
+    
   },
-  {
-    name: "Arjun Mehta",
-    title: "Head of Growth & Marketing",
-    bio: "Arjun drives WeSee's growth strategy and client acquisition. With a background in performance marketing and revenue operations, he builds the systems that help WeSee — and its clients — scale efficiently across channels.",
-    email: "arjun@wesee.in",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
-    linkedin: "https://linkedin.com/company/wesee",
-  },
+ 
 ];
 
 const teamMembers = [
-  { name: "Ananya Desai", title: "AI Solutions Architect", photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&q=80" },
-  { name: "Vikram Singh", title: "Full Stack Developer", photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&q=80" },
-  { name: "Neha Kapoor", title: "Growth Marketing Lead", photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&q=80" },
-  { name: "Rohan Joshi", title: "Automation Engineer", photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&q=80" },
-  { name: "Meera Patel", title: "UX Designer", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80" },
-  { name: "Karan Malhotra", title: "Data Analyst", photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&q=80" },
+  { name: "sanjeev vishwakarma", title: "Full Stack Developer", photo: "/services/sanjiv.webp" },
+  { name: "harsh khanna", title: "Growth Marketing Lead", photo: "/client/harsh.webp" },
+  { name: "deepak yadav", title: "Automation Engineer", photo: "/services/deepak.webp" },
+  { name: "alex", title: "UX Designer", photo: "/client/takeshi.webp" },
+  { name: "virendra singh", title: "Data Analyst", photo: "/client/virendra.jpg" },
 ];
 
 type ColumnProps = {
@@ -135,23 +126,26 @@ const TeamParallaxGallery = () => {
     }
   }
   
-  // Duplicate mobile images for smooth parallax scrolling
-  // Add more images to ensure smooth scrolling
+  // Duplicate mobile images for smooth parallax scrolling.
+  // Pad using the full team photo list — column 1 often has only one real slot
+  // (every 5th index), so padding with col[i % col.length] repeated the same image.
   const minMobileImagesPerColumn = 15;
-  const duplicateMobileIfNeeded = (col: string[]) => {
-    if (col.length < minMobileImagesPerColumn) {
-      const needed = minMobileImagesPerColumn - col.length;
-      const duplicated = [...col];
-      for (let i = 0; i < needed; i++) {
-        duplicated.push(col[i % col.length]);
-      }
-      return duplicated;
+  const duplicateMobileIfNeeded = (col: string[], pool: string[], phase: number) => {
+    if (col.length >= minMobileImagesPerColumn || pool.length === 0) return col;
+    const needed = minMobileImagesPerColumn - col.length;
+    const duplicated = [...col];
+    for (let i = 0; i < needed; i++) {
+      duplicated.push(pool[(phase + i) % pool.length]);
     }
-    return col;
+    return duplicated;
   };
-  
-  const finalMobileCol1 = duplicateMobileIfNeeded(mobileCol1);
-  const finalMobileCol2 = duplicateMobileIfNeeded(mobileCol2);
+
+  const finalMobileCol1 = duplicateMobileIfNeeded(mobileCol1, sources, 0);
+  const finalMobileCol2 = duplicateMobileIfNeeded(
+    mobileCol2,
+    sources,
+    Math.max(1, Math.floor(sources.length / 2))
+  );
 
   return (
     <div className="w-full bg-[#eee] text-black rounded-3xl overflow-hidden mt-10">
@@ -210,7 +204,28 @@ export default function Team() {
     <div style={{ paddingTop: 64 }}>
       <div className="section-padding">
         <div className="container">
-          <SectionLabel number="01" title="TEAM" />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+            <span
+              className="hidden sm:inline-block"
+              style={{
+                width: 24,
+                height: 1,
+                background: "#C9A84C",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#999999",
+              }}
+            >
+              (01) TEAM
+            </span>
+          </div>
           <TextReveal as="h1" style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
             We are a community of builders.
           </TextReveal>
@@ -266,11 +281,11 @@ export default function Team() {
             Leadership.
           </TextReveal>
           <StaggerReveal stagger={0.15} y={30} style={{ marginTop: 48 }}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
               {directors.map((d) => (
                 <TiltCard key={d.name} maxTilt={5} scale={1.01}>
                   <div className="group">
-                    <div className="group relative overflow-hidden cursor-pointer rounded-2xl w-full" style={{ maxWidth: 280, aspectRatio: "280/400", borderRadius: 16 }}>
+                    <div className="group relative overflow-hidden cursor-pointer rounded-2xl w-full max-w-[320px] md:max-w-[420px] mx-auto" style={{ aspectRatio: "280/400", borderRadius: 16 }}>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out" aria-hidden>
                         <img src={d.photo} alt="" className="w-full h-full object-cover block scale-105" style={{ filter: "blur(14px)" }} />
                       </div>
@@ -285,8 +300,12 @@ export default function Team() {
                       <div style={{ fontSize: 20, fontWeight: 600, color: "#1A1A1A" }}>{d.name}</div>
                       <div style={{ fontSize: 14, fontWeight: 400, color: "#888888", marginTop: 4 }}>{d.title}</div>
                       <p style={{ fontSize: 14, fontWeight: 400, color: "#3A3A3A", lineHeight: 1.7, marginTop: 12 }}>{d.bio}</p>
-                      <div className="flex items-center gap-4" style={{ marginTop: 12 }}>
-                        <a href={d.linkedin} target="_blank" rel="noopener noreferrer" className="cta-link" style={{ fontSize: 13, color: "#1A1A1A" }}>LinkedIn</a>
+                      <div className="flex flex-col items-start gap-2" style={{ marginTop: 12 }}>
+                        {"linkedin" in d && d.linkedin ? (
+                          <a href={d.linkedin} target="_blank" rel="noopener noreferrer" className="cta-link" style={{ fontSize: 13, color: "#1A1A1A" }}>
+                            LinkedIn
+                          </a>
+                        ) : null}
                         <span style={{ fontSize: 13, color: "#888888" }}>{d.email}</span>
                       </div>
                     </div>

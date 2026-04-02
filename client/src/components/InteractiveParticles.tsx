@@ -4,6 +4,12 @@ interface InteractiveParticlesProps {
   className?: string;
   style?: React.CSSProperties;
   isHovered?: boolean;
+  /** When set with logoMaxHeightFraction, uses this max width share and desktop grid (About mobile). */
+  logoWidthFraction?: number;
+  /** When set with logoWidthFraction, uses this max height share for aspect-contained logo. */
+  logoMaxHeightFraction?: number;
+  /** Shift logo down by this fraction of canvas height (e.g. align with headline below badge). */
+  logoCenterYOffsetFraction?: number;
 }
 
 interface Particle {
@@ -41,7 +47,14 @@ const ASPECT=2.2572;
 // Ease function — smooth deceleration
 function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
 
-export default function InteractiveParticles({ className = "", style = {}, isHovered: externalIsHovered = false }: InteractiveParticlesProps) {
+export default function InteractiveParticles({
+  className = "",
+  style = {},
+  isHovered: externalIsHovered = false,
+  logoWidthFraction,
+  logoMaxHeightFraction,
+  logoCenterYOffsetFraction,
+}: InteractiveParticlesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -72,19 +85,49 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
     };
 
     const init = () => {
+      const customLogo =
+        logoWidthFraction != null &&
+        logoMaxHeightFraction != null &&
+        logoWidthFraction > 0 &&
+        logoMaxHeightFraction > 0;
       const isMobile = window.innerWidth < 768;
-      const GRID_SPACING = isMobile ? 14 : 22;
+      const GRID_SPACING = customLogo ? 22 : isMobile ? 14 : 22;
       const cols = Math.ceil(w / GRID_SPACING);
       const rows = Math.ceil(h / GRID_SPACING);
       const totalGrid = cols * rows;
 
-      // Logo dimensions — use more screen space on mobile
-      const logoFraction = isMobile ? 0.85 : 0.65;
-      let lw = h * 0.55 * ASPECT;
-      let lh = h * 0.55;
-      if (lw > w * logoFraction) { lw = w * logoFraction; lh = lw / ASPECT; }
-      const ox = (w - lw) / 2;
-      const oy = (h - lh) / 2;
+      let lw: number;
+      let lh: number;
+      let ox: number;
+      let oy: number;
+      if (customLogo) {
+        const maxW = w * logoWidthFraction;
+        const maxH = h * logoMaxHeightFraction;
+        lw = maxW;
+        lh = lw / ASPECT;
+        if (lh > maxH) {
+          lh = maxH;
+          lw = lh * ASPECT;
+        }
+        ox = (w - lw) / 2;
+        oy = (h - lh) / 2;
+      } else {
+        const logoFraction = isMobile ? 0.85 : 0.65;
+        lw = h * 0.55 * ASPECT;
+        lh = h * 0.55;
+        if (lw > w * logoFraction) {
+          lw = w * logoFraction;
+          lh = lw / ASPECT;
+        }
+        ox = (w - lw) / 2;
+        oy = (h - lh) / 2;
+      }
+
+      if (logoCenterYOffsetFraction != null && logoCenterYOffsetFraction !== 0) {
+        oy += h * logoCenterYOffsetFraction;
+        const edge = 8;
+        oy = Math.max(edge, Math.min(oy, h - lh - edge));
+      }
 
       // Build logo target positions in pixel space
       const logoTargets = L.map(pt => ({
@@ -176,7 +219,12 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
     resize();
     window.addEventListener("resize", resize);
 
-    const DOT_RADIUS = window.innerWidth < 768 ? 0.9 : 1.5;
+    const customLogo =
+      logoWidthFraction != null &&
+      logoMaxHeightFraction != null &&
+      logoWidthFraction > 0 &&
+      logoMaxHeightFraction > 0;
+    const DOT_RADIUS = customLogo || window.innerWidth >= 768 ? 1.5 : 0.9;
     // Colors
     const GRAY_R = 180, GRAY_G = 175, GRAY_B = 168;
     const GOLD_R = 208, GOLD_G = 195, GOLD_B = 159;
@@ -307,7 +355,7 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
       window.removeEventListener("resize", resize);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [externalIsHovered]);
+  }, [externalIsHovered, logoWidthFraction, logoMaxHeightFraction, logoCenterYOffsetFraction]);
 
   return (
     <div

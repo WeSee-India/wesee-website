@@ -18,14 +18,14 @@ const jobs = [
   },
   {
     title: "Growth Marketing Strategist",
-    location: "Mumbai / Remote",
+    location: "Mumbai",
     skills: "Meta Ads, Google Ads, Analytics, CRM",
     profile: "3+ years managing paid advertising campaigns with proven ROAS results. Experience with Meta Business Suite, Google Ads, and analytics platforms. Strong understanding of full-funnel marketing strategy.",
     description: "You will own paid advertising strategy and execution for WeSee's clients across Meta, Google, and LinkedIn. You'll build campaign architectures, optimize for conversions, and report on performance — all while collaborating with our AI team to integrate automation into marketing workflows.",
   },
   {
     title: "Full Stack Developer",
-    location: "Remote",
+    location: "Mumbai",
     skills: "Next.js, Node.js, PostgreSQL, APIs",
     profile: "2+ years building production web applications. Proficiency in React/Next.js, Node.js, and relational databases. Experience with REST APIs and third-party integrations.",
     description: "You will build custom web applications, client dashboards, and integration layers that power our automation solutions. You'll work closely with our AI engineers to create seamless user experiences that connect intelligent backends with intuitive frontends.",
@@ -68,11 +68,45 @@ export default function Careers() {
   }, []);
 
   return (
-    <div style={{ paddingTop: 64 }}>
+    <div className="careers-page" style={{ paddingTop: 20 }}>
       <div className="section-padding">
         <div className="container">
-          <SectionLabel number="01" title="CAREERS" />
-          <TextReveal as="h1" style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+            }}
+          >
+            <span
+              className="hidden md:inline-block"
+              style={{
+                width: 24,
+                height: 1,
+                background: "#C9A84C",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#999999",
+              }}
+            >
+              (01) CAREERS
+            </span>
+          </div>
+          <TextReveal
+            as="h1"
+            className="careers-hero-title"
+            style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }}
+            stagger={0.06}
+            onScroll={false}
+          >
             Careers.
           </TextReveal>
           <p className="body-text gsap-reveal" style={{ marginTop: 24 }}>
@@ -82,7 +116,15 @@ export default function Careers() {
         </div>
       </div>
 
-      <div style={{ width: "100%", height: "clamp(250px, 45vh, 400px)", overflow: "hidden" }}>
+      <div
+        style={{
+          width: "calc(100% - clamp(24px, 6vw, 64px))",
+          margin: "clamp(12px, 2.5vw, 24px) auto",
+          height: "clamp(240px, 40vh, 380px)",
+          overflow: "hidden",
+          borderRadius: 16,
+        }}
+      >
         <img
           src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=2000&q=80"
           alt="Team"
@@ -91,9 +133,9 @@ export default function Careers() {
         />
       </div>
 
-      <section style={{ paddingTop: 48, paddingBottom: 16 }}>
+      <section style={{ paddingTop: 40, paddingBottom: 16 }}>
         <div className="container">
-          <TextReveal as="h2" className="section-heading" stagger={0.05}>
+          <TextReveal as="h2" className="section-heading careers-team-heading" stagger={0.05}>
             Become part of the WeSee team.
           </TextReveal>
         </div>
@@ -111,10 +153,19 @@ export default function Careers() {
                   style={{ padding: "24px 0", cursor: "pointer", background: "none", border: "none", textAlign: "left" }}
                 >
                   <div>
-                    <span style={{ fontSize: 20, fontWeight: 600, color: "#1A1A1A", transition: "transform 0.3s ease", display: "inline-block" }} className="group-hover:translate-x-2">{job.title}</span>
-                    <span style={{ fontSize: 14, fontWeight: 400, color: "#888888", marginLeft: 16 }}>{job.location}</span>
+                    <span
+                      className="careers-job-title group-hover:translate-x-2"
+                      style={{ fontSize: 20, fontWeight: 600, color: "#1A1A1A", transition: "transform 0.3s ease", display: "inline-block" }}
+                    >
+                      {job.title}
+                    </span>
                   </div>
-                  <span style={{ fontSize: 24, fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)", transform: openJob === i ? "rotate(45deg)" : "none" }}>+</span>
+                  <span
+                    className="careers-job-toggle-icon"
+                    style={{ fontSize: 24, fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)", transform: openJob === i ? "rotate(45deg)" : "none" }}
+                  >
+                    +
+                  </span>
                 </button>
                 <div
                   style={{
@@ -128,6 +179,9 @@ export default function Careers() {
                       ref={(el) => { contentRefs.current[i] = el; }}
                       style={{ paddingBottom: 32 }}
                     >
+                      <div className="job-block" style={{ fontSize: 12, fontWeight: 400, color: "#888888", letterSpacing: "0.1em", textTransform: "uppercase" }}>Location</div>
+                      <div className="job-block" style={{ fontSize: 14, fontWeight: 400, color: "#3A3A3A", marginBottom: 12, marginTop: 4  }}>{job.location}</div>
+
                       <div className="job-block" style={{ fontSize: 12, fontWeight: 400, color: "#888888", letterSpacing: "0.1em", textTransform: "uppercase" }}>Skills</div>
                       <div className="job-block" style={{ fontSize: 14, fontWeight: 400, color: "#3A3A3A", marginTop: 4 }}>{job.skills}</div>
 

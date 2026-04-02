@@ -162,6 +162,7 @@ export default function ImageReveal({
           zIndex: 2,
           borderRadius: style?.borderRadius,
           pointerEvents: "none",
+          opacity: loopOnScroll ? 1 : 0,
         }}
       />
       <img

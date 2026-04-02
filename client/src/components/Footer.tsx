@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import ParticleWrapper from "./ParticleWrapper";
+import { useFinePointer } from "@/hooks/useFinePointer";
 
 const serviceLinks = [
   { label: "AI Agents", href: "/services?category=1" },
@@ -19,12 +20,13 @@ const companyLinks = [
 ];
 
 const socials = [
-  { label: "LinkedIn", href: "https://linkedin.com/company/wesee" },
-  { label: "Instagram", href: "https://instagram.com/wesee" },
-  { label: "X / Twitter", href: "https://twitter.com/wesee" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/wesee-agi" },
+  { label: "Instagram", href: "https://www.instagram.com/weseeventures" },
+  { label: "X / Twitter", href: "https://twitter.com/weseecc" },
 ];
 
 export default function Footer() {
+  const finePointer = useFinePointer();
   return (
     <footer style={{ background: "var(--ink)", position: "relative", overflow: "hidden" }}>
       {/* Subtle blob */}
@@ -80,14 +82,14 @@ export default function Footer() {
                 </a>
               </ParticleWrapper>
               <ParticleWrapper>
-                <a href="mailto:support@weseegpt.com" style={{
+                <a href="mailto:hr@weseegpt.com" style={{
                   fontSize: 14, color: "rgba(255,255,255,0.35)",
                   transition: "color 0.3s ease", textDecoration: "none",
                 }}
                   onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
                 >
-                  support@weseegpt.com
+                  hr@weseegpt.com
                 </a>
               </ParticleWrapper>
             </div>
@@ -107,7 +109,7 @@ export default function Footer() {
               fontSize: 13, color: "rgba(255,255,255,0.30)",
               lineHeight: 1.7, marginTop: 14, maxWidth: 240,
             }}>
-              India's leading AI automation agency — building intelligent systems that help businesses operate smarter, faster, and at scale.
+              India's leading AI automation agency  building intelligent systems that help businesses operate smarter, faster, and at scale.
             </p>
             <div style={{ display: "flex", gap: 16, marginTop: 20 }}>
               {socials.map(s => (
@@ -178,7 +180,7 @@ export default function Footer() {
             {[
               { city: "Japan", sub: "Japan — HQ" },
               { city: "Mumbai", sub: "India — Operations" },
-              { city: "Dubai", sub: "UAE — MENA" },
+             
             ].map(o => (
               <div key={o.city} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.55)", letterSpacing: "-0.01em" }}>
@@ -204,24 +206,12 @@ export default function Footer() {
             © {new Date().getFullYear()} WeSee AI Automation. All rights reserved.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            {[
-              { label: "Privacy Policy", href: "/privacy" },
-              { label: "Terms", href: "/terms" },
-            ].map(l => (
-              <Link key={l.label} href={l.href} style={{
-                fontSize: 12, color: "rgba(255,255,255,0.18)", transition: "color 0.3s ease", textDecoration: "none",
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.7)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.18)"; }}
-              >
-                {l.label}
-              </Link>
-            ))}
+           
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               style={{
                 fontSize: 12, color: "rgba(255,255,255,0.18)", background: "none",
-                border: "none", transition: "color 0.3s ease", cursor: "none",
+                border: "none", transition: "color 0.3s ease", cursor: finePointer ? "none" : "pointer",
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.18)"; }}

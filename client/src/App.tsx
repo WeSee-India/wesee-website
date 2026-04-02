@@ -5,10 +5,10 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
-import CustomCursor from "./components/CustomCursor";
 import { useLenis } from "./hooks/useLenis";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -42,6 +42,10 @@ function PageLoader() {
 }
 
 function Router() {
+  const isMobile =
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches;
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Switch>
@@ -98,7 +102,6 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <GrainOverlay />
-          <CustomCursor />
           <LoadingScreen onComplete={() => setLoadingDone(true)} />
           <ScrollToTop />
           <Header />

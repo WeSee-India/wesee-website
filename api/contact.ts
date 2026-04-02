@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const toAddress = process.env.CONTACT_TO || "support@weseegpt.com";
+    const toAddress = process.env.CONTACT_TO || "hr@weseegpt.com";
 
     await resend.emails.send({
       from: "WeSee Contact Form <onboarding@resend.dev>",

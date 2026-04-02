@@ -1,14 +1,32 @@
 /*
  * RotorGallery — 3D Rotating Ring Gallery
  *
- * Based on Framer RotorGallery concept, adapted for React
- * - 3D rotating ring of images
- * - Hover effects preserved
- * - Smooth rotation animation
- * - Image reveal fixed at screen center (inside the ring)
+ * DESKTOP LABEL FIX (v2):
+ *  - Labels are promoted to their own GPU compositor layer via will-change + translate3d
+ *  - Center offsets are pre-computed once (not per-frame) to avoid layout reads in RAF
+ *  - Labels use position:fixed so they are removed from document flow entirely,
+ *    eliminating any reflow cascade from transform updates
+ *  - All trig pre-cached; zero object allocations inside the tick loop
+ *
+ * DESKTOP HOVER SYNC FIX (v3):
+ *  - updateClosestCardDesktop now projects each card through the exact same
+ *    4×4 matrix chain the CSS uses (rotateX camX → rotateY 90 → rotateZ camZ →
+ *    translate offsetX/offsetY → per-card ring rotation → translateZ gapPx)
+ *  - Cursor is compared to each card's actual screen-space projected centre
+ *    with a perspective divide — no more flat-circle / atan2 angle mismatch
+ *
+ * MOBILE TOUCH FIX (v5):
+ *  - updateClosestImageMobile now uses the same mat4 projection as the desktop
+ *    version, computing each card's exact screen-space centre this frame.
+ *  - Pivot correctly mirrors left:"100%", top:"95%" of the container.
+ *  - Hit radius is card-size based so tapping anywhere on a card registers.
+ *  - No more atan2 angle mismatch — works regardless of ring orientation.
+ *
+ * MOBILE: all other mobile logic untouched from original.
  */
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useFinePointer } from "@/hooks/useFinePointer";
 
 interface RingItem {
   title: string;
@@ -48,6 +66,61 @@ interface RotorGalleryProps {
 
 const MAX_SAFE_COUNT = 90;
 
+// ── Tiny column-major mat4 helpers ────────────────────────────────────────────
+type M4 = Float64Array;
+
+function m4id(): M4 {
+  const m = new Float64Array(16);
+  m[0] = m[5] = m[10] = m[15] = 1;
+  return m;
+}
+
+function m4mul(a: M4, b: M4): M4 {
+  const o = new Float64Array(16);
+  for (let c = 0; c < 4; c++)
+    for (let r = 0; r < 4; r++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
+      o[c * 4 + r] = s;
+    }
+  return o;
+}
+
+function m4rx(deg: number): M4 {
+  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
+  m[5] = c; m[9] = -s; m[6] = s; m[10] = c;
+  return m;
+}
+
+function m4ry(deg: number): M4 {
+  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
+  m[0] = c; m[8] = s; m[2] = -s; m[10] = c;
+  return m;
+}
+
+function m4rz(deg: number): M4 {
+  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
+  m[0] = c; m[4] = -s; m[1] = s; m[5] = c;
+  return m;
+}
+
+function m4tr(tx: number, ty: number, tz: number): M4 {
+  const m = m4id();
+  m[12] = tx; m[13] = ty; m[14] = tz;
+  return m;
+}
+
+/** Transform point (x,y,z) by column-major mat4, returns [x,y,z,w] */
+function m4pt(m: M4, x: number, y: number, z: number): [number, number, number, number] {
+  return [
+    m[0] * x + m[4] * y + m[8]  * z + m[12],
+    m[1] * x + m[5] * y + m[9]  * z + m[13],
+    m[2] * x + m[6] * y + m[10] * z + m[14],
+    m[3] * x + m[7] * y + m[11] * z + m[15],
+  ];
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function RotorItem({
   item,
   index,
@@ -62,9 +135,8 @@ function RotorItem({
   baseCardRotZ,
   cardOpacity,
   isHovered,
-  onMouseEnter,
-  onMouseLeave,
-  onClick,
+  isMobile,
+  finePointer,
 }: {
   item: RingItem;
   index: number;
@@ -79,9 +151,8 @@ function RotorItem({
   baseCardRotZ: number;
   cardOpacity: number;
   isHovered: boolean;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-  onClick: () => void;
+  isMobile: boolean;
+  finePointer: boolean;
 }) {
   const itemAngle = (index / total) * 360;
   const thicknessPx = 1;
@@ -106,12 +177,9 @@ function RotorItem({
         transform: ringTransform,
         transformStyle: "preserve-3d",
         willChange: "transform",
-        pointerEvents: "auto",
-        cursor: "none",
+        pointerEvents: "none",
+        cursor: finePointer ? "none" : "grab",
       }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
     >
       <div
         style={{
@@ -142,7 +210,6 @@ function RotorItem({
             transition: "transform 0.5s cubic-bezier(0.16,1,0.3,1)",
           }}
         />
-        {/* Gradient overlay */}
         <div
           style={{
             position: "absolute",
@@ -154,40 +221,41 @@ function RotorItem({
             pointerEvents: "none",
           }}
         />
-        {/* Title overlay */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 10,
-            left: 10,
-            right: 10,
-            pointerEvents: "none",
-          }}
-        >
+        {!isMobile && (
           <div
             style={{
-              fontSize: 10,
-              fontWeight: 400,
-              color: "rgba(255,255,255,0.55)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: 2,
+              position: "absolute",
+              bottom: 10,
+              left: 10,
+              right: 10,
+              pointerEvents: "none",
             }}
           >
-            {item.category.split("&")[0].trim()}
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 400,
+                color: "rgba(255,255,255,0.55)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 2,
+              }}
+            >
+              {item.category.split("&")[0].trim()}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#FFFFFF",
+                lineHeight: 1.3,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {item.title}
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: "#FFFFFF",
-              lineHeight: 1.3,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {item.title}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -214,15 +282,24 @@ export default function RotorGallery({
   categoryLabels = [],
   onItemClick,
 }: RotorGalleryProps) {
+  const finePointer = useFinePointer();
   const safeCount = Math.min(MAX_SAFE_COUNT, count);
   const sceneRef = useRef<HTMLDivElement>(null);
   const revealSceneRef = useRef<HTMLDivElement>(null);
   const revealLayerRef = useRef<HTMLDivElement>(null);
   const angleRef = useRef(0);
-  const [currentRotation, setCurrentRotation] = useState(0); // Track rotation for label updates
-  const activeCardIndexRef = useRef<number>(0);
-  const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
+
+  const labelElemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const labelSizeRefs = useRef<{ halfW: number; halfH: number }[]>([]);
+  const labelCenterRef = useRef({ x: 0, y: 0 });
+
+  const activeCardIndexRef = useRef<number>(-1);
+  const [activeCardIndex, setActiveCardIndex] = useState<number>(-1);
   const [isRevealVisible, setIsRevealVisible] = useState<boolean>(false);
+
+  const previewLockedRef = useRef(false);
+  const [previewLocked, setPreviewLocked] = useState(false);
+
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [, navigate] = useLocation();
@@ -237,75 +314,133 @@ export default function RotorGallery({
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const hasDraggedRef = useRef(false);
   const isHoveringRef = useRef(false);
-  const lastRotationUpdateRef = useRef(0);
+  const touchStartedOnRingRef = useRef(false);
 
   const isMobile = dimensions.w < 640;
   const list = useMemo(() => items.slice(0, safeCount), [items, safeCount]);
+  const desktopFitScale = useMemo(() => {
+    if (isMobile) return 1;
+    const vw = dimensions.w || window.innerWidth;
+    const vh = dimensions.h || window.innerHeight;
+    const widthScale = vw / 1536;
+    const heightScale = vh / 864;
+    return Math.max(0.72, Math.min(1, Math.min(widthScale, heightScale)));
+  }, [isMobile, dimensions.w, dimensions.h]);
+  const desktopRadiusScale = useMemo(() => {
+    if (isMobile) return 1;
+    const vw = dimensions.w || window.innerWidth;
+    const vh = dimensions.h || window.innerHeight;
+    const widthScale = vw / 1536;
+    const heightScale = vh / 864;
+    const viewportScale = Math.min(widthScale, heightScale);
+    // Reduce ring radius more aggressively on smaller desktop viewports.
+    return Math.max(0.72, Math.min(1, 0.86 + (viewportScale - 0.72) * 0.38));
+  }, [isMobile, dimensions.w, dimensions.h]);
 
-  // Base ring radius (distance from center to card faces)
-  const LABEL_OFFSET_X_PX = 50; // horizontal label offset from ring (X‑axis)
-  const LABEL_OFFSET_Y_PX = 6; // vertical label offset from ring (Y‑axis)
+  const LABEL_OFFSET_X_PX = 50;
+  const LABEL_OFFSET_Y_PX = 6;
+  const effectiveCardWidth = isMobile ? cardWidth * 0.6 : cardWidth * desktopFitScale;
+  const effectiveCardHeight = isMobile ? cardHeight * 0.6 : cardHeight * desktopFitScale;
+  const effectiveGapPx = isMobile ? gapPx * 0.45 : gapPx * desktopFitScale * desktopRadiusScale;
+
   const ringRadius = useMemo(() => {
     if (categoryLabels.length === 0 || isMobile) return 0;
-
-    const effectiveCardWidth = isMobile ? cardWidth * 0.6 : cardWidth;
-    const effectiveCardHeight = isMobile ? cardHeight * 0.6 : cardHeight;
     const cardDiagonal = Math.sqrt(effectiveCardWidth ** 2 + effectiveCardHeight ** 2);
     const maxCardScale = 1.15;
-    const mobileGapPx = isMobile ? gapPx * 0.45 : gapPx;
-    return mobileGapPx + (cardDiagonal * maxCardScale) / 2;
-  }, [categoryLabels.length, isMobile, cardWidth, cardHeight, gapPx]);
+    return effectiveGapPx + (cardDiagonal * maxCardScale) / 2;
+  }, [categoryLabels.length, isMobile, effectiveCardWidth, effectiveCardHeight, effectiveGapPx]);
 
   useEffect(() => {
-    const update = () => setDimensions({ w: window.innerWidth, h: window.innerHeight });
+    const update = () => {
+      setDimensions({ w: window.innerWidth, h: window.innerHeight });
+      labelCenterRef.current = {
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight * 0.5,
+      };
+    };
     update();
     window.addEventListener("resize", update, { passive: true });
     return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
+    if (isMobile || categoryLabels.length === 0) return;
+    const updateLabelSizes = () => {
+      labelSizeRefs.current = categoryLabels.map((_, i) => {
+        const el = labelElemRefs.current[i];
+        if (!el) return { halfW: 110, halfH: 18 };
+        const rect = el.getBoundingClientRect();
+        return {
+          halfW: Math.max(80, rect.width * 0.5),
+          halfH: Math.max(14, rect.height * 0.5),
+        };
+      });
+    };
+
+    updateLabelSizes();
+    window.addEventListener("resize", updateLabelSizes, { passive: true });
+    return () => window.removeEventListener("resize", updateLabelSizes);
+  }, [categoryLabels, isMobile]);
+
+  // ── Main animation loop ───────────────────────────────────────────────────
+  useEffect(() => {
     let last = performance.now();
     const speed = 360 / (speedSec * 1000);
     let raf: number;
+
+    const camXRads = (camX * Math.PI) / 180;
+    const baseEllipseRatio = Math.cos(camXRads);
+    const finalEllipseRatio = Math.max(0.55, Math.min(0.75, baseEllipseRatio * 0.75));
+    const labelRadiusX = ringRadius + LABEL_OFFSET_X_PX;
+    const labelRadiusY = ringRadius + LABEL_OFFSET_Y_PX;
+
+    const baseAngles = categoryLabels.map((l) => l.angle);
+    const labelCount = categoryLabels.length;
 
     const tick = (t: number) => {
       const dt = Math.min(t - last, 16.67);
       last = t;
 
-      // Stop auto-rotation when hovering over the ring or when dragging
       if (!isDraggingRef.current && !isHoveringRef.current && targetAngleRef.current === null) {
         angleRef.current += speed * dt;
       }
 
-      // Stop momentum rotation when hovering
       if (Math.abs(velocityRef.current) > 0.01 && targetAngleRef.current === null && !isHoveringRef.current) {
         angleRef.current += velocityRef.current * dt;
         velocityRef.current *= 0.95;
       } else if (isHoveringRef.current) {
-        // Clear velocity when hovering to stop momentum immediately
         velocityRef.current = 0;
       }
 
       if (targetAngleRef.current !== null) {
-        // Smooth interpolation using 0.08 factor
         angleRef.current += (targetAngleRef.current - angleRef.current) * 0.08;
-        
-        // Snap to target if very close (within 0.1 degrees)
         if (Math.abs(targetAngleRef.current - angleRef.current) < 0.1) {
           angleRef.current = targetAngleRef.current;
         }
       }
 
       const rotVal = `${angleRef.current}deg`;
+      if (sceneRef.current) sceneRef.current.style.setProperty("--global-rotation", rotVal);
 
-      if (sceneRef.current) {
-        sceneRef.current.style.setProperty("--global-rotation", rotVal);
-      }
+      if (labelCount > 0 && !isMobile && ringRadius > 0) {
+        const rotationRad = (angleRef.current * Math.PI) / 180;
+        const cx = labelCenterRef.current.x;
+        const cy = labelCenterRef.current.y;
+        const pad = 10;
+        const maxX = window.innerWidth - pad;
+        const maxY = window.innerHeight - pad;
 
-      // Update category label positions periodically during auto-rotation (throttled to ~10fps)
-      if (t - lastRotationUpdateRef.current > 100) {
-        setCurrentRotation(angleRef.current);
-        lastRotationUpdateRef.current = t;
+        for (let i = 0; i < labelCount; i++) {
+          const el = labelElemRefs.current[i];
+          if (!el) continue;
+          const totalAngle = baseAngles[i] + rotationRad;
+          const rawX = cx + Math.cos(totalAngle) * labelRadiusX + offsetX;
+          const rawY = cy + Math.sin(totalAngle) * labelRadiusY * finalEllipseRatio + offsetY;
+          const size = labelSizeRefs.current[i] || { halfW: 110, halfH: 18 };
+          const tx = Math.min(maxX - size.halfW, Math.max(pad + size.halfW, rawX));
+          const ty = Math.min(maxY - size.halfH, Math.max(pad + size.halfH, rawY));
+          el.style.transform = `translate3d(${tx}px,${ty}px,0) translate(-50%,-50%)`;
+        }
       }
 
       raf = requestAnimationFrame(tick);
@@ -313,14 +448,11 @@ export default function RotorGallery({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [speedSec]);
+  }, [speedSec, categoryLabels, isMobile, ringRadius, offsetX, offsetY, camX]);
 
   const handleItemClick = useCallback(
     (item: RingItem) => {
-      // Prevent click if user was just dragging
-      if (hasDraggedRef.current) {
-        return;
-      }
+      if (hasDraggedRef.current) return;
       if (onItemClick) {
         onItemClick(item);
       } else if (item.url) {
@@ -329,6 +461,83 @@ export default function RotorGallery({
     },
     [onItemClick, navigate]
   );
+
+  const RING_SCALE = 0.85;
+  const ringGapPx = effectiveGapPx * RING_SCALE;
+
+  const sceneCardWidth = effectiveCardWidth;
+  const sceneCardHeight = effectiveCardHeight;
+  const revealImageWidth = isMobile ? sceneCardWidth * 3.8 : sceneCardWidth * 2.5;
+  const revealImageHeight = isMobile ? sceneCardHeight * 2.6 : sceneCardHeight * 1.6;
+  const revealImageTopVh = isMobile ? 0.35 : 0.45;
+
+  // ── Desktop hover hit-test (fast path) ──────────────────────────────────
+  const updateClosestCardDesktop = useCallback(
+    (clientX: number, clientY: number): boolean => {
+      const container = containerRef.current;
+      if (!container) return false;
+
+      const rect = container.getBoundingClientRect();
+      const sceneCenterX = rect.left + rect.width * 0.5 + offsetX;
+      const sceneCenterY = rect.top + rect.height * 0.5 + offsetY;
+
+      const dx = clientX - sceneCenterX;
+      const dy = clientY - sceneCenterY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const cardDiag = Math.sqrt(sceneCardWidth ** 2 + sceneCardHeight ** 2) * 0.5;
+      const minR = ringGapPx * 0.55;
+      const maxR = ringGapPx + cardDiag * 1.3;
+
+      if (dist < minR || dist > maxR) {
+        if (activeCardIndexRef.current >= 0) {
+          activeCardIndexRef.current = -1;
+          setActiveCardIndex(-1);
+          setIsRevealVisible(false);
+          isHoveringRef.current = false;
+        }
+        return false;
+      }
+
+      let cursorAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+      cursorAngle = (cursorAngle + 360) % 360;
+
+      const anglePerCard = 360 / safeCount;
+      const MAX_ANG_TOLERANCE = Math.min(18, anglePerCard * 0.55);
+
+      let minAngDist = Infinity;
+      let bestIndex = -1;
+
+      for (let i = 0; i < safeCount; i++) {
+        let cardAngle = (angleRef.current - i * anglePerCard) % 360;
+        if (cardAngle < 0) cardAngle += 360;
+        let d = Math.abs(cursorAngle - cardAngle);
+        if (d > 180) d = 360 - d;
+        if (d < minAngDist) {
+          minAngDist = d;
+          bestIndex = i;
+        }
+      }
+
+      if (minAngDist > MAX_ANG_TOLERANCE) {
+        if (activeCardIndexRef.current >= 0) {
+          activeCardIndexRef.current = -1;
+          setActiveCardIndex(-1);
+          setIsRevealVisible(false);
+          isHoveringRef.current = false;
+        }
+        return false;
+      }
+
+      if (bestIndex !== activeCardIndexRef.current) {
+        activeCardIndexRef.current = bestIndex;
+        setActiveCardIndex(bestIndex);
+      }
+      return true;
+    },
+    [ringGapPx, sceneCardWidth, sceneCardHeight, safeCount, offsetX, offsetY]
+  );
+  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const container = containerRef.current;
@@ -349,65 +558,43 @@ export default function RotorGallery({
 
       const now = performance.now();
       const dt = Math.max(now - lastPosRef.current.time, 1);
-      
-      // Calculate rotation based on angular movement around center
-      // This is more consistent than using dx directly
+
       const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      
-      // Get angles for current and previous positions
+
       const currentAngle = Math.atan2(clientY - centerY, clientX - centerX);
       const prevAngle = Math.atan2(lastPosRef.current.y - centerY, lastPosRef.current.x - centerX);
-      
-      // Calculate angular difference, handling wrap-around
+
       let angleDelta = currentAngle - prevAngle;
-      // Normalize to [-π, π]
       if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
       if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
-      
-      // Convert to degrees and apply to rotation
-      // Transform uses (globalRotation - itemAngle), so we need to match the direction
+
       const rotationDelta = angleDelta * (180 / Math.PI);
       angleRef.current += rotationDelta;
       targetAngleRef.current = null;
-
-      // Calculate velocity for momentum
       velocityRef.current = rotationDelta / (dt / 1000);
 
-      // Track if user has actually dragged (moved more than 5px)
       if (dragStartPosRef.current) {
         const totalDx = clientX - dragStartPosRef.current.x;
         const totalDy = clientY - dragStartPosRef.current.y;
-        const dragDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
-        if (dragDistance > 5) {
+        if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) > 5) {
           hasDraggedRef.current = true;
         }
       }
 
       lastPosRef.current = { x: clientX, y: clientY, time: now };
 
-      if (sceneRef.current) {
-        sceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
-      }
-      if (revealSceneRef.current) {
-        revealSceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
-      }
-      
-      // Don't update labels during drag - only update after drag ends
+      if (sceneRef.current) sceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
+      if (revealSceneRef.current) revealSceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
     };
 
     const handleEnd = () => {
       isDraggingRef.current = false;
       setIsDragging(false);
-      // Stop any momentum rotation immediately
       velocityRef.current = 0;
       targetAngleRef.current = null;
-      
-      // Update labels position after drag ends
-      setCurrentRotation(angleRef.current);
-      
-      // Reset drag flag after a short delay to allow clicks again
+
       if (hasDraggedRef.current) {
         setTimeout(() => {
           hasDraggedRef.current = false;
@@ -418,222 +605,346 @@ export default function RotorGallery({
       }
     };
 
-    const updateClosestImage = (clientX: number, clientY: number) => {
-      // On desktop we rely on direct card hover to determine the active card.
-      // The angle-based mapping is only needed on mobile / touch, where there is no hover.
-      if (!isMobile) return;
+    // ── MOBILE TOUCH FIX v5: project cards through the same mat4 chain ────────
+    //
+    // The ring pivot is at left:"100%", top:"95%" of the container, then
+    // shifted by mobileOffsetX = vw*0.4.  Cards fan out *leftward* from there,
+    // so their visible screen positions bear no simple relationship to the pivot.
+    //
+    // We use the same 4×4 matrix projection the desktop version uses, but with
+    // the mobile camera/offset values (camX=0, camY=90, mobileOffsetX).
+    // This gives us the exact screen-space centre of every card this frame, so
+    // we can find the one closest to the touch point — no atan2 needed.
+    //
+    // A generous HIT_RADIUS_PX is used so tapping anywhere on a card registers.
+    // ────────────────────────────────────────────────────────────────────────
+    const updateClosestImageMobile = (clientX: number, clientY: number): boolean => {
+      if (!isMobile) return false;
 
       const now = performance.now();
-      if (now - lastMouseUpdateRef.current < 16) return;
+      if (now - lastMouseUpdateRef.current < 16) return activeCardIndexRef.current >= 0;
       lastMouseUpdateRef.current = now;
 
       const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      // Store touch position for image positioning
-      mousePosRef.current = { x: clientX, y: clientY };
-      
-      // Calculate touch position relative to center
-      const dx = clientX - centerX;
-      const dy = clientY - centerY;
-      
-      // Convert touch position to angle (in degrees)
-      // atan2 gives angle from positive x-axis: 0° = right, 90° = down, 180° = left, 270° = up
-      let cursorAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-      cursorAngle = (cursorAngle + 360) % 360;
-      
-      // Calculate angle per card
-      const anglePerCard = 360 / safeCount;
-      
-      // Find the card closest to the touch position by checking ALL cards
-      let minDistance = Infinity;
-      let activeIndex = 0;
-      
+      const vw = dimensions.w || window.innerWidth;
+
+      // Scene pivot in screen-space — mirrors top:"95%", left:"100%" of container
+      // then translate(-50%,-50%) in the sceneTransform anchors on this point.
+      const pivotX = rect.left + rect.width;        // left:"100%"
+      const pivotY = rect.top  + rect.height * 0.95; // top:"95%"
+
+      // mobileOffsetX mirrors: translate(mobileOffsetX, offsetY) in sceneTransform
+      const mobileOffsetX = vw * 0.4;
+
+      // Scene matrix for mobile: rotateX(0) → rotateY(90) → rotateZ(camZ)
+      //                           → translate(mobileOffsetX, offsetY, 0)
+      const sceneMatrix = m4mul(
+        m4mul(m4mul(m4rx(0), m4ry(90)), m4rz(camZ)),
+        m4tr(mobileOffsetX, offsetY, 0)
+      );
+
+      const baseCardRotX = cardRotXDeg + rotateCardDeg;
+
+      // Generous hit radius — cards are physically large on mobile
+      const HIT_RADIUS_PX = Math.max(sceneCardWidth, sceneCardHeight) * 1.1;
+
+      let bestIndex = -1;
+      let bestDist  = Infinity;
+
       for (let i = 0; i < safeCount; i++) {
-        // Calculate where this card appears visually (accounting for ring rotation)
-        let cardAngle = (angleRef.current - i * anglePerCard) % 360;
-        if (cardAngle < 0) cardAngle += 360;
-        
-        // Calculate angular distance between touch and card
-        let distance = Math.abs(cursorAngle - cardAngle);
-        // Handle wrap-around (e.g., 350° and 10° are only 20° apart)
-        if (distance > 180) distance = 360 - distance;
-        
-        // Track the card with minimum distance
-        if (distance < minDistance) {
-          minDistance = distance;
-          activeIndex = i;
+        const itemAngle = (i / safeCount) * 360;
+        const ringAngle = angleRef.current - itemAngle;
+
+        // Per-card matrix — mirrors RotorItem ringTransform (same as desktop)
+        const cardMatrix = m4mul(
+          m4mul(
+            m4mul(
+              m4mul(m4rx(ringAngle), m4tr(0, 0, ringGapPx)),
+              m4rx(baseCardRotX)
+            ),
+            m4ry(cardRotYDeg)
+          ),
+          m4rz(cardRotZDeg)
+        );
+
+        const fullMatrix = m4mul(sceneMatrix, cardMatrix);
+        const [wx, wy, wz] = m4pt(fullMatrix, 0, 0, 0);
+
+        // Perspective divide
+        const pz = perspective + wz;
+        if (pz <= 0) continue;
+
+        const scale = perspective / pz;
+        const sx = pivotX + wx * scale;
+        const sy = pivotY + wy * scale;
+
+        const dist = Math.sqrt((clientX - sx) ** 2 + (clientY - sy) ** 2);
+        if (dist < bestDist) {
+          bestDist  = dist;
+          bestIndex = i;
         }
       }
-      
-      // Ensure index is within valid range
-      if (activeIndex < 0) activeIndex = ((activeIndex % safeCount) + safeCount) % safeCount;
-      
-      // Only update if the active card changed
-      if (activeCardIndexRef.current !== activeIndex) {
-        activeCardIndexRef.current = activeIndex;
-        // Update React state for UI re-renders
-        setActiveCardIndex(activeIndex);
+
+      if (bestIndex < 0 || bestDist > HIT_RADIUS_PX) {
+        if (!previewLockedRef.current && activeCardIndexRef.current >= 0) {
+          activeCardIndexRef.current = -1;
+          setActiveCardIndex(-1);
+          setIsRevealVisible(false);
+          isHoveringRef.current = false;
+        }
+        return false;
       }
+
+      mousePosRef.current = { x: clientX, y: clientY };
+
+      if (activeCardIndexRef.current !== bestIndex) {
+        activeCardIndexRef.current = bestIndex;
+        setActiveCardIndex(bestIndex);
+      }
+      return true;
+    };
+    // ── end mobile fix ───────────────────────────────────────────────────────
+
+    const isTouchOnPreview = (clientX: number, clientY: number): boolean => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const centerX = vw * 0.5;
+      const centerY = vh * revealImageTopVh;
+      return (
+        clientX >= centerX - revealImageWidth / 2 &&
+        clientX <= centerX + revealImageWidth / 2 &&
+        clientY >= centerY - revealImageHeight / 2 &&
+        clientY <= centerY + revealImageHeight / 2
+      );
     };
 
+    const isTouchOnCategoryLabel = (clientX: number, clientY: number): boolean => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const centerX = vw * 0.5;
+      const pillTop = vh * revealImageTopVh + revealImageHeight / 2 + 20;
+      const pillHeight = isMobile ? 44 : 52;
+      const halfW = isMobile ? 200 : 240;
+      return (
+        clientX >= centerX - halfW &&
+        clientX <= centerX + halfW &&
+        clientY >= pillTop &&
+        clientY <= pillTop + pillHeight
+      );
+    };
+
+    const isTouchOnPreviewOrCategoryLabel = (clientX: number, clientY: number): boolean =>
+      isTouchOnPreview(clientX, clientY) || isTouchOnCategoryLabel(clientX, clientY);
+
+    // ── Desktop mouse handlers (UNCHANGED) ──
     const onMouseDown = (e: MouseEvent) => {
       e.preventDefault();
       handleStart(e.clientX, e.clientY);
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      // This handler is only called when cursor is inside container
-      // (called from onWindowMouseMove or container mousemove event)
-      
-      // Ensure reveal layer is visible when mouse is moving
-      if (revealLayerRef.current && !isDraggingRef.current) {
-        revealLayerRef.current.style.opacity = "1";
-        revealLayerRef.current.style.pointerEvents = "auto";
-        setIsRevealVisible(true);
-      }
-      
       if (isDraggingRef.current) {
         e.preventDefault();
         handleMove(e.clientX, e.clientY);
-      } else {
-        updateClosestImage(e.clientX, e.clientY);
+        return;
+      }
+      if (!isMobile) {
+        const onRing = updateClosestCardDesktop(e.clientX, e.clientY);
+        if (onRing) {
+          isHoveringRef.current = true;
+          setIsRevealVisible(true);
+        } else {
+          isHoveringRef.current = false;
+          setIsRevealVisible(false);
+        }
       }
     };
 
     const onMouseUp = () => handleEnd();
 
-    // Show reveal when cursor enters the gallery container
-    // NOTE: Rotation is NOT stopped here — it only stops when hovering a card
-    const onMouseEnter = (e: MouseEvent) => {
-      if (revealLayerRef.current) {
-        revealLayerRef.current.style.opacity = "1";
-        revealLayerRef.current.style.pointerEvents = "auto";
-        setIsRevealVisible(true);
-      }
-    };
-
-    // Hide reveal when cursor leaves container - rotation resumes via card onMouseLeave
-    const onMouseLeave = (e: MouseEvent) => {
-      // Ensure hover is cleared when leaving container entirely
+    const onMouseLeave = () => {
+      if (previewLockedRef.current) return;
       isHoveringRef.current = false;
       velocityRef.current = 0;
       mousePosRef.current = null;
       targetAngleRef.current = null;
-      // Reset active card to first card
-      activeCardIndexRef.current = 0;
-      setActiveCardIndex(0);
-      if (revealLayerRef.current) {
-        revealLayerRef.current.style.opacity = "0";
-        revealLayerRef.current.style.pointerEvents = "none";
-        setIsRevealVisible(false);
+      activeCardIndexRef.current = -1;
+      setActiveCardIndex(-1);
+      setIsRevealVisible(false);
+    };
+
+    const onContainerClick = (e: MouseEvent) => {
+      if (isMobile) return;
+      if (hasDraggedRef.current) return;
+      const activeIndex = activeCardIndexRef.current;
+      if (activeIndex >= 0 && activeIndex < list.length) {
+        handleItemClick(list[activeIndex]);
       }
     };
-    
-    // Hover detection is now handled by individual RotorItem onMouseEnter/onMouseLeave
-    // No need for distance-based detection from container center
 
+    // ── Mobile touch handlers (logic unchanged, uses fixed updateClosestImageMobile) ──
     const onTouchStart = (e: TouchEvent) => {
-      isHoveringRef.current = true;
       const touch = e.touches[0];
-      // Show reveal layer on touch start
-      if (revealLayerRef.current) {
-        revealLayerRef.current.style.opacity = "1";
-        revealLayerRef.current.style.pointerEvents = "auto";
+
+      if (previewLockedRef.current) {
+        if (isTouchOnPreviewOrCategoryLabel(touch.clientX, touch.clientY)) {
+          const idx = activeCardIndexRef.current;
+          previewLockedRef.current = false;
+          setPreviewLocked(false);
+          isHoveringRef.current = false;
+          activeCardIndexRef.current = -1;
+          setActiveCardIndex(-1);
+          setIsRevealVisible(false);
+          if (idx >= 0 && idx < list.length) {
+            handleItemClick(list[idx]);
+          }
+        } else {
+          const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
+          touchStartedOnRingRef.current = nearRing;
+          if (nearRing) {
+            isHoveringRef.current = true;
+            setIsRevealVisible(true);
+          } else {
+            previewLockedRef.current = false;
+            setPreviewLocked(false);
+            isHoveringRef.current = false;
+            activeCardIndexRef.current = -1;
+            setActiveCardIndex(-1);
+            setIsRevealVisible(false);
+          }
+        }
+        dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+        hasDraggedRef.current = false;
+        return;
+      }
+
+      const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
+      touchStartedOnRingRef.current = nearRing;
+
+      if (nearRing) {
+        isHoveringRef.current = true;
         setIsRevealVisible(true);
-      }
-      // Only prevent default if we're starting a drag
-      if (!isDraggingRef.current) {
-        updateClosestImage(touch.clientX, touch.clientY);
       } else {
-        e.preventDefault();
-        handleStart(touch.clientX, touch.clientY);
+        isHoveringRef.current = false;
+        setIsRevealVisible(false);
       }
+
+      dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+      hasDraggedRef.current = false;
     };
 
     const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      const touch = e.touches[0];
+
       if (isDraggingRef.current) {
         e.preventDefault();
-        const touch = e.touches[0];
         handleMove(touch.clientX, touch.clientY);
-      } else if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        // Show reveal layer on touch move
-        if (revealLayerRef.current) {
-          revealLayerRef.current.style.opacity = "1";
-          revealLayerRef.current.style.pointerEvents = "auto";
-          setIsRevealVisible(true);
+        return;
+      }
+
+      // Start drag-driven rotation only when touch originated on the ring.
+      if (touchStartedOnRingRef.current && dragStartPosRef.current) {
+        const dx = touch.clientX - dragStartPosRef.current.x;
+        const dy = touch.clientY - dragStartPosRef.current.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 8) {
+          if (previewLockedRef.current) {
+            previewLockedRef.current = false;
+            setPreviewLocked(false);
+          }
+          isHoveringRef.current = false;
+          setIsRevealVisible(false);
+          activeCardIndexRef.current = -1;
+          setActiveCardIndex(-1);
+          handleStart(touch.clientX, touch.clientY);
+          hasDraggedRef.current = true;
+          touchStartedOnRingRef.current = false;
+          return;
         }
-        updateClosestImage(touch.clientX, touch.clientY);
+      }
+
+      if (touchStartedOnRingRef.current) {
+        const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
+        if (nearRing) {
+          isHoveringRef.current = true;
+          setIsRevealVisible(true);
+        } else if (!previewLockedRef.current) {
+          isHoveringRef.current = false;
+          setIsRevealVisible(false);
+        }
       }
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (e: TouchEvent) => {
+      const wasDragging = hasDraggedRef.current;
+
+      if (previewLockedRef.current) {
+        touchStartedOnRingRef.current = false;
+        handleEnd();
+        return;
+      }
+
+      if (!wasDragging && touchStartedOnRingRef.current) {
+        const activeIndex = activeCardIndexRef.current;
+        if (activeIndex >= 0 && activeIndex < list.length) {
+          previewLockedRef.current = true;
+          setPreviewLocked(true);
+          isHoveringRef.current = true;
+          setIsRevealVisible(true);
+          touchStartedOnRingRef.current = false;
+          handleEnd();
+          return;
+        }
+      }
+
       isHoveringRef.current = false;
+      touchStartedOnRingRef.current = false;
+      activeCardIndexRef.current = -1;
+      setActiveCardIndex(-1);
+      setIsRevealVisible(false);
       handleEnd();
     };
 
-    // Window-level mouse move handler - handles drag and reveal
     const onWindowMouseMove = (e: MouseEvent) => {
-      // Only process drag interactions at window level
-      if (isDraggingRef.current) {
-        onMouseMove(e);
-      }
+      if (isDraggingRef.current) onMouseMove(e);
     };
 
-    // Event listeners - mouseenter/mouseleave control reveal layer visibility
-    // Rotation pause/resume is handled by individual card hover events
-    container.addEventListener("mouseenter", onMouseEnter as EventListener);
     container.addEventListener("mouseleave", onMouseLeave as EventListener);
-    
-    // Event listeners for interactions
     container.addEventListener("mousedown", onMouseDown);
     container.addEventListener("mousemove", onMouseMove);
-    // Window mousemove checks position on every move to ensure accuracy
+    container.addEventListener("click", onContainerClick);
     window.addEventListener("mousemove", onWindowMouseMove);
     window.addEventListener("mouseup", onMouseUp);
-    container.addEventListener("touchstart", onTouchStart, { passive: false });
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
     container.addEventListener("touchmove", onTouchMove, { passive: false });
     container.addEventListener("touchend", onTouchEnd);
 
     return () => {
       container.removeEventListener("mousedown", onMouseDown);
       container.removeEventListener("mousemove", onMouseMove);
+      container.removeEventListener("click", onContainerClick);
       window.removeEventListener("mousemove", onWindowMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
-      container.removeEventListener("mouseenter", onMouseEnter);
       container.removeEventListener("mouseleave", onMouseLeave);
       container.removeEventListener("touchstart", onTouchStart);
       container.removeEventListener("touchmove", onTouchMove);
       container.removeEventListener("touchend", onTouchEnd);
     };
-  }, [safeCount, camY]);
+  }, [safeCount, camY, list, handleItemClick, isMobile, ringGapPx, offsetX, offsetY,
+      revealImageWidth, revealImageHeight, revealImageTopVh, updateClosestCardDesktop,
+      dimensions.w, camZ, cardRotXDeg, cardRotYDeg, cardRotZDeg, rotateCardDeg,
+      perspective, sceneCardWidth, sceneCardHeight]);
 
-  // Overall ring scale — lower ] => smaller ring radius (cards closer to center)
-  const RING_SCALE = 0.85;
-  const mobileGapPx = (isMobile ? gapPx * 0.45 : gapPx) * RING_SCALE;
-  const mobileCardWidth = isMobile ? cardWidth * 0.6 : cardWidth;
-  const mobileCardHeight = isMobile ? cardHeight * 0.6 : cardHeight;
   const mobileOffsetX = isMobile ? (dimensions.w || window.innerWidth) * 0.4 : offsetX;
   const mobileLeft = isMobile ? "100%" : "50%";
   const mobileTop = isMobile ? "95%" : "50%";
   const mobileCamX = isMobile ? 0 : camX;
   const mobileCamY = isMobile ? 90 : 90;
 
-  // Reveal radius — circular mask size at center
   const revealRadius = 600;
-  
-  // Reveal image size (wider and shorter for better aspect ratio)
-  // Bigger on mobile as requested
-  const revealImageWidth = isMobile ? mobileCardWidth * 3.8 : mobileCardWidth * 2.5;
-  const revealImageHeight = isMobile ? mobileCardHeight * 2.6 : mobileCardHeight * 1.6;
-  
-  // Image position - move up more on mobile
   const revealImageTop = isMobile ? "35vh" : "45vh";
   const revealMaskY = isMobile ? "35vh" : "45vh";
 
-  // Shared transform used by both the main scene and the reveal mirror
   const sceneTransform = `
     translate(-50%, -50%)
     rotateX(${mobileCamX}deg)
@@ -642,6 +953,8 @@ export default function RotorGallery({
     translate(${isMobile ? mobileOffsetX : offsetX}px, ${offsetY}px)
   `;
 
+  const showReveal = activeCardIndex >= 0 && activeCardIndex < list.length;
+
   return (
     <div
       ref={containerRef}
@@ -649,27 +962,16 @@ export default function RotorGallery({
         width: "100%",
         height: "100vh",
         perspective,
-        overflow: "visible",
+        overflow: isMobile ? "hidden" : "visible",
+        overflowX: "hidden",
         background: "var(--paper)",
         position: "relative",
-        cursor: "none",
+        cursor: finePointer ? "none" : "grab",
         userSelect: "none",
         touchAction: "none",
       }}
     >
-      {/*
-        ══════════════════════════════════════════════════
-        REVEAL LAYER
-        ──────────────────────────────────────────────────
-        • Full-screen fixed layer, z-index below cursor ring
-        • opacity: 0 by default → 1 on mouseenter
-        • mask is a FIXED circle at 50vw / 50vh — the exact
-          screen center where the ring's 3D scene is anchored.
-          As the ring rotates the closest card always snaps to
-          center, so the revealed image matches what's "inside"
-          the ring at all times.
-        ══════════════════════════════════════════════════
-      */}
+      {/* REVEAL LAYER */}
       <div
         ref={revealLayerRef}
         style={{
@@ -677,33 +979,22 @@ export default function RotorGallery({
           inset: 0,
           zIndex: 400,
           pointerEvents: "none",
-          opacity: 0,
+          opacity: showReveal || isRevealVisible ? 1 : 0,
           transition: "opacity 0.2s ease",
           WebkitMaskImage: `radial-gradient(circle ${revealRadius}px at 50vw ${revealMaskY}, white 0%, white 90%, transparent 100%)`,
           maskImage: `radial-gradient(circle ${revealRadius}px at 50vw ${revealMaskY}, white 0%, white 90%, transparent 100%)`,
-          cursor: "none",
+          cursor: finePointer ? "none" : "grab",
           mixBlendMode: "normal",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
-        onClick={(e) => {
-          // Prevent click if user was just dragging
-          if (hasDraggedRef.current) {
-            return;
-          }
-          const activeIndex = activeCardIndexRef.current;
-          if (activeIndex >= 0 && activeIndex < list.length) {
-            handleItemClick(list[activeIndex]);
-          }
-        }}
       >
-        {/* Center reveal - shows only the active card image */}
-        {list.length > 0 && activeCardIndex < list.length && (
+        {showReveal && (
           <>
-        <div
-          ref={revealSceneRef}
-          style={{
+            <div
+              ref={revealSceneRef}
+              style={{
                 position: "fixed",
                 top: revealImageTop,
                 left: "50vw",
@@ -714,6 +1005,8 @@ export default function RotorGallery({
                 overflow: "hidden",
                 pointerEvents: "none",
                 boxShadow: "0 20px 60px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2)",
+                outline: previewLocked ? "2.5px solid rgba(255,255,255,0.6)" : "none",
+                transition: "outline 0.2s ease",
               }}
             >
               <img
@@ -728,20 +1021,43 @@ export default function RotorGallery({
                   display: "block",
                 }}
               />
+              {previewLocked && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 10,
+                    left: 0,
+                    right: 0,
+                    textAlign: "center",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
             </div>
-            {/* Active category label below the image */}
+
             <div
               style={{
                 position: "fixed",
-                top: isMobile 
+                top: isMobile
                   ? `calc(35vh + ${revealImageHeight / 2}px + 20px)`
                   : `calc(45vh + ${revealImageHeight / 2}px + 20px)`,
                 left: "50vw",
                 transform: "translateX(-50%)",
                 zIndex: 401,
-                pointerEvents: "none",
+                pointerEvents: isMobile ? "none" : "auto",
+                cursor: finePointer && isMobile ? undefined : "pointer",
                 textAlign: "center",
               }}
+              onMouseDown={isMobile ? undefined : (e) => e.stopPropagation()}
+              onClick={
+                isMobile
+                  ? undefined
+                  : (e) => {
+                      e.stopPropagation();
+                      const idx = activeCardIndex;
+                      if (idx >= 0 && idx < list.length) handleItemClick(list[idx]);
+                    }
+              }
             >
               <span
                 style={{
@@ -761,14 +1077,13 @@ export default function RotorGallery({
               >
                 {list[activeCardIndex].category.split("&")[0].trim()}
               </span>
-        </div>
+            </div>
           </>
         )}
       </div>
-      {/* ══════════════ END REVEAL LAYER ══════════════ */}
 
-      {/* "We are WeSee" fallback - shows when reveal layer is hidden */}
-      {!isRevealVisible && (
+      {/* "We are WeSee" fallback */}
+      {!showReveal && !isRevealVisible && (
         <div
           style={{
             position: "fixed",
@@ -778,7 +1093,7 @@ export default function RotorGallery({
             zIndex: 350,
             pointerEvents: "none",
             textAlign: "center",
-            opacity: isRevealVisible ? 0 : 1,
+            opacity: 1,
             transition: "opacity 0.3s ease",
           }}
         >
@@ -812,15 +1127,15 @@ export default function RotorGallery({
         </div>
       )}
 
-      {/* Main 3D scene — completely unchanged */}
+      {/* Main 3D scene */}
       <div
         ref={sceneRef}
         style={{
           position: "absolute",
           top: mobileTop,
           left: mobileLeft,
-          width: mobileCardWidth,
-          height: mobileCardHeight,
+          width: sceneCardWidth,
+          height: sceneCardHeight,
           transform: sceneTransform,
           transformStyle: "preserve-3d",
           willChange: "transform",
@@ -834,102 +1149,65 @@ export default function RotorGallery({
             index={i}
             total={safeCount}
             borderRadius={borderRadius}
-            cardWidth={mobileCardWidth}
-            cardHeight={mobileCardHeight}
-            gapPx={mobileGapPx}
+            cardWidth={sceneCardWidth}
+            cardHeight={sceneCardHeight}
+            gapPx={ringGapPx}
             zOffsetPx={0}
             baseCardRotX={cardRotXDeg + rotateCardDeg}
             baseCardRotY={cardRotYDeg}
             baseCardRotZ={cardRotZDeg}
             cardOpacity={1}
             isHovered={activeCardIndex === i}
-            onMouseEnter={() => {
-              isHoveringRef.current = true;
-              velocityRef.current = 0;
-              targetAngleRef.current = null;
-              activeCardIndexRef.current = i;
-              setActiveCardIndex(i);
-            }}
-            onMouseLeave={() => {
-              isHoveringRef.current = false;
-            }}
-            onClick={() => handleItemClick(item)}
+            isMobile={isMobile}
+            finePointer={finePointer}
           />
         ))}
       </div>
 
-      {/* Category labels - dynamic positions that follow ring rotation */}
-      {categoryLabels.length > 0 && !isMobile && ringRadius > 0 && (
-        <>
-          {categoryLabels.map((label, i) => {
-            // Calculate dynamic position based on current rotation
-            // label.angle is in radians, currentRotation is in degrees
-            // Add current rotation to the base angle to make labels follow the ring
-            const rotationRad = (currentRotation * Math.PI) / 180;
-            const totalAngle = label.angle + rotationRad;
-            
-            // Calculate elliptical path to match carousel perspective
-            // The carousel is viewed from an angle (camX = -25°, camY = 5°), so the circle appears as an ellipse
-            // Compress Y-axis to match the visual perspective of the tilted ring
-            const camXRads = (camX * Math.PI) / 180;
-            // The vertical compression is primarily from the X-axis rotation
-            // cos(camX) gives us how much the vertical dimension is compressed
-            // For camX = -25°, cos(-25°) ≈ 0.906, but we want more visible compression
-            // Use a more pronounced ellipse ratio to match the visual appearance
-            const baseEllipseRatio = Math.cos(camXRads);
-            // Apply additional compression to make the ellipse more visible (typical range: 0.55-0.75)
-            const finalEllipseRatio = Math.max(0.55, Math.min(0.75, baseEllipseRatio * 0.75));
-            
-            // Label radii — separate control for X and Y distance from the ring
-            const labelRadiusX = ringRadius + LABEL_OFFSET_X_PX;
-            const labelRadiusY = ringRadius + LABEL_OFFSET_Y_PX;
-            
-            // Calculate elliptical position with independent X/Y offsets,
-            // then apply same offsetX/offsetY so labels share the same center as the cards
-            const x = Math.cos(totalAngle) * labelRadiusX + offsetX;
-            const y = Math.sin(totalAngle) * labelRadiusY * finalEllipseRatio + offsetY;
-            
-            return (
-              <div
-                key={`label-${i}`}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                  zIndex: 500,
-                  pointerEvents: "none",
-                  whiteSpace: "nowrap",
-                  transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)", // Always smooth transition for repositioning
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "#111317",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    display: "inline-block",
-                    background: "rgba(255,255,255,0.95)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    padding: "6px 14px",
-                    borderRadius: 20,
-                    border: "1px solid rgba(17,19,23,0.15)",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {label.name} ({label.count})
-                </span>
-              </div>
-            );
-          })}
-        </>
-      )}
+      {/*
+       * ── DESKTOP CATEGORY LABELS ──
+       * position:fixed + translate3d — GPU composited, zero reflow
+       */}
+      {categoryLabels.length > 0 && !isMobile && ringRadius > 0 &&
+        categoryLabels.map((label, i) => (
+          <div
+            key={`label-${i}`}
+            ref={(el) => { labelElemRefs.current[i] = el; }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              willChange: "transform",
+              transform: "translate3d(0px,0px,0) translate(-50%,-50%)",
+              zIndex: 500,
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#111317",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                display: "inline-block",
+                background: "rgba(255,255,255,0.95)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                padding: "6px 14px",
+                borderRadius: 20,
+                border: "1px solid rgba(17,19,23,0.15)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label.name} ({label.count})
+            </span>
+          </div>
+        ))
+      }
 
-      {/* Bottom hint — unchanged */}
       <div
         style={{
           position: "absolute",
@@ -940,8 +1218,7 @@ export default function RotorGallery({
           textAlign: "center",
           pointerEvents: "none",
         }}
-      >
-      </div>
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ interface HoverParticlesProps {
 export default function HoverParticles({ className = "" }: HoverParticlesProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  const touchTimeoutRef = useRef<number | null>(null);
   const particlesRef = useRef<any[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const [isHovered, setIsHovered] = useState(false);
@@ -53,6 +54,16 @@ export default function HoverParticles({ className = "" }: HoverParticlesProps) 
     const onMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    const onTouchStart = () => {
+      setIsHovered(true);
+      if (touchTimeoutRef.current) window.clearTimeout(touchTimeoutRef.current);
+      // Keep the hover animation visible briefly after tap on touch devices.
+      touchTimeoutRef.current = window.setTimeout(() => setIsHovered(false), 1400);
+    };
+    const onTouchEnd = () => {
+      if (touchTimeoutRef.current) window.clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = window.setTimeout(() => setIsHovered(false), 800);
     };
 
     parent.addEventListener("mousemove", onMouseMove, { passive: true });
@@ -148,13 +159,20 @@ export default function HoverParticles({ className = "" }: HoverParticlesProps) 
 
     parent.addEventListener("mouseenter", handleMouseEnter);
     parent.addEventListener("mouseleave", handleMouseLeave);
+    parent.addEventListener("touchstart", onTouchStart, { passive: true });
+    parent.addEventListener("touchend", onTouchEnd, { passive: true });
+    parent.addEventListener("touchcancel", onTouchEnd, { passive: true });
 
     return () => {
       cancelAnimationFrame(animRef.current);
+      if (touchTimeoutRef.current) window.clearTimeout(touchTimeoutRef.current);
       window.removeEventListener("resize", resize);
       parent.removeEventListener("mousemove", onMouseMove);
       parent.removeEventListener("mouseenter", handleMouseEnter);
       parent.removeEventListener("mouseleave", handleMouseLeave);
+      parent.removeEventListener("touchstart", onTouchStart);
+      parent.removeEventListener("touchend", onTouchEnd);
+      parent.removeEventListener("touchcancel", onTouchEnd);
     };
   }, [isHovered]);
 

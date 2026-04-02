@@ -593,38 +593,51 @@ export default function Header() {
               if (isServices) {
                 return (
                   <div key={item.href} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <button
-                      type="button"
-                      onClick={() => setMobileServicesOpen((v) => !v)}
-                      aria-expanded={mobileServicesOpen}
+                    <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
                         width: "100%",
                         padding: "14px 16px",
-                        background: "transparent",
-                        border: "none",
                         borderRadius: 12,
-                        fontSize: 17,
-                        fontWeight: isActive ? 600 : 500,
-                        color: isActive ? "var(--ink)" : "rgba(17,19,23,0.85)",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        fontFamily: "inherit",
                       }}
                     >
-                      {item.label}
-                      <span
+                      <Link
+                        href="/services"
                         style={{
-                          display: "inline-block",
-                          transition: "transform 0.25s ease",
-                          transform: mobileServicesOpen ? "rotate(180deg)" : "none",
+                          fontSize: 17,
+                          fontWeight: isActive ? 600 : 500,
+                          color: isActive ? "var(--ink)" : "rgba(17,19,23,0.85)",
+                          textAlign: "left",
+                          textDecoration: "none",
+                          display: "block",
+                          flex: 1,
                         }}
+                        onClick={() => setOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                      <Link
+                        href="/services?openFilter=1"
+                        aria-label="Open services filter"
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          textDecoration: "none",
+                          color: "rgba(17,19,23,0.85)",
+                          fontSize: 14,
+                          lineHeight: 1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        onClick={() => setOpen(false)}
                       >
                         ▼
-                      </span>
-                    </button>
+                      </Link>
+                    </div>
                     {mobileServicesOpen && (
                       <div
                         style={{

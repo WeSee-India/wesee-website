@@ -33,8 +33,8 @@ const articles: Record<string, {
         title: "The Hidden Cost of Manual Workflows",
         category: "Workflow Automation",
         date: "Jan 2026",
-        image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=2000&q=80",
-        excerpt: "Most businesses underestimate how much manual work costs them. We break down the real numbers.",
+            image: "/cost.jpg",
+            excerpt: "Most businesses underestimate how much manual work costs them. We break down the real numbers.",
         content: [
             "Every business has manual workflows. The question is: do you know how much they really cost you?",
             "The obvious costs are easy to calculate — the salary of the person doing the work. But the hidden costs are far larger: the errors they make (and the time spent fixing them), the delays caused by waiting for human input, the opportunities missed because the process was too slow, and the mental overhead of managing it all.",
@@ -47,7 +47,7 @@ const articles: Record<string, {
         title: "Meta Ads in 2025: How AI is Changing Paid Advertising Optimization",
         category: "Performance Marketing",
         date: "Dec 2025",
-        image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=2000&q=80",
+        image: "/metaad.jpg",
         excerpt: "From Advantage+ campaigns to AI-generated creatives, Meta's ad platform is evolving fast.",
         content: [
             "Meta's advertising platform has changed more in the past 18 months than in the previous five years combined. The shift from manual campaign control to AI-driven optimization is accelerating, and advertisers who embrace it are seeing radically better results than those still clinging to the old playbook.",
@@ -61,7 +61,7 @@ const articles: Record<string, {
         title: "Building Your First AI Chatbot: A Guide for Indian SMEs",
         category: "AI Agents",
         date: "Nov 2025",
-        image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=2000&q=80",
+        image: "/chatbot.jpg",
         excerpt: "A practical, no-jargon guide to building and deploying your first AI chatbot for Indian businesses.",
         content: [
             "If you run a small or medium business in India and you're thinking about building an AI chatbot, this guide is for you. Not the theoretical version — the practical one.",
@@ -114,30 +114,32 @@ export default function BlogDetail() {
     }
 
     return (
-        <div style={{ paddingTop: 64 }}>
+        <div className="blog-route" style={{ paddingTop: 64 }}>
             <div className="section-padding">
                 <div className="container">
                     <Link href="/blog" className="cta-link" style={{ fontSize: 13, color: "#888888" }}>
                         ← All articles
                     </Link>
-                    <div style={{ marginTop: 24, fontSize: 11, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888" }}>
+                    <div className="blog-detail-meta" style={{ marginTop: 24, fontSize: 11, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888" }}>
                         {article.category} · {article.date}
                     </div>
                     <TextReveal
                         as="h1"
+                        className="blog-detail-title"
                         style={{ fontSize: "clamp(36px, 5vw, 64px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15, marginTop: 12, maxWidth: 800 }}
                         stagger={0.04}
                         onScroll={false}
                     >
                         {article.title}
                     </TextReveal>
-                    <p className="gsap-reveal" style={{ fontSize: 20, fontWeight: 400, color: "#3A3A3A", fontStyle: "italic", maxWidth: 720, marginTop: 20, lineHeight: 1.6 }}>
+                    <p className="gsap-reveal blog-detail-excerpt" style={{ fontSize: 20, fontWeight: 400, color: "#3A3A3A", fontStyle: "italic", maxWidth: 720, marginTop: 20, lineHeight: 1.6 }}>
                         {article.excerpt}
                     </p>
                 </div>
 
                 <div className="gsap-reveal" style={{ marginTop: 48, width: "100%", overflow: "hidden" }}>
                     <img
+                        className="blog-detail-hero-img"
                         src={article.image}
                         alt={article.title}
                         style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }}
@@ -168,7 +170,7 @@ export default function BlogDetail() {
             {/* Dark CTA */}
             <div style={{ background: "#1A1A1A", padding: "64px 0", marginTop: 64 }}>
                 <div className="container" style={{ textAlign: "center" }}>
-                    <TextReveal as="h3" style={{ fontSize: 32, fontWeight: 600, color: "#FFFFFF" }} stagger={0.05}>
+                    <TextReveal as="h3" className="blog-detail-cta-title" style={{ fontSize: 32, fontWeight: 600, color: "#FFFFFF" }} stagger={0.05}>
                         Want results like this for your business?
                     </TextReveal>
                     <p className="gsap-reveal" style={{ fontSize: 16, fontWeight: 400, color: "#AAAAAA", marginTop: 16, maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>

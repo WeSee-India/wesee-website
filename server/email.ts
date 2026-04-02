@@ -12,7 +12,7 @@ export async function sendContactEmail(payload: ContactPayload) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const { name, email, company, service, message } = payload;
 
-  const toAddress = process.env.CONTACT_TO || "support@weseegpt.com";
+  const toAddress = process.env.CONTACT_TO || "hr@weseegpt.com";
 
   await resend.emails.send({
     from: "WeSee Contact Form <onboarding@resend.dev>",

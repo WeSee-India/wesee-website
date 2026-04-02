@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import InteractiveParticles from "@/components/InteractiveParticles";
 import StaggerReveal from "@/components/StaggerReveal";
 import gsap from "gsap";
@@ -24,8 +24,125 @@ const values = [
   { num: "04", title: "Ship & Iterate", desc: "We launch fast, measure everything, and continuously refine for maximum performance." },
 ];
 
+function parseStatValue(val: string) {
+  const raw = val.trim();
+  const plus = raw.endsWith("+");
+  const cleaned = plus ? raw.slice(0, -1) : raw;
+  const upper = cleaned.toUpperCase();
+  const k = upper.endsWith("K");
+  const base = k ? upper.slice(0, -1) : upper;
+  const num = Number(base.replace(/,/g, ""));
+  const target = Number.isFinite(num) ? num : 0;
+  return { target, plus, k };
+}
+
+function formatStatValue(n: number, meta: { plus: boolean; k: boolean }) {
+  const rounded = Math.round(n);
+  const core = meta.k ? `${rounded}K` : `${rounded}`;
+  return meta.plus ? `${core}+` : core;
+}
+
+function AboutStatCard({
+  index,
+  val,
+  label,
+  bgImg,
+}: {
+  index: number;
+  val: string;
+  label: string;
+  bgImg: string;
+}) {
+  const meta = useMemo(() => parseStatValue(val), [val]);
+  const [display, setDisplay] = useState(val);
+  const startedRef = useRef(false);
+  const elRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry.isIntersecting) return;
+        if (startedRef.current) return;
+        startedRef.current = true;
+
+        const durationMs = 1450;
+        const start = performance.now();
+        const from = 0;
+        const to = meta.target;
+        const spinPhase = 0.42;
+
+        const tick = (now: number) => {
+          const t = Math.min(1, (now - start) / durationMs);
+          // Slot-like rolling start, then ease to final value.
+          if (t < spinPhase) {
+            const spinProgress = t / spinPhase;
+            const randomBoost = Math.random() * Math.max(6, to * 0.22);
+            const rolling = (spinProgress * to * 0.68) + randomBoost;
+            setDisplay(formatStatValue(rolling, meta));
+          } else {
+            const settleT = (t - spinPhase) / (1 - spinPhase);
+            const eased = 1 - Math.pow(1 - settleT, 3); // easeOutCubic
+            const next = from + (to - from) * eased;
+            setDisplay(formatStatValue(next, meta));
+          }
+
+          if (t >= 1) {
+            setDisplay(formatStatValue(to, meta));
+            return;
+          }
+          if (t < 1) requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.35 }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [meta]);
+
+  return (
+    <div
+      ref={elRef}
+      className="about-stat-card gsap-reveal"
+      style={{ "--i": index } as React.CSSProperties}
+    >
+      <img className="about-stat-bg-img" src={bgImg} alt="" aria-hidden="true" />
+      <div className="about-stat-value">{display}</div>
+      <div className="about-stat-label">{label}</div>
+    </div>
+  );
+}
+
 export default function About() {
   const [isTextHovered, setIsTextHovered] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const touchCapable =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
+        "ontouchstart" in window);
+    setIsTouchDevice(touchCapable);
+    if (touchCapable) {
+      setIsTextHovered(true);
+    }
+  }, []);
+
+  const stats = useMemo(
+    () => [
+      { val: "35+", label: "Projects Delivered", bgImg: "/aisoftware.jpg" },
+      { val: "80+", label: "Automations Deployed", bgImg: "/aitalent.jpg" },
+      { val: "15K+", label: "Hours Saved Monthly", bgImg: "/digital.jpg" },
+      { val: "3", label: "Office Locations", bgImg: "/roi.jpg" },
+    ],
+    []
+  );
 
   useEffect(() => {
     const localTriggers: ScrollTrigger[] = [];
@@ -46,31 +163,55 @@ export default function About() {
 
   return (
     <>
-      {/* ══════════════ HERO ══════════════ */}
-      <section style={{
-        minHeight: "clamp(60vh, 75vh, 90vh)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-        paddingTop: "clamp(60px, 10vw, 88px)", paddingBottom: 40,
-      }}>
-        <InteractiveParticles 
-          style={{ position: "absolute", inset: 0, zIndex: 0 }} 
-          isHovered={isTextHovered}
-        />
+     
+      <section
+        className="about-hero"
+        style={{
+          minHeight: "100svh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          paddingTop: 72,
+          paddingBottom: 60,
+          background: "var(--paper)",
+        }}
+      >
+        {/* Same particle layer + mobile offset as Home.tsx home-hero-particle-logo-layer */}
+        <div
+          className="about-hero-particle-logo-layer"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <InteractiveParticles
+            style={{ position: "absolute", inset: 0, zIndex: 0 }}
+            isHovered={isTextHovered}
+          />
+        </div>
+        <style>{`
+          @media (max-width: 767px) {
+            .about-hero .about-hero-particle-logo-layer {
+              transform: translateY(clamp(-140px, -14vh, -56px));
+            }
+          }
+        `}</style>
 
-        <div style={{
-          position: "absolute",
-          width: 700, height: 700, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 65%)",
-          top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)",
-          pointerEvents: "none",
-          animation: "blob1 18s ease-in-out infinite",
-        }} />
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+          <div style={{
+            position: "absolute", pointerEvents: "none",
+            width: 1000, height: 1000, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 65%)",
+            top: "50%", left: "50%",
+            transform: "translate(-50%, -55%)",
+            animation: "blob1 20s ease-in-out infinite",
+          }} />
+        </div>
 
         <div className="container" style={{
           position: "relative", zIndex: 1, textAlign: "center",
@@ -86,16 +227,15 @@ export default function About() {
           </div>
 
           <div
-            onMouseEnter={() => setIsTextHovered(true)}
-            onMouseLeave={() => setIsTextHovered(false)}
-            onTouchStart={() => setIsTextHovered(true)}
-            onTouchEnd={() => setTimeout(() => setIsTextHovered(false), 4000)}
+            onMouseEnter={() => { if (!isTouchDevice) setIsTextHovered(true); }}
+            onMouseLeave={() => { if (!isTouchDevice) setIsTextHovered(false); }}
+            onTouchStart={() => { if (!isTouchDevice) setIsTextHovered(true); }}
             style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer" }}
           >
             <h1 
               className="fade-up" 
               style={{
-                fontSize: "clamp(52px, 8vw, 100px)",
+                fontSize: "clamp(40px, 8vw, 100px)",
                 fontWeight: 450, letterSpacing: "-0.04em", lineHeight: 1.12,
                 color: "var(--ink)", maxWidth: "14ch", textAlign: "center",
                 animationDelay: "0.15s", margin: 0,
@@ -112,6 +252,7 @@ export default function About() {
               }}>
                 WeSee.
               </span>
+              {" "} 
             </h1>
 
             <p 
@@ -122,7 +263,7 @@ export default function About() {
                 animationDelay: "0.25s",
               }}
             >
-              India's leading AI automation agency — a cross-functional team of AI engineers, operators, and growth strategists building the intelligent systems modern business runs on.
+              India's leading AI automation agency  a cross-functional team of AI engineers, operators, and growth strategists building the intelligent systems modern business runs on.
             </p>
           </div>
         </div>
@@ -135,9 +276,9 @@ export default function About() {
             display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
             gap: "clamp(28px, 5vw, 60px)", alignItems: "start",
           }}>
-            <div>
-              <span className="section-label gsap-reveal">(01) Our Mission</span>
-              <h2 className="section-heading gsap-reveal" style={{ marginTop: 12 }}>
+            <div className="about-mobile-center-block">
+              <span className="section-label gsap-reveal about-mobile-center-label">(01) Our Mission</span>
+              <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 12 }}>
                 Automation that changes how business works.
               </h2>
             </div>
@@ -170,10 +311,12 @@ export default function About() {
       {/* ══════════════ TIMELINE ══════════════ */}
       <section className="section-pad" style={{ background: "var(--paper)" }}>
         <div className="container">
-          <span className="section-label gsap-reveal">(02) Our Journey</span>
-          <h2 className="section-heading gsap-reveal" style={{ marginTop: 12, marginBottom: 60 }}>
-            Building for the long run.
-          </h2>
+          <div className="about-mobile-center-block">
+            <span className="section-label gsap-reveal about-mobile-center-label">(02) Our Journey</span>
+            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 12, marginBottom: 60 }}>
+              Building for the long run.
+            </h2>
+          </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             {milestones.map((m, i) => (
@@ -208,46 +351,22 @@ export default function About() {
       </section>
 
       {/* ══════════════ STATS — dark ══════════════ */}
-      <section className="section-pad" style={{
+      <section className="section-pad about-impact-section" style={{
         background: "var(--ink)",
         position: "relative", overflow: "hidden",
       }}>
-        <div style={{
-          position: "absolute", width: 600, height: 600, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(201,168,76,0.10) 0%, transparent 65%)",
-          top: "50%", left: "50%",
-          transform: "translate(-50%,-50%)", pointerEvents: "none",
-          animation: "blob2 14s ease-in-out infinite",
-        }} />
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
-          <div style={{
-            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16,
+          <div className="about-impact-head gsap-reveal pb-10">
+            <h2 className="about-impact-title">The Impact We've Delivered</h2>
+            <p className="about-impact-subtitle">Real results from the systems we build</p>
+          </div>
+          <div className="about-impact-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16,
           }}>
-            {[
-              { val: "35+", label: "Projects Delivered" },
-              { val: "80+", label: "Automations Deployed" },
-              { val: "15K+", label: "Hours Saved Monthly" },
-              { val: "3", label: "Office Locations" },
-            ].map((s, i) => (
-              <div key={i} className="gsap-reveal" style={{
-                padding: "32px 28px",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "20px !important",
-                textAlign: "center",
-                backdropFilter: "blur(8px)",
-              }}>
-                <div style={{
-                  fontSize: "clamp(40px, 5vw, 60px)", fontWeight: 600,
-                  color: "var(--accent)", letterSpacing: "-0.05em", lineHeight: 1,
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {s.val}
-                </div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.30)", marginTop: 10, letterSpacing: "0.04em" }}>
-                  {s.label}
-                </div>
-              </div>
+            {stats.map((s, i) => (
+              <AboutStatCard key={s.label} index={i} val={s.val} label={s.label} bgImg={s.bgImg} />
             ))}
           </div>
         </div>
@@ -256,10 +375,12 @@ export default function About() {
       {/* ══════════════ VALUES ══════════════ */}
       <section className="section-pad" style={{ background: "var(--paper-dark)" }}>
         <div className="container">
-          <span className="section-label gsap-reveal" style={{ marginBottom: 8 }}>(03) Our Values</span>
-          <h2 className="section-heading gsap-reveal" style={{ marginBottom: 52, marginTop: 12 }}>
-            How we operate.
-          </h2>
+          <div className="about-mobile-center-block">
+            <span className="section-label gsap-reveal about-mobile-center-label" style={{ marginBottom: 8 }}>(03) Our Values</span>
+            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginBottom: 52, marginTop: 12 }}>
+              How we operate.
+            </h2>
+          </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
             {values.map((v, i) => (
