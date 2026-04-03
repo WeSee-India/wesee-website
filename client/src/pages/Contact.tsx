@@ -376,7 +376,7 @@ export default function Contact() {
       {/* Offices accordion with smooth animation */}
       <section className="" style={{ borderTop: "1px solid #EEEEEE" }}>
         <div className="container">
-          <TextReveal as="h2" className="section-heading" stagger={0.05}>
+          <TextReveal as="h2" className="section-heading" stagger={0.05} style={{ paddingTop: "clamp(20px, 3vw, 28px)" }}>
             Our offices.
           </TextReveal>
           <div ref={officeSectionRef} style={{ marginTop: "clamp(32px, 4vw, 48px)" }}>

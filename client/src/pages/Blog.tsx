@@ -168,12 +168,13 @@ export default function Blog() {
                           loading="lazy"
                         />
                       </div>
-                      <div style={{ marginTop: 16 }}>
+                      <div style={{ marginTop: 26 }}>
                         <div className="flex items-center gap-4">
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 14,
                               fontWeight: 400,
+                              paddingBottom: 4,
                               letterSpacing: "0.12em",
                               textTransform: "uppercase",
                               color: "#888888",
@@ -183,7 +184,8 @@ export default function Blog() {
                           </span>
                           <span
                             style={{
-                              fontSize: 12,
+                              fontSize: 14,
+                              paddingBottom: 4,
                               fontWeight: 400,
                               color: "#888888",
                             }}
@@ -194,11 +196,11 @@ export default function Blog() {
                         <h3
                           className="blog-card-title group-hover:translate-x-2"
                           style={{
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: 600,
                             color: "#1A1A1A",
                             lineHeight: 1.3,
-                            marginTop: 8,
+                            marginTop: 12,
                             transition: "transform 0.3s ease",
                           }}
                         >
@@ -206,11 +208,11 @@ export default function Blog() {
                         </h3>
                         <p
                           style={{
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: 400,
                             color: "#3A3A3A",
                             lineHeight: 1.6,
-                            marginTop: 8,
+                            marginTop: 13,
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
