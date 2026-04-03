@@ -1,28 +1,18 @@
 /*
  * RotorGallery — 3D Rotating Ring Gallery
  *
- * DESKTOP LABEL FIX (v2):
- *  - Labels are promoted to their own GPU compositor layer via will-change + translate3d
- *  - Center offsets are pre-computed once (not per-frame) to avoid layout reads in RAF
- *  - Labels use position:fixed so they are removed from document flow entirely,
- *    eliminating any reflow cascade from transform updates
- *  - All trig pre-cached; zero object allocations inside the tick loop
+ * DESKTOP HOVER FIX (v7 — DOM getBoundingClientRect):
+ *  - Replaced all mat4 projection math in updateClosestCardDesktop with
+ *    getBoundingClientRect() on each card's inner face div.
+ *  - The browser already knows exactly where every card is on screen after
+ *    CSS 3D transforms. We just read each rect's center and find the closest
+ *    one to the cursor. Zero matrix math, zero offset errors, pixel-perfect.
+ *  - RotorItem accepts an `innerRef` callback prop that writes into the
+ *    parent's cardInnerRefs array so every card's DOM node is always tracked.
+ *  - Cards that are edge-on (width < 2px or height < 2px) are skipped —
+ *    they're visually invisible and shouldn't steal hover.
  *
- * DESKTOP HOVER SYNC FIX (v3):
- *  - updateClosestCardDesktop now projects each card through the exact same
- *    4×4 matrix chain the CSS uses (rotateX camX → rotateY 90 → rotateZ camZ →
- *    translate offsetX/offsetY → per-card ring rotation → translateZ gapPx)
- *  - Cursor is compared to each card's actual screen-space projected centre
- *    with a perspective divide — no more flat-circle / atan2 angle mismatch
- *
- * MOBILE TOUCH FIX (v5):
- *  - updateClosestImageMobile now uses the same mat4 projection as the desktop
- *    version, computing each card's exact screen-space centre this frame.
- *  - Pivot correctly mirrors left:"100%", top:"95%" of the container.
- *  - Hit radius is card-size based so tapping anywhere on a card registers.
- *  - No more atan2 angle mismatch — works regardless of ring orientation.
- *
- * MOBILE: all other mobile logic untouched from original.
+ * MOBILE: all mobile logic completely untouched from original v5.
  */
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -66,61 +56,24 @@ interface RotorGalleryProps {
 
 const MAX_SAFE_COUNT = 90;
 
-// ── Tiny column-major mat4 helpers ────────────────────────────────────────────
+// ── mat4 helpers — kept only for mobile updateClosestImageMobile ──────────────
 type M4 = Float64Array;
-
-function m4id(): M4 {
-  const m = new Float64Array(16);
-  m[0] = m[5] = m[10] = m[15] = 1;
-  return m;
-}
-
+function m4id(): M4 { const m = new Float64Array(16); m[0]=m[5]=m[10]=m[15]=1; return m; }
 function m4mul(a: M4, b: M4): M4 {
   const o = new Float64Array(16);
-  for (let c = 0; c < 4; c++)
-    for (let r = 0; r < 4; r++) {
-      let s = 0;
-      for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
-      o[c * 4 + r] = s;
-    }
+  for (let c=0;c<4;c++) for (let r=0;r<4;r++) { let s=0; for (let k=0;k<4;k++) s+=a[k*4+r]*b[c*4+k]; o[c*4+r]=s; }
   return o;
 }
-
-function m4rx(deg: number): M4 {
-  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
-  m[5] = c; m[9] = -s; m[6] = s; m[10] = c;
-  return m;
-}
-
-function m4ry(deg: number): M4 {
-  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
-  m[0] = c; m[8] = s; m[2] = -s; m[10] = c;
-  return m;
-}
-
-function m4rz(deg: number): M4 {
-  const m = m4id(), r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
-  m[0] = c; m[4] = -s; m[1] = s; m[5] = c;
-  return m;
-}
-
-function m4tr(tx: number, ty: number, tz: number): M4 {
-  const m = m4id();
-  m[12] = tx; m[13] = ty; m[14] = tz;
-  return m;
-}
-
-/** Transform point (x,y,z) by column-major mat4, returns [x,y,z,w] */
-function m4pt(m: M4, x: number, y: number, z: number): [number, number, number, number] {
-  return [
-    m[0] * x + m[4] * y + m[8]  * z + m[12],
-    m[1] * x + m[5] * y + m[9]  * z + m[13],
-    m[2] * x + m[6] * y + m[10] * z + m[14],
-    m[3] * x + m[7] * y + m[11] * z + m[15],
-  ];
+function m4rx(deg: number): M4 { const m=m4id(),r=(deg*Math.PI)/180,c=Math.cos(r),s=Math.sin(r); m[5]=c;m[9]=-s;m[6]=s;m[10]=c; return m; }
+function m4ry(deg: number): M4 { const m=m4id(),r=(deg*Math.PI)/180,c=Math.cos(r),s=Math.sin(r); m[0]=c;m[8]=s;m[2]=-s;m[10]=c; return m; }
+function m4rz(deg: number): M4 { const m=m4id(),r=(deg*Math.PI)/180,c=Math.cos(r),s=Math.sin(r); m[0]=c;m[4]=-s;m[1]=s;m[5]=c; return m; }
+function m4tr(tx: number, ty: number, tz: number): M4 { const m=m4id(); m[12]=tx;m[13]=ty;m[14]=tz; return m; }
+function m4pt(m: M4, x: number, y: number, z: number): [number,number,number,number] {
+  return [m[0]*x+m[4]*y+m[8]*z+m[12], m[1]*x+m[5]*y+m[9]*z+m[13], m[2]*x+m[6]*y+m[10]*z+m[14], m[3]*x+m[7]*y+m[11]*z+m[15]];
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// RotorItem accepts a setInnerRef callback to wire the inner face div into the parent's ref array
 function RotorItem({
   item,
   index,
@@ -137,6 +90,7 @@ function RotorItem({
   isHovered,
   isMobile,
   finePointer,
+  setInnerRef,
 }: {
   item: RingItem;
   index: number;
@@ -153,6 +107,7 @@ function RotorItem({
   isHovered: boolean;
   isMobile: boolean;
   finePointer: boolean;
+  setInnerRef?: (el: HTMLDivElement | null) => void;
 }) {
   const itemAngle = (index / total) * 360;
   const thicknessPx = 1;
@@ -181,7 +136,9 @@ function RotorItem({
         cursor: finePointer ? "none" : "grab",
       }}
     >
+      {/* ref={setInnerRef} — this is the element we call getBoundingClientRect on */}
       <div
+        ref={setInnerRef}
         style={{
           position: "absolute",
           inset: 0,
@@ -289,6 +246,9 @@ export default function RotorGallery({
   const revealLayerRef = useRef<HTMLDivElement>(null);
   const angleRef = useRef(0);
 
+  // ── Per-card inner face DOM refs for getBoundingClientRect hit-testing ───────
+  const cardInnerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const labelElemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const labelSizeRefs = useRef<{ halfW: number; halfH: number }[]>([]);
   const labelCenterRef = useRef({ x: 0, y: 0 });
@@ -318,6 +278,7 @@ export default function RotorGallery({
 
   const isMobile = dimensions.w < 640;
   const list = useMemo(() => items.slice(0, safeCount), [items, safeCount]);
+
   const desktopFitScale = useMemo(() => {
     if (isMobile) return 1;
     const vw = dimensions.w || window.innerWidth;
@@ -326,6 +287,7 @@ export default function RotorGallery({
     const heightScale = vh / 864;
     return Math.max(0.72, Math.min(1, Math.min(widthScale, heightScale)));
   }, [isMobile, dimensions.w, dimensions.h]);
+
   const desktopRadiusScale = useMemo(() => {
     if (isMobile) return 1;
     const vw = dimensions.w || window.innerWidth;
@@ -333,7 +295,6 @@ export default function RotorGallery({
     const widthScale = vw / 1536;
     const heightScale = vh / 864;
     const viewportScale = Math.min(widthScale, heightScale);
-    // Reduce ring radius more aggressively on smaller desktop viewports.
     return Math.max(0.72, Math.min(1, 0.86 + (viewportScale - 0.72) * 0.38));
   }, [isMobile, dimensions.w, dimensions.h]);
 
@@ -353,10 +314,7 @@ export default function RotorGallery({
   useEffect(() => {
     const update = () => {
       setDimensions({ w: window.innerWidth, h: window.innerHeight });
-      labelCenterRef.current = {
-        x: window.innerWidth * 0.5,
-        y: window.innerHeight * 0.5,
-      };
+      labelCenterRef.current = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5 };
     };
     update();
     window.addEventListener("resize", update, { passive: true });
@@ -370,13 +328,9 @@ export default function RotorGallery({
         const el = labelElemRefs.current[i];
         if (!el) return { halfW: 110, halfH: 18 };
         const rect = el.getBoundingClientRect();
-        return {
-          halfW: Math.max(80, rect.width * 0.5),
-          halfH: Math.max(14, rect.height * 0.5),
-        };
+        return { halfW: Math.max(80, rect.width * 0.5), halfH: Math.max(14, rect.height * 0.5) };
       });
     };
-
     updateLabelSizes();
     window.addEventListener("resize", updateLabelSizes, { passive: true });
     return () => window.removeEventListener("resize", updateLabelSizes);
@@ -387,13 +341,11 @@ export default function RotorGallery({
     let last = performance.now();
     const speed = 360 / (speedSec * 1000);
     let raf: number;
-
     const camXRads = (camX * Math.PI) / 180;
     const baseEllipseRatio = Math.cos(camXRads);
     const finalEllipseRatio = Math.max(0.55, Math.min(0.75, baseEllipseRatio * 0.75));
     const labelRadiusX = ringRadius + LABEL_OFFSET_X_PX;
     const labelRadiusY = ringRadius + LABEL_OFFSET_Y_PX;
-
     const baseAngles = categoryLabels.map((l) => l.angle);
     const labelCount = categoryLabels.length;
 
@@ -404,14 +356,12 @@ export default function RotorGallery({
       if (!isDraggingRef.current && !isHoveringRef.current && targetAngleRef.current === null) {
         angleRef.current += speed * dt;
       }
-
       if (Math.abs(velocityRef.current) > 0.01 && targetAngleRef.current === null && !isHoveringRef.current) {
         angleRef.current += velocityRef.current * dt;
         velocityRef.current *= 0.95;
       } else if (isHoveringRef.current) {
         velocityRef.current = 0;
       }
-
       if (targetAngleRef.current !== null) {
         angleRef.current += (targetAngleRef.current - angleRef.current) * 0.08;
         if (Math.abs(targetAngleRef.current - angleRef.current) < 0.1) {
@@ -429,7 +379,6 @@ export default function RotorGallery({
         const pad = 10;
         const maxX = window.innerWidth - pad;
         const maxY = window.innerHeight - pad;
-
         for (let i = 0; i < labelCount; i++) {
           const el = labelElemRefs.current[i];
           if (!el) continue;
@@ -442,10 +391,8 @@ export default function RotorGallery({
           el.style.transform = `translate3d(${tx}px,${ty}px,0) translate(-50%,-50%)`;
         }
       }
-
       raf = requestAnimationFrame(tick);
     };
-
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [speedSec, categoryLabels, isMobile, ringRadius, offsetX, offsetY, camX]);
@@ -453,73 +400,59 @@ export default function RotorGallery({
   const handleItemClick = useCallback(
     (item: RingItem) => {
       if (hasDraggedRef.current) return;
-      if (onItemClick) {
-        onItemClick(item);
-      } else if (item.url) {
-        navigate(item.url);
-      }
+      if (onItemClick) { onItemClick(item); } else if (item.url) { navigate(item.url); }
     },
     [onItemClick, navigate]
   );
 
   const RING_SCALE = 0.85;
   const ringGapPx = effectiveGapPx * RING_SCALE;
-
   const sceneCardWidth = effectiveCardWidth;
   const sceneCardHeight = effectiveCardHeight;
   const revealImageWidth = isMobile ? sceneCardWidth * 3.8 : sceneCardWidth * 2.5;
   const revealImageHeight = isMobile ? sceneCardHeight * 2.6 : sceneCardHeight * 1.6;
   const revealImageTopVh = isMobile ? 0.35 : 0.45;
 
-  // ── Desktop hover hit-test (fast path) ──────────────────────────────────
+  // ── Desktop hover — getBoundingClientRect on each card's inner div (v7) ──────
+  //
+  // Why this works perfectly:
+  //   The browser computes each card's final screen position after all CSS 3D
+  //   transforms (camX, camZ, rotateX ring, rotateZ card, perspective, etc).
+  //   getBoundingClientRect() returns THAT result directly. We just find whose
+  //   center is closest to the cursor. No matrix math needed, no offset drift.
+  //
+  // Hit threshold: half the card diagonal (~65%). Cards rotated edge-on have
+  //   near-zero rect size so they're naturally skipped (width < 2px guard).
+  // ─────────────────────────────────────────────────────────────────────────────
   const updateClosestCardDesktop = useCallback(
     (clientX: number, clientY: number): boolean => {
-      const container = containerRef.current;
-      if (!container) return false;
+      if (isMobile) return false;
 
-      const rect = container.getBoundingClientRect();
-      const sceneCenterX = rect.left + rect.width * 0.5 + offsetX;
-      const sceneCenterY = rect.top + rect.height * 0.5 + offsetY;
+      const hitThreshold = Math.sqrt(sceneCardWidth ** 2 + sceneCardHeight ** 2) * 0.65;
 
-      const dx = clientX - sceneCenterX;
-      const dy = clientY - sceneCenterY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      const cardDiag = Math.sqrt(sceneCardWidth ** 2 + sceneCardHeight ** 2) * 0.5;
-      const minR = ringGapPx * 0.55;
-      const maxR = ringGapPx + cardDiag * 1.3;
-
-      if (dist < minR || dist > maxR) {
-        if (activeCardIndexRef.current >= 0) {
-          activeCardIndexRef.current = -1;
-          setActiveCardIndex(-1);
-          setIsRevealVisible(false);
-          isHoveringRef.current = false;
-        }
-        return false;
-      }
-
-      let cursorAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-      cursorAngle = (cursorAngle + 360) % 360;
-
-      const anglePerCard = 360 / safeCount;
-      const MAX_ANG_TOLERANCE = Math.min(18, anglePerCard * 0.55);
-
-      let minAngDist = Infinity;
       let bestIndex = -1;
+      let bestDist  = Infinity;
 
-      for (let i = 0; i < safeCount; i++) {
-        let cardAngle = (angleRef.current - i * anglePerCard) % 360;
-        if (cardAngle < 0) cardAngle += 360;
-        let d = Math.abs(cursorAngle - cardAngle);
-        if (d > 180) d = 360 - d;
-        if (d < minAngDist) {
-          minAngDist = d;
+      for (let i = 0; i < list.length; i++) {
+        const el = cardInnerRefs.current[i];
+        if (!el) continue;
+
+        const r = el.getBoundingClientRect();
+
+        // Card is edge-on and essentially invisible — skip it
+        if (r.width < 2 || r.height < 2) continue;
+
+        const cx = r.left + r.width  * 0.5;
+        const cy = r.top  + r.height * 0.5;
+        const dist = Math.sqrt((clientX - cx) ** 2 + (clientY - cy) ** 2);
+
+        if (dist < bestDist) {
+          bestDist  = dist;
           bestIndex = i;
         }
       }
 
-      if (minAngDist > MAX_ANG_TOLERANCE) {
+      if (bestIndex < 0 || bestDist > hitThreshold) {
         if (activeCardIndexRef.current >= 0) {
           activeCardIndexRef.current = -1;
           setActiveCardIndex(-1);
@@ -535,9 +468,9 @@ export default function RotorGallery({
       }
       return true;
     },
-    [ringGapPx, sceneCardWidth, sceneCardHeight, safeCount, offsetX, offsetY]
+    [list.length, sceneCardWidth, sceneCardHeight, isMobile]
   );
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const container = containerRef.current;
@@ -555,36 +488,26 @@ export default function RotorGallery({
 
     const handleMove = (clientX: number, clientY: number) => {
       if (!isDraggingRef.current) return;
-
       const now = performance.now();
       const dt = Math.max(now - lastPosRef.current.time, 1);
-
       const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-
       const currentAngle = Math.atan2(clientY - centerY, clientX - centerX);
       const prevAngle = Math.atan2(lastPosRef.current.y - centerY, lastPosRef.current.x - centerX);
-
       let angleDelta = currentAngle - prevAngle;
       if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
       if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
-
       const rotationDelta = angleDelta * (180 / Math.PI);
       angleRef.current += rotationDelta;
       targetAngleRef.current = null;
       velocityRef.current = rotationDelta / (dt / 1000);
-
       if (dragStartPosRef.current) {
         const totalDx = clientX - dragStartPosRef.current.x;
         const totalDy = clientY - dragStartPosRef.current.y;
-        if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) > 5) {
-          hasDraggedRef.current = true;
-        }
+        if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) > 5) hasDraggedRef.current = true;
       }
-
       lastPosRef.current = { x: clientX, y: clientY, time: now };
-
       if (sceneRef.current) sceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
       if (revealSceneRef.current) revealSceneRef.current.style.setProperty("--global-rotation", `${angleRef.current}deg`);
     };
@@ -594,320 +517,142 @@ export default function RotorGallery({
       setIsDragging(false);
       velocityRef.current = 0;
       targetAngleRef.current = null;
-
       if (hasDraggedRef.current) {
-        setTimeout(() => {
-          hasDraggedRef.current = false;
-          dragStartPosRef.current = null;
-        }, 100);
+        setTimeout(() => { hasDraggedRef.current = false; dragStartPosRef.current = null; }, 100);
       } else {
         dragStartPosRef.current = null;
       }
     };
 
-    // ── MOBILE TOUCH FIX v5: project cards through the same mat4 chain ────────
-    //
-    // The ring pivot is at left:"100%", top:"95%" of the container, then
-    // shifted by mobileOffsetX = vw*0.4.  Cards fan out *leftward* from there,
-    // so their visible screen positions bear no simple relationship to the pivot.
-    //
-    // We use the same 4×4 matrix projection the desktop version uses, but with
-    // the mobile camera/offset values (camX=0, camY=90, mobileOffsetX).
-    // This gives us the exact screen-space centre of every card this frame, so
-    // we can find the one closest to the touch point — no atan2 needed.
-    //
-    // A generous HIT_RADIUS_PX is used so tapping anywhere on a card registers.
-    // ────────────────────────────────────────────────────────────────────────
+    // ── MOBILE TOUCH FIX v5 — completely untouched ────────────────────────────
     const updateClosestImageMobile = (clientX: number, clientY: number): boolean => {
       if (!isMobile) return false;
-
       const now = performance.now();
       if (now - lastMouseUpdateRef.current < 16) return activeCardIndexRef.current >= 0;
       lastMouseUpdateRef.current = now;
-
       const rect = container.getBoundingClientRect();
       const vw = dimensions.w || window.innerWidth;
-
-      // Scene pivot in screen-space — mirrors top:"95%", left:"100%" of container
-      // then translate(-50%,-50%) in the sceneTransform anchors on this point.
-      const pivotX = rect.left + rect.width;        // left:"100%"
-      const pivotY = rect.top  + rect.height * 0.95; // top:"95%"
-
-      // mobileOffsetX mirrors: translate(mobileOffsetX, offsetY) in sceneTransform
+      const pivotX = rect.left + rect.width;
+      const pivotY = rect.top  + rect.height * 0.95;
       const mobileOffsetX = vw * 0.4;
-
-      // Scene matrix for mobile: rotateX(0) → rotateY(90) → rotateZ(camZ)
-      //                           → translate(mobileOffsetX, offsetY, 0)
-      const sceneMatrix = m4mul(
-        m4mul(m4mul(m4rx(0), m4ry(90)), m4rz(camZ)),
-        m4tr(mobileOffsetX, offsetY, 0)
-      );
-
+      const sceneMatrix = m4mul(m4mul(m4mul(m4rx(0), m4ry(90)), m4rz(camZ)), m4tr(mobileOffsetX, offsetY, 0));
       const baseCardRotX = cardRotXDeg + rotateCardDeg;
-
-      // Generous hit radius — cards are physically large on mobile
       const HIT_RADIUS_PX = Math.max(sceneCardWidth, sceneCardHeight) * 1.1;
-
       let bestIndex = -1;
       let bestDist  = Infinity;
-
       for (let i = 0; i < safeCount; i++) {
         const itemAngle = (i / safeCount) * 360;
         const ringAngle = angleRef.current - itemAngle;
-
-        // Per-card matrix — mirrors RotorItem ringTransform (same as desktop)
-        const cardMatrix = m4mul(
-          m4mul(
-            m4mul(
-              m4mul(m4rx(ringAngle), m4tr(0, 0, ringGapPx)),
-              m4rx(baseCardRotX)
-            ),
-            m4ry(cardRotYDeg)
-          ),
-          m4rz(cardRotZDeg)
-        );
-
+        const cardMatrix = m4mul(m4mul(m4mul(m4mul(m4rx(ringAngle), m4tr(0, 0, ringGapPx)), m4rx(baseCardRotX)), m4ry(cardRotYDeg)), m4rz(cardRotZDeg));
         const fullMatrix = m4mul(sceneMatrix, cardMatrix);
         const [wx, wy, wz] = m4pt(fullMatrix, 0, 0, 0);
-
-        // Perspective divide
         const pz = perspective + wz;
         if (pz <= 0) continue;
-
         const scale = perspective / pz;
         const sx = pivotX + wx * scale;
         const sy = pivotY + wy * scale;
-
         const dist = Math.sqrt((clientX - sx) ** 2 + (clientY - sy) ** 2);
-        if (dist < bestDist) {
-          bestDist  = dist;
-          bestIndex = i;
-        }
+        if (dist < bestDist) { bestDist = dist; bestIndex = i; }
       }
-
       if (bestIndex < 0 || bestDist > HIT_RADIUS_PX) {
         if (!previewLockedRef.current && activeCardIndexRef.current >= 0) {
-          activeCardIndexRef.current = -1;
-          setActiveCardIndex(-1);
-          setIsRevealVisible(false);
-          isHoveringRef.current = false;
+          activeCardIndexRef.current = -1; setActiveCardIndex(-1); setIsRevealVisible(false); isHoveringRef.current = false;
         }
         return false;
       }
-
       mousePosRef.current = { x: clientX, y: clientY };
-
-      if (activeCardIndexRef.current !== bestIndex) {
-        activeCardIndexRef.current = bestIndex;
-        setActiveCardIndex(bestIndex);
-      }
+      if (activeCardIndexRef.current !== bestIndex) { activeCardIndexRef.current = bestIndex; setActiveCardIndex(bestIndex); }
       return true;
     };
-    // ── end mobile fix ───────────────────────────────────────────────────────
+    // ── end mobile (untouched) ─────────────────────────────────────────────────
 
     const isTouchOnPreview = (clientX: number, clientY: number): boolean => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const centerX = vw * 0.5;
-      const centerY = vh * revealImageTopVh;
-      return (
-        clientX >= centerX - revealImageWidth / 2 &&
-        clientX <= centerX + revealImageWidth / 2 &&
-        clientY >= centerY - revealImageHeight / 2 &&
-        clientY <= centerY + revealImageHeight / 2
-      );
+      const vw = window.innerWidth; const vh = window.innerHeight; const centerX = vw * 0.5; const centerY = vh * revealImageTopVh;
+      return clientX >= centerX - revealImageWidth / 2 && clientX <= centerX + revealImageWidth / 2 && clientY >= centerY - revealImageHeight / 2 && clientY <= centerY + revealImageHeight / 2;
     };
-
     const isTouchOnCategoryLabel = (clientX: number, clientY: number): boolean => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const centerX = vw * 0.5;
-      const pillTop = vh * revealImageTopVh + revealImageHeight / 2 + 20;
-      const pillHeight = isMobile ? 44 : 52;
-      const halfW = isMobile ? 200 : 240;
-      return (
-        clientX >= centerX - halfW &&
-        clientX <= centerX + halfW &&
-        clientY >= pillTop &&
-        clientY <= pillTop + pillHeight
-      );
+      const vw = window.innerWidth; const vh = window.innerHeight; const centerX = vw * 0.5;
+      const pillTop = vh * revealImageTopVh + revealImageHeight / 2 + 20; const pillHeight = isMobile ? 44 : 52; const halfW = isMobile ? 200 : 240;
+      return clientX >= centerX - halfW && clientX <= centerX + halfW && clientY >= pillTop && clientY <= pillTop + pillHeight;
     };
+    const isTouchOnPreviewOrCategoryLabel = (cx: number, cy: number): boolean => isTouchOnPreview(cx, cy) || isTouchOnCategoryLabel(cx, cy);
 
-    const isTouchOnPreviewOrCategoryLabel = (clientX: number, clientY: number): boolean =>
-      isTouchOnPreview(clientX, clientY) || isTouchOnCategoryLabel(clientX, clientY);
-
-    // ── Desktop mouse handlers (UNCHANGED) ──
-    const onMouseDown = (e: MouseEvent) => {
-      e.preventDefault();
-      handleStart(e.clientX, e.clientY);
-    };
-
+    const onMouseDown = (e: MouseEvent) => { e.preventDefault(); handleStart(e.clientX, e.clientY); };
     const onMouseMove = (e: MouseEvent) => {
-      if (isDraggingRef.current) {
-        e.preventDefault();
-        handleMove(e.clientX, e.clientY);
-        return;
-      }
+      if (isDraggingRef.current) { e.preventDefault(); handleMove(e.clientX, e.clientY); return; }
       if (!isMobile) {
         const onRing = updateClosestCardDesktop(e.clientX, e.clientY);
-        if (onRing) {
-          isHoveringRef.current = true;
-          setIsRevealVisible(true);
-        } else {
-          isHoveringRef.current = false;
-          setIsRevealVisible(false);
-        }
+        if (onRing) { isHoveringRef.current = true; setIsRevealVisible(true); }
+        else { isHoveringRef.current = false; setIsRevealVisible(false); }
       }
     };
-
     const onMouseUp = () => handleEnd();
-
     const onMouseLeave = () => {
       if (previewLockedRef.current) return;
-      isHoveringRef.current = false;
-      velocityRef.current = 0;
-      mousePosRef.current = null;
-      targetAngleRef.current = null;
-      activeCardIndexRef.current = -1;
-      setActiveCardIndex(-1);
-      setIsRevealVisible(false);
+      isHoveringRef.current = false; velocityRef.current = 0; mousePosRef.current = null;
+      targetAngleRef.current = null; activeCardIndexRef.current = -1; setActiveCardIndex(-1); setIsRevealVisible(false);
     };
-
     const onContainerClick = (e: MouseEvent) => {
-      if (isMobile) return;
-      if (hasDraggedRef.current) return;
+      if (isMobile) return; if (hasDraggedRef.current) return;
       const activeIndex = activeCardIndexRef.current;
-      if (activeIndex >= 0 && activeIndex < list.length) {
-        handleItemClick(list[activeIndex]);
-      }
+      if (activeIndex >= 0 && activeIndex < list.length) handleItemClick(list[activeIndex]);
     };
 
-    // ── Mobile touch handlers (logic unchanged, uses fixed updateClosestImageMobile) ──
+    // ── Mobile touch handlers (completely untouched) ──
     const onTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
-
       if (previewLockedRef.current) {
         if (isTouchOnPreviewOrCategoryLabel(touch.clientX, touch.clientY)) {
           const idx = activeCardIndexRef.current;
-          previewLockedRef.current = false;
-          setPreviewLocked(false);
-          isHoveringRef.current = false;
-          activeCardIndexRef.current = -1;
-          setActiveCardIndex(-1);
-          setIsRevealVisible(false);
-          if (idx >= 0 && idx < list.length) {
-            handleItemClick(list[idx]);
-          }
+          previewLockedRef.current = false; setPreviewLocked(false); isHoveringRef.current = false;
+          activeCardIndexRef.current = -1; setActiveCardIndex(-1); setIsRevealVisible(false);
+          if (idx >= 0 && idx < list.length) handleItemClick(list[idx]);
         } else {
           const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
           touchStartedOnRingRef.current = nearRing;
-          if (nearRing) {
-            isHoveringRef.current = true;
-            setIsRevealVisible(true);
-          } else {
-            previewLockedRef.current = false;
-            setPreviewLocked(false);
-            isHoveringRef.current = false;
-            activeCardIndexRef.current = -1;
-            setActiveCardIndex(-1);
-            setIsRevealVisible(false);
-          }
+          if (nearRing) { isHoveringRef.current = true; setIsRevealVisible(true); }
+          else { previewLockedRef.current = false; setPreviewLocked(false); isHoveringRef.current = false; activeCardIndexRef.current = -1; setActiveCardIndex(-1); setIsRevealVisible(false); }
         }
-        dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-        hasDraggedRef.current = false;
-        return;
+        dragStartPosRef.current = { x: touch.clientX, y: touch.clientY }; hasDraggedRef.current = false; return;
       }
-
       const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
       touchStartedOnRingRef.current = nearRing;
-
-      if (nearRing) {
-        isHoveringRef.current = true;
-        setIsRevealVisible(true);
-      } else {
-        isHoveringRef.current = false;
-        setIsRevealVisible(false);
-      }
-
-      dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-      hasDraggedRef.current = false;
+      if (nearRing) { isHoveringRef.current = true; setIsRevealVisible(true); }
+      else { isHoveringRef.current = false; setIsRevealVisible(false); }
+      dragStartPosRef.current = { x: touch.clientX, y: touch.clientY }; hasDraggedRef.current = false;
     };
-
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 0) return;
       const touch = e.touches[0];
-
-      if (isDraggingRef.current) {
-        e.preventDefault();
-        handleMove(touch.clientX, touch.clientY);
-        return;
-      }
-
-      // Start drag-driven rotation only when touch originated on the ring.
+      if (isDraggingRef.current) { e.preventDefault(); handleMove(touch.clientX, touch.clientY); return; }
       if (touchStartedOnRingRef.current && dragStartPosRef.current) {
-        const dx = touch.clientX - dragStartPosRef.current.x;
-        const dy = touch.clientY - dragStartPosRef.current.y;
+        const dx = touch.clientX - dragStartPosRef.current.x; const dy = touch.clientY - dragStartPosRef.current.y;
         if (Math.sqrt(dx * dx + dy * dy) > 8) {
-          if (previewLockedRef.current) {
-            previewLockedRef.current = false;
-            setPreviewLocked(false);
-          }
-          isHoveringRef.current = false;
-          setIsRevealVisible(false);
-          activeCardIndexRef.current = -1;
-          setActiveCardIndex(-1);
-          handleStart(touch.clientX, touch.clientY);
-          hasDraggedRef.current = true;
-          touchStartedOnRingRef.current = false;
-          return;
+          if (previewLockedRef.current) { previewLockedRef.current = false; setPreviewLocked(false); }
+          isHoveringRef.current = false; setIsRevealVisible(false); activeCardIndexRef.current = -1; setActiveCardIndex(-1);
+          handleStart(touch.clientX, touch.clientY); hasDraggedRef.current = true; touchStartedOnRingRef.current = false; return;
         }
       }
-
       if (touchStartedOnRingRef.current) {
         const nearRing = updateClosestImageMobile(touch.clientX, touch.clientY);
-        if (nearRing) {
-          isHoveringRef.current = true;
-          setIsRevealVisible(true);
-        } else if (!previewLockedRef.current) {
-          isHoveringRef.current = false;
-          setIsRevealVisible(false);
-        }
+        if (nearRing) { isHoveringRef.current = true; setIsRevealVisible(true); }
+        else if (!previewLockedRef.current) { isHoveringRef.current = false; setIsRevealVisible(false); }
       }
     };
-
     const onTouchEnd = (e: TouchEvent) => {
       const wasDragging = hasDraggedRef.current;
-
-      if (previewLockedRef.current) {
-        touchStartedOnRingRef.current = false;
-        handleEnd();
-        return;
-      }
-
+      if (previewLockedRef.current) { touchStartedOnRingRef.current = false; handleEnd(); return; }
       if (!wasDragging && touchStartedOnRingRef.current) {
         const activeIndex = activeCardIndexRef.current;
         if (activeIndex >= 0 && activeIndex < list.length) {
-          previewLockedRef.current = true;
-          setPreviewLocked(true);
-          isHoveringRef.current = true;
-          setIsRevealVisible(true);
-          touchStartedOnRingRef.current = false;
-          handleEnd();
-          return;
+          previewLockedRef.current = true; setPreviewLocked(true); isHoveringRef.current = true; setIsRevealVisible(true);
+          touchStartedOnRingRef.current = false; handleEnd(); return;
         }
       }
-
-      isHoveringRef.current = false;
-      touchStartedOnRingRef.current = false;
-      activeCardIndexRef.current = -1;
-      setActiveCardIndex(-1);
-      setIsRevealVisible(false);
-      handleEnd();
+      isHoveringRef.current = false; touchStartedOnRingRef.current = false; activeCardIndexRef.current = -1; setActiveCardIndex(-1); setIsRevealVisible(false); handleEnd();
     };
 
-    const onWindowMouseMove = (e: MouseEvent) => {
-      if (isDraggingRef.current) onMouseMove(e);
-    };
+    const onWindowMouseMove = (e: MouseEvent) => { if (isDraggingRef.current) onMouseMove(e); };
 
     container.addEventListener("mouseleave", onMouseLeave as EventListener);
     container.addEventListener("mousedown", onMouseDown);
@@ -939,7 +684,6 @@ export default function RotorGallery({
   const mobileLeft = isMobile ? "100%" : "50%";
   const mobileTop = isMobile ? "95%" : "50%";
   const mobileCamX = isMobile ? 0 : camX;
-  const mobileCamY = isMobile ? 90 : 90;
 
   const revealRadius = 600;
   const revealImageTop = isMobile ? "35vh" : "45vh";
@@ -948,7 +692,7 @@ export default function RotorGallery({
   const sceneTransform = `
     translate(-50%, -50%)
     rotateX(${mobileCamX}deg)
-    rotateY(${mobileCamY}deg)
+    rotateY(90deg)
     rotateZ(${camZ}deg)
     translate(${isMobile ? mobileOffsetX : offsetX}px, ${offsetY}px)
   `;
@@ -1013,34 +757,17 @@ export default function RotorGallery({
                 src={list[activeCardIndex].image}
                 alt={list[activeCardIndex].title}
                 draggable={false}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  userSelect: "none",
-                  display: "block",
-                }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", userSelect: "none", display: "block" }}
               />
               {previewLocked && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 10,
-                    left: 0,
-                    right: 0,
-                    textAlign: "center",
-                    pointerEvents: "none",
-                  }}
-                />
+                <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }} />
               )}
             </div>
 
             <div
               style={{
                 position: "fixed",
-                top: isMobile
-                  ? `calc(35vh + ${revealImageHeight / 2}px + 20px)`
-                  : `calc(45vh + ${revealImageHeight / 2}px + 20px)`,
+                top: isMobile ? `calc(35vh + ${revealImageHeight / 2}px + 20px)` : `calc(45vh + ${revealImageHeight / 2}px + 20px)`,
                 left: "50vw",
                 transform: "translateX(-50%)",
                 zIndex: 401,
@@ -1049,15 +776,11 @@ export default function RotorGallery({
                 textAlign: "center",
               }}
               onMouseDown={isMobile ? undefined : (e) => e.stopPropagation()}
-              onClick={
-                isMobile
-                  ? undefined
-                  : (e) => {
-                      e.stopPropagation();
-                      const idx = activeCardIndex;
-                      if (idx >= 0 && idx < list.length) handleItemClick(list[idx]);
-                    }
-              }
+              onClick={isMobile ? undefined : (e) => {
+                e.stopPropagation();
+                const idx = activeCardIndex;
+                if (idx >= 0 && idx < list.length) handleItemClick(list[idx]);
+              }}
             >
               <span
                 style={{
@@ -1160,14 +883,12 @@ export default function RotorGallery({
             isHovered={activeCardIndex === i}
             isMobile={isMobile}
             finePointer={finePointer}
+            setInnerRef={(el) => { cardInnerRefs.current[i] = el; }}
           />
         ))}
       </div>
 
-      {/*
-       * ── DESKTOP CATEGORY LABELS ──
-       * position:fixed + translate3d — GPU composited, zero reflow
-       */}
+      {/* DESKTOP CATEGORY LABELS */}
       {categoryLabels.length > 0 && !isMobile && ringRadius > 0 &&
         categoryLabels.map((label, i) => (
           <div

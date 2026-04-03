@@ -241,7 +241,7 @@ export default function About() {
                 animationDelay: "0.15s", margin: 0,
               }}
             >
-              We are{" "}
+              {" "}
               <span style={{
                 fontStyle: "italic", fontWeight: 300, letterSpacing: "-0.05em",
                 background: "linear-gradient(135deg, #B8922E 0%, var(--accent) 48%, #E8C870 100%)",
@@ -250,9 +250,9 @@ export default function About() {
                 animation: "textShimmer 5s ease infinite",
                 paddingRight: "0.1em",
               }}>
-                WeSee.
+                WeSee
               </span>
-              {" "} 
+              {" "} beyond the obvious.
             </h1>
 
             <p 
