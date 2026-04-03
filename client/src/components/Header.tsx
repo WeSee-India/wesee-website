@@ -12,120 +12,133 @@ const navItems = [
   { label: "Contact", href: "/contact", hasDropdown: false },
 ];
 
+/** Matches `client/src/data/services.ts` slugs; `categoryId` when there is no dedicated ServiceDetail page. */
+type NavSubService =
+  | { label: string; slug: string }
+  | { label: string; categoryId: number };
+
+function subServiceHref(sub: NavSubService): string {
+  return "slug" in sub ? `/services/${sub.slug}` : `/services?category=${sub.categoryId}`;
+}
+
 // 10 service categories with expandable sub-services
-const serviceCategories = [
+const serviceCategories: Array<{
+  name: string;
+  description: string;
+  subServices: NavSubService[];
+}> = [
   {
     name: "Autonomous AI Agents",
     description: "AI-powered agents that talk, think, and act on behalf of businesses — handling sales, support, appointments, and calls 24/7.",
     subServices: [
-      "AI Sales Agent",
-      "AI Customer Support Bot",
-      "AI Receptionist & Scheduler",
-      "Internal Knowledge AI (HR / IT / Ops)",
-      "Voice AI & Smart IVR",
-      "Custom AI Agent Development",
+      { label: "AI Sales Agent", slug: "ai-sales-agent" },
+      { label: "AI Customer Support Bot", slug: "ai-customer-support-bot" },
+      { label: "AI Receptionist & Scheduler", slug: "ai-receptionist" },
+      { label: "Internal Knowledge AI (HR / IT / Ops)", slug: "internal-ai-assistant" },
+      { label: "Voice AI & Smart IVR", slug: "voice-ai-ivr" },
+      { label: "Custom AI Agent Development", categoryId: 1 },
     ],
   },
   {
     name: "Workflow Automation & Systems Integration",
     description: "Connect your existing tools and eliminate manual work using n8n, Zapier, Make, and custom code.",
     subServices: [
-      "No-Code Workflow Automation",
-      "Document & Invoice Automation",
-      "Smart Lead Routing & Assignment",
-      "ERP & Multi-System Integration",
-      "Alerts, Escalations & Notification Engines",
+      { label: "No-Code Workflow Automation", slug: "no-code-workflow" },
+      { label: "Document & Invoice Automation", slug: "document-invoice-automation" },
+      { label: "Smart Lead Routing & Assignment", slug: "lead-routing" },
+      { label: "ERP & Multi-System Integration", slug: "erp-integration" },
+      { label: "Alerts, Escalations & Notification Engines", slug: "notification-systems" },
     ],
   },
   {
     name: "Performance Marketing & Paid Media",
     description: "ROI-driven advertising across Meta, Google, YouTube, LinkedIn — every rupee tracked and optimized.",
     subServices: [
-      "Meta Ads — Facebook & Instagram",
-      "Google Ads — Search, Display & Shopping",
-      "YouTube Video Advertising",
-      "LinkedIn B2B Campaigns",
-      "Retargeting & Programmatic",
-      "Influencer-Paid Hybrid Campaigns",
+      { label: "Meta Ads — Facebook & Instagram", slug: "meta-ads" },
+      { label: "Google Ads — Search, Display & Shopping", slug: "google-ads" },
+      { label: "YouTube Video Advertising", slug: "google-ads" },
+      { label: "LinkedIn B2B Campaigns", slug: "linkedin-ads" },
+      { label: "Retargeting & Programmatic", slug: "retargeting" },
+      { label: "Influencer-Paid Hybrid Campaigns", slug: "influencer-affiliate" },
     ],
   },
   {
     name: "Search Dominance & Organic Discovery",
     description: "Long-term organic visibility through technical SEO, content strategy, and authority building.",
     subServices: [
-      "Technical & On-Page SEO",
-      "Local SEO & Google Business",
-      "Content Strategy & Authority Building",
-      "AI-Powered Content at Scale",
-      "Answer Engine Optimisation (AEO)",
+      { label: "Technical & On-Page SEO", slug: "technical-seo" },
+      { label: "Local SEO & Google Business", slug: "local-seo" },
+      { label: "Content Strategy & Authority Building", slug: "content-seo" },
+      { label: "AI-Powered Content at Scale", slug: "content-seo" },
+      { label: "Answer Engine Optimisation (AEO)", slug: "content-seo" },
     ],
   },
   {
     name: "Conversational Marketing & Messaging",
     description: "Automated multi-channel communication via WhatsApp, email, SMS, and push notifications.",
     subServices: [
-      "WhatsApp Business API & Automation",
-      "Email Marketing & Drip Campaigns",
-      "SMS & RCS Rich Messaging",
-      "Omnichannel Unified Inbox",
-      "Push Notifications & In-App Messaging",
+      { label: "WhatsApp Business API & Automation", slug: "whatsapp-business" },
+      { label: "Email Marketing & Drip Campaigns", slug: "email-marketing" },
+      { label: "SMS & RCS Rich Messaging", slug: "sms-rcs" },
+      { label: "Omnichannel Unified Inbox", slug: "omnichannel-inbox" },
+      { label: "Push Notifications & In-App Messaging", slug: "push-notifications" },
     ],
   },
   {
     name: "Digital Experience & Creative Studio",
     description: "High-converting websites, brand identities, and video content designed for performance.",
     subServices: [
-      "High-Performance Website Design & Dev",
-      "Landing Pages & Conversion Optimisation",
-      "Brand Identity & Visual Systems",
-      "Video Production & Motion Graphics",
-      "UI/UX Design & Prototyping",
-      "Social Media Creative & Content Design",
+      { label: "High-Performance Website Design & Dev", slug: "website-design" },
+      { label: "Landing Pages & Conversion Optimisation", slug: "landing-pages" },
+      { label: "Brand Identity & Visual Systems", slug: "brand-identity" },
+      { label: "Video Production & Motion Graphics", slug: "video-production" },
+      { label: "UI/UX Design & Prototyping", slug: "ui-ux-design" },
+      { label: "Social Media Creative & Content Design", slug: "social-media-management" },
     ],
   },
   {
     name: "E-Commerce & D2C Growth Engine",
     description: "Full-stack e-commerce solutions from store setup to marketplace management and optimization.",
     subServices: [
-      "D2C Brand Launch & Growth",
-      "E-Commerce Storefront Design",
-      "Marketplace Onboarding & Management",
-      "Product Listing & Catalog Optimisation",
-      "Subscription & Recurring Revenue Systems",
+      { label: "D2C Brand Launch & Growth", slug: "ecommerce-store" },
+      { label: "E-Commerce Storefront Design", slug: "ecommerce-store" },
+      { label: "Marketplace Onboarding & Management", slug: "marketplace-management" },
+      { label: "Product Listing & Catalog Optimisation", slug: "product-feed" },
+      { label: "Subscription & Recurring Revenue Systems", slug: "ecommerce-store" },
     ],
   },
   {
     name: "Revenue Operations & Sales Automation",
     description: "Systems that capture, nurture, convert, and retain customers — engineered for revenue.",
     subServices: [
-      "CRM Setup & Pipeline Optimisation",
-      "Sales Funnel & Conversion Automation",
-      "Lead Generation — Inbound & Outbound",
-      "Influencer & Affiliate Program Management",
-      "Loyalty, Referral & Retention Programs",
+      { label: "CRM Setup & Pipeline Optimisation", slug: "crm-setup" },
+      { label: "Sales Funnel & Conversion Automation", slug: "sales-funnel" },
+      { label: "Lead Generation — Inbound & Outbound", slug: "lead-generation" },
+      { label: "Influencer & Affiliate Program Management", slug: "influencer-affiliate" },
+      { label: "Loyalty, Referral & Retention Programs", slug: "referral-loyalty" },
     ],
   },
   {
     name: "Data Intelligence & Analytics",
     description: "Custom dashboards and BI solutions that turn raw data into actionable insights for smarter decision-making.",
     subServices: [
-      "Custom BI Dashboards & Reporting",
-      "Marketing Attribution & ROI Tracking",
-      "Customer Analytics & Churn Prediction",
-      "A/B Testing & Experimentation Frameworks",
-      "AI-Powered Forecasting & Trend Analysis",
+      { label: "Custom BI Dashboards & Reporting", slug: "analytics-dashboards" },
+      { label: "Marketing Attribution & ROI Tracking", slug: "analytics-dashboards" },
+      { label: "Customer Analytics & Churn Prediction", slug: "analytics-dashboards" },
+      { label: "A/B Testing & Experimentation Frameworks", slug: "analytics-dashboards" },
+      { label: "AI-Powered Forecasting & Trend Analysis", slug: "analytics-dashboards" },
     ],
   },
   {
     name: "Cloud, Security & Business Operations",
     description: "Cloud infrastructure, analytics dashboards, HR automation, and operational excellence.",
     subServices: [
-      "Cloud Architecture & DevOps",
-      "Cybersecurity & Compliance",
-      "HR & Recruitment Automation",
-      "Reputation & Review Management",
-      "Business Strategy & Growth Consulting",
-      "Government Subsidy & Scheme Marketing",
+      { label: "Cloud Architecture & DevOps", slug: "cloud-infrastructure" },
+      { label: "Cybersecurity & Compliance", slug: "data-security" },
+      { label: "HR & Recruitment Automation", slug: "hr-recruitment" },
+      { label: "Reputation & Review Management", categoryId: 9 },
+      { label: "Business Strategy & Growth Consulting", categoryId: 9 },
+      { label: "Government Subsidy & Scheme Marketing", categoryId: 9 },
     ],
   },
 ];
@@ -439,10 +452,10 @@ export default function Header() {
                           paddingTop: 16,
                           paddingRight: 20,
                         }}>
-                          {serviceCategories[expandedCategoryIndex].subServices.map((sub) => (
+                          {serviceCategories[expandedCategoryIndex].subServices.map((sub, subIdx) => (
                             <Link
-                              key={sub}
-                              href={`/services#${serviceCategories[expandedCategoryIndex].name.toLowerCase().replace(/\s+/g, "-")}`}
+                              key={`${sub.label}-${subIdx}`}
+                              href={subServiceHref(sub)}
                               style={{ 
                                 fontSize: 13, 
                                 color: "rgba(17,19,23,0.62)", 
@@ -463,7 +476,7 @@ export default function Header() {
                                 setExpandedCategoryIndex(null);
                               }}
                             >
-                              <span style={{ flex: 1 }}>{sub}</span>
+                              <span style={{ flex: 1 }}>{sub.label}</span>
                               <TrendingUp size={14} style={{ flexShrink: 0, marginLeft: 8 }} />
                             </Link>
                           ))}
@@ -692,10 +705,10 @@ export default function Header() {
                                   paddingBottom: 8,
                                 }}
                               >
-                                {category.subServices.map((sub) => (
+                                {category.subServices.map((sub, subIdx) => (
                                   <Link
-                                    key={sub}
-                                    href={`/services#${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+                                    key={`${sub.label}-${subIdx}`}
+                                    href={subServiceHref(sub)}
                                     style={{
                                       fontSize: 13,
                                       color: "rgba(17,19,23,0.7)",
@@ -708,7 +721,7 @@ export default function Header() {
                                     }}
                                     onClick={() => setOpen(false)}
                                   >
-                                    {sub}
+                                    {sub.label}
                                     <TrendingUp size={14} style={{ flexShrink: 0 }} />
                                   </Link>
                                 ))}
