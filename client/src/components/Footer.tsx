@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import ParticleWrapper from "./ParticleWrapper";
 import { useFinePointer } from "@/hooks/useFinePointer";
+import { scrollToTop } from "@/hooks/useLenis";
 
 const serviceLinks = [
   { label: "AI Agents", href: "/services?category=1" },
@@ -135,9 +136,12 @@ export default function Footer() {
               {serviceLinks.map(l => (
                 <li key={l.label}>
                   <ParticleWrapper>
-                    <Link href={l.href} style={{
-                      fontSize: 14, color: "rgba(255,255,255,0.35)", transition: "color 0.3s ease", textDecoration: "none",
-                    }}
+                    <Link
+                      href={l.href}
+                      onClick={() => scrollToTop()}
+                      style={{
+                        fontSize: 14, color: "rgba(255,255,255,0.35)", transition: "color 0.3s ease", textDecoration: "none",
+                      }}
                       onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.35)"; }}
                     >
