@@ -518,7 +518,7 @@ const MasonryCard3D = ({ svc, tier, accent }: { svc: ServiceCard; tier: string; 
   };
 
   return (
-    <Link href={`/services/${svc.slug}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/services/${svc.slug}`} style={{ textDecoration: "none", display: "block" }} className="min-w-0 touch-manipulation">
       <div
         ref={cardRef}
         onMouseMove={onMove}
@@ -531,9 +531,13 @@ const MasonryCard3D = ({ svc, tier, accent }: { svc: ServiceCard; tier: string; 
           cursor: "pointer",
           position: "relative",
         }}
+        className="max-md:rounded-xl"
       >
-        {/* Image with parallax */}
-        <div style={{ aspectRatio: tier, overflow: "hidden", position: "relative" }}>
+        {/* Image with parallax — cap visual height on small phones so the column scroll stays balanced */}
+        <div
+          style={{ aspectRatio: tier, overflow: "hidden", position: "relative" }}
+          className="max-sm:!aspect-auto max-sm:h-[min(48vw,210px)] max-sm:max-h-[min(48vw,210px)]"
+        >
           <img
             ref={imgRef}
             src={svc.image} alt={svc.name} loading="lazy"
@@ -544,16 +548,16 @@ const MasonryCard3D = ({ svc, tier, accent }: { svc: ServiceCard; tier: string; 
                         background: `linear-gradient(to top, ${accent}22, transparent)`, pointerEvents: "none" }} />
         </div>
         {/* Text */}
-        <div style={{ padding: "10px 12px 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} />
-            <div style={{ fontSize: "clamp(9px, 1vw, 11px)", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" }}>{svc.category}</div>
+        <div style={{ padding: "10px 12px 12px" }} className="max-md:!px-3 max-md:!pb-3 max-md:!pt-2.5">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }} className="max-sm:flex-wrap max-sm:items-start max-sm:gap-y-1">
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent, flexShrink: 0 }} className="max-sm:mt-0.5" />
+            <div style={{ fontSize: "clamp(9px, 1vw, 11px)", color: "#888", textTransform: "uppercase", letterSpacing: "0.08em" }} className="min-w-0 max-sm:leading-snug">{svc.category}</div>
           </div>
-          <div style={{ fontSize: "clamp(13px, 1.3vw, 16px)", fontWeight: 600, color: "#1A1A1A", lineHeight: 1.25 }}>{svc.name}</div>
+          <div style={{ fontSize: "clamp(13px, 1.3vw, 16px)", fontWeight: 600, color: "#1A1A1A", lineHeight: 1.25 }} className="max-sm:[overflow-wrap:anywhere]">{svc.name}</div>
         </div>
         {/* Glare overlay */}
         <div ref={glareRef} style={{ position: "absolute", inset: 0, opacity: 0,
-          transition: "opacity 0.25s ease", pointerEvents: "none", borderRadius: 14 }} />
+          transition: "opacity 0.25s ease", pointerEvents: "none", borderRadius: 14 }} className="max-md:rounded-xl" />
       </div>
     </Link>
   );
@@ -568,9 +572,9 @@ const ServicesMasonryGrid = ({ services }: { services: ServiceCard[] }) => {
     <div style={{
       maxWidth: 1400, margin: "0 auto",
       padding: "80px clamp(12px, 3vw, 32px) 60px",
-      columnCount: 4, columnGap: "clamp(10px, 1.5vw, 18px)",
+      columnGap: "clamp(10px, 1.5vw, 18px)",
     }}
-    className="max-[1200px]:[column-count:3] max-[768px]:[column-count:2]"
+    className="max-[1200px]:![column-count:3] min-[1201px]:![column-count:4] max-md:!pt-[7rem] max-md:!pb-14 max-md:[padding-left:max(12px,env(safe-area-inset-left))] max-md:[padding-right:max(12px,env(safe-area-inset-right))] max-md:[column-gap:12px] max-sm:[column-gap:10px]"
     >
       {services.map((svc, i) => {
         const accent = getCategoryColor(svc.category);
@@ -583,6 +587,7 @@ const ServicesMasonryGrid = ({ services }: { services: ServiceCard[] }) => {
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: (i % 4) * 0.06 }}
             style={{ breakInside: "avoid", marginBottom: "clamp(10px, 1.5vw, 18px)" }}
+            className="max-sm:!mb-3"
           >
             <MasonryCard3D svc={svc} tier={tier} accent={accent} />
           </motion.div>
@@ -5266,6 +5271,7 @@ export default function Services() {
       url: `/services/${s.slug}`,
       category: s.category,
       categoryId: s.categoryId,
+      shortDescription: s.shortDescription,
     }));
     const n = baseItems.length;
     if (n === 0) return [];

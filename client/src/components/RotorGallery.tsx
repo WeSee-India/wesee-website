@@ -12,9 +12,9 @@
  *  - Cards that are edge-on (width < 2px or height < 2px) are skipped —
  *    they're visually invisible and shouldn't steal hover.
  *
- * MOBILE: all mobile logic completely untouched from original v5.
+ * MOBILE: pan-y + vertical-move bail-out so the page can scroll to content below the ring.
  */
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback, useLayoutEffect } from "react";
 import { useLocation } from "wouter";
 import { useFinePointer } from "@/hooks/useFinePointer";
 
@@ -24,6 +24,7 @@ interface RingItem {
   url: string;
   category: string;
   categoryId: number;
+  shortDescription?: string;
 }
 
 interface CategoryLabel {
@@ -72,6 +73,55 @@ function m4rz(deg: number): M4 { const m=m4id(),r=(deg*Math.PI)/180,c=Math.cos(r
 function m4tr(tx: number, ty: number, tz: number): M4 { const m=m4id(); m[12]=tx;m[13]=ty;m[14]=tz; return m; }
 function m4pt(m: M4, x: number, y: number, z: number): [number,number,number,number] {
   return [m[0]*x+m[4]*y+m[8]*z+m[12], m[1]*x+m[5]*y+m[9]*z+m[13], m[2]*x+m[6]*y+m[10]*z+m[14], m[3]*x+m[7]*y+m[11]*z+m[15]];
+}
+
+/** Mobile-only: ring slot closest to a screen point (same projection as touch hit-test). */
+function computeMobileClosestRingIndex(
+  angleDeg: number,
+  clientX: number,
+  clientY: number,
+  containerRect: DOMRect,
+  p: {
+    perspective: number;
+    camZ: number;
+    offsetY: number;
+    ringGapPx: number;
+    cardRotXDeg: number;
+    cardRotYDeg: number;
+    cardRotZDeg: number;
+    rotateCardDeg: number;
+    safeCount: number;
+    listLen: number;
+  }
+): number {
+  const vw = window.innerWidth;
+  const pivotX = containerRect.left + containerRect.width;
+  const pivotY = containerRect.top + containerRect.height * 0.95;
+  const mobileOffsetX = vw * 0.4;
+  const sceneMatrix = m4mul(m4mul(m4mul(m4rx(0), m4ry(90)), m4rz(p.camZ)), m4tr(mobileOffsetX, p.offsetY, 0));
+  const baseCardRotX = p.cardRotXDeg + p.rotateCardDeg;
+  let bestIndex = 0;
+  let bestDist = Infinity;
+  const n = Math.min(p.safeCount, Math.max(0, p.listLen));
+  const denom = Math.max(1, p.safeCount);
+  for (let i = 0; i < n; i++) {
+    const itemAngle = (i / denom) * 360;
+    const ringAngle = angleDeg - itemAngle;
+    const cardMatrix = m4mul(m4mul(m4mul(m4mul(m4rx(ringAngle), m4tr(0, 0, p.ringGapPx)), m4rx(baseCardRotX)), m4ry(p.cardRotYDeg)), m4rz(p.cardRotZDeg));
+    const fullMatrix = m4mul(sceneMatrix, cardMatrix);
+    const [wx, wy, wz] = m4pt(fullMatrix, 0, 0, 0);
+    const pz = p.perspective + wz;
+    if (pz <= 0) continue;
+    const scale = p.perspective / pz;
+    const sx = pivotX + wx * scale;
+    const sy = pivotY + wy * scale;
+    const dist = Math.sqrt((clientX - sx) ** 2 + (clientY - sy) ** 2);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIndex = i;
+    }
+  }
+  return bestIndex;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -269,6 +319,22 @@ export default function RotorGallery({
   const previewLockedRef = useRef(false);
   const [previewLocked, setPreviewLocked] = useState(false);
 
+  /** Mobile: front slot facing the hero reveal (updated from ring angle each frame). */
+  const mobileFrontIndexRafRef = useRef(0);
+  const [mobileFrontIndex, setMobileFrontIndex] = useState(0);
+  const mobileProjRef = useRef({
+    perspective: 2500,
+    camZ: -100,
+    offsetY: 30,
+    ringGapPx: 200,
+    cardRotXDeg: 0,
+    cardRotYDeg: 0,
+    cardRotZDeg: 0,
+    rotateCardDeg: 90,
+    safeCount: 0,
+    listLen: 0,
+  });
+
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [, navigate] = useLocation();
@@ -287,6 +353,8 @@ export default function RotorGallery({
 
   const isMobile = dimensions.w < 640;
   const list = useMemo(() => items.slice(0, safeCount), [items, safeCount]);
+
+  const itemsKey = useMemo(() => items.map((it) => it.url).join("|"), [items]);
 
   const desktopFitScale = useMemo(() => {
     if (isMobile) return 1;
@@ -345,6 +413,49 @@ export default function RotorGallery({
     return () => window.removeEventListener("resize", updateLabelSizes);
   }, [categoryLabels, isMobile]);
 
+  const RING_SCALE = 0.85;
+  const ringGapPx = effectiveGapPx * RING_SCALE;
+  const sceneCardWidth = effectiveCardWidth;
+  const sceneCardHeight = effectiveCardHeight;
+  const revealImageWidth = isMobile ? sceneCardWidth * 3.8 : sceneCardWidth * 2.5;
+  const revealImageHeight = isMobile ? sceneCardHeight * 2.6 : sceneCardHeight * 1.6;
+  const revealImageTopVh = isMobile ? 0.35 : 0.45;
+
+  useLayoutEffect(() => {
+    mobileProjRef.current = {
+      perspective,
+      camZ,
+      offsetY,
+      ringGapPx,
+      cardRotXDeg,
+      cardRotYDeg,
+      cardRotZDeg,
+      rotateCardDeg,
+      safeCount,
+      listLen: list.length,
+    };
+  }, [
+    perspective,
+    camZ,
+    offsetY,
+    ringGapPx,
+    cardRotXDeg,
+    cardRotYDeg,
+    cardRotZDeg,
+    rotateCardDeg,
+    safeCount,
+    list.length,
+  ]);
+
+  useEffect(() => {
+    mobileFrontIndexRafRef.current = 0;
+    setMobileFrontIndex(0);
+  }, [itemsKey]);
+
+  useEffect(() => {
+    setMobileFrontIndex((i) => (list.length === 0 ? 0 : Math.min(i, list.length - 1)));
+  }, [list.length]);
+
   // ── Main animation loop ───────────────────────────────────────────────────
   useEffect(() => {
     let last = performance.now();
@@ -381,6 +492,22 @@ export default function RotorGallery({
       const rotVal = `${angleRef.current}deg`;
       if (sceneRef.current) sceneRef.current.style.setProperty("--global-rotation", rotVal);
 
+      // Mobile: keep hero preview in sync with ring rotation / auto-spin / drag (no desktop change).
+      const vw = window.innerWidth;
+      if (vw < 640 && mobileProjRef.current.listLen > 0) {
+        const cont = containerRef.current;
+        if (cont) {
+          const rect = cont.getBoundingClientRect();
+          const cx = vw * 0.5;
+          const cy = window.innerHeight * 0.35;
+          const idx = computeMobileClosestRingIndex(angleRef.current, cx, cy, rect, mobileProjRef.current);
+          if (idx !== mobileFrontIndexRafRef.current) {
+            mobileFrontIndexRafRef.current = idx;
+            setMobileFrontIndex(idx);
+          }
+        }
+      }
+
       if (labelCount > 0 && !isMobile && ringRadius > 0) {
         const rotationRad = (angleRef.current * Math.PI) / 180;
         const cx = labelCenterRef.current.x;
@@ -413,14 +540,6 @@ export default function RotorGallery({
     },
     [onItemClick, navigate]
   );
-
-  const RING_SCALE = 0.85;
-  const ringGapPx = effectiveGapPx * RING_SCALE;
-  const sceneCardWidth = effectiveCardWidth;
-  const sceneCardHeight = effectiveCardHeight;
-  const revealImageWidth = isMobile ? sceneCardWidth * 3.8 : sceneCardWidth * 2.5;
-  const revealImageHeight = isMobile ? sceneCardHeight * 2.6 : sceneCardHeight * 1.6;
-  const revealImageTopVh = isMobile ? 0.35 : 0.45;
 
   // ── Desktop hover — getBoundingClientRect on each card's inner div (v7) ──────
   //
@@ -533,7 +652,7 @@ export default function RotorGallery({
       }
     };
 
-    // ── MOBILE TOUCH FIX v5 — completely untouched ────────────────────────────
+    // ── Mobile: closest card on ring (projection hit test) ───────────────────
     const updateClosestImageMobile = (clientX: number, clientY: number): boolean => {
       if (!isMobile) return false;
       const now = performance.now();
@@ -573,7 +692,7 @@ export default function RotorGallery({
       if (activeCardIndexRef.current !== bestIndex) { activeCardIndexRef.current = bestIndex; setActiveCardIndex(bestIndex); }
       return true;
     };
-    // ── end mobile (untouched) ─────────────────────────────────────────────────
+    // ── end mobile hit test ────────────────────────────────────────────────────
 
     const isTouchOnPreview = (clientX: number, clientY: number): boolean => {
       const vw = window.innerWidth; const vh = window.innerHeight; const centerX = vw * 0.5; const centerY = vh * revealImageTopVh;
@@ -607,7 +726,7 @@ export default function RotorGallery({
       if (activeIndex >= 0 && activeIndex < list.length) handleItemClick(list[activeIndex]);
     };
 
-    // ── Mobile touch handlers (completely untouched) ──
+    // ── Mobile touch handlers ──
     const onTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
       if (previewLockedRef.current) {
@@ -635,8 +754,15 @@ export default function RotorGallery({
       const touch = e.touches[0];
       if (isDraggingRef.current) { e.preventDefault(); handleMove(touch.clientX, touch.clientY); return; }
       if (touchStartedOnRingRef.current && dragStartPosRef.current) {
-        const dx = touch.clientX - dragStartPosRef.current.x; const dy = touch.clientY - dragStartPosRef.current.y;
-        if (Math.sqrt(dx * dx + dy * dy) > 8) {
+        const dx = touch.clientX - dragStartPosRef.current.x;
+        const dy = touch.clientY - dragStartPosRef.current.y;
+        if (Math.hypot(dx, dy) > 8) {
+          // Mobile: vertical drag = page scroll (touch-action: pan-y); do not capture as ring rotation.
+          if (isMobile && Math.abs(dy) > Math.abs(dx)) {
+            touchStartedOnRingRef.current = false;
+            dragStartPosRef.current = null;
+            return;
+          }
           if (previewLockedRef.current) { previewLockedRef.current = false; setPreviewLocked(false); }
           isHoveringRef.current = false; setIsRevealVisible(false); activeCardIndexRef.current = -1; setActiveCardIndex(-1);
           handleStart(touch.clientX, touch.clientY); hasDraggedRef.current = true; touchStartedOnRingRef.current = false; return;
@@ -708,6 +834,25 @@ export default function RotorGallery({
 
   const showReveal = activeCardIndex >= 0 && activeCardIndex < list.length;
 
+  const revealIndexForDisplay = useMemo(() => {
+    if (!isMobile || list.length === 0) return activeCardIndex;
+    if (previewLocked && activeCardIndex >= 0 && activeCardIndex < list.length) return activeCardIndex;
+    if (activeCardIndex >= 0 && (isRevealVisible || isDragging)) return activeCardIndex;
+    return mobileFrontIndex;
+  }, [isMobile, list.length, previewLocked, activeCardIndex, isRevealVisible, isDragging, mobileFrontIndex]);
+
+  const displayRevealIdx =
+    isMobile && list.length > 0
+      ? Math.max(0, Math.min(list.length - 1, revealIndexForDisplay))
+      : activeCardIndex;
+
+  const revealLayerOpaque = isMobile ? list.length > 0 : showReveal || isRevealVisible;
+
+  const showRevealContent =
+    isMobile
+      ? list.length > 0 && displayRevealIdx >= 0 && displayRevealIdx < list.length
+      : showReveal;
+
   return (
     <div
       ref={containerRef}
@@ -721,7 +866,7 @@ export default function RotorGallery({
         position: "relative",
         cursor: finePointer ? "none" : "grab",
         userSelect: "none",
-        touchAction: "none",
+        touchAction: isMobile ? "pan-y" : "none",
       }}
     >
       {/* REVEAL LAYER */}
@@ -732,7 +877,7 @@ export default function RotorGallery({
           inset: 0,
           zIndex: 400,
           pointerEvents: "none",
-          opacity: showReveal || isRevealVisible ? 1 : 0,
+          opacity: revealLayerOpaque ? 1 : 0,
           transition: "opacity 0.2s ease",
           WebkitMaskImage: `radial-gradient(circle ${revealRadius}px at 50vw ${revealMaskY}, white 0%, white 90%, transparent 100%)`,
           maskImage: `radial-gradient(circle ${revealRadius}px at 50vw ${revealMaskY}, white 0%, white 90%, transparent 100%)`,
@@ -743,10 +888,33 @@ export default function RotorGallery({
           justifyContent: "center",
         }}
       >
-        {showReveal && (
+        {showRevealContent && (
           <>
             <div
               ref={revealSceneRef}
+              role={isMobile ? "link" : undefined}
+              aria-label={isMobile ? `Open ${list[displayRevealIdx].title}` : undefined}
+              tabIndex={isMobile ? 0 : undefined}
+              onKeyDown={
+                isMobile
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleItemClick(list[displayRevealIdx]);
+                      }
+                    }
+                  : undefined
+              }
+              onClick={
+                isMobile
+                  ? (e) => {
+                      e.stopPropagation();
+                      handleItemClick(list[displayRevealIdx]);
+                    }
+                  : undefined
+              }
+              onTouchStart={isMobile ? (e) => e.stopPropagation() : undefined}
+              onTouchEnd={isMobile ? (e) => e.stopPropagation() : undefined}
               style={{
                 position: "fixed",
                 top: revealImageTop,
@@ -756,17 +924,20 @@ export default function RotorGallery({
                 transform: "translate(-50%, -50%)",
                 borderRadius: borderRadius,
                 overflow: "hidden",
-                pointerEvents: "none",
+                pointerEvents: isMobile ? "auto" : "none",
+                touchAction: isMobile ? "manipulation" : undefined,
+                cursor: isMobile ? "pointer" : undefined,
+                WebkitTapHighlightColor: isMobile ? "transparent" : undefined,
                 boxShadow: "0 20px 60px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2)",
                 outline: previewLocked ? "2.5px solid rgba(255,255,255,0.6)" : "none",
                 transition: "outline 0.2s ease",
               }}
             >
               <img
-                src={list[activeCardIndex].image}
-                alt={list[activeCardIndex].title}
+                src={list[displayRevealIdx].image}
+                alt={list[displayRevealIdx].title}
                 draggable={false}
-                style={{ width: "100%", height: "100%", objectFit: "cover", userSelect: "none", display: "block" }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", userSelect: "none", display: "block", pointerEvents: "none" }}
               />
               {previewLocked && (
                 <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }} />
@@ -783,6 +954,14 @@ export default function RotorGallery({
                 pointerEvents: isMobile ? "none" : "auto",
                 cursor: finePointer && isMobile ? undefined : "pointer",
                 textAlign: "center",
+                display: isMobile ? "flex" : "block",
+                flexDirection: isMobile ? "column" : undefined,
+                alignItems: isMobile ? "center" : undefined,
+                gap: isMobile ? 10 : undefined,
+                width: isMobile ? "min(92vw, 380px)" : undefined,
+                maxWidth: isMobile ? "min(92vw, 380px)" : undefined,
+                padding: isMobile ? "0 12px" : undefined,
+                boxSizing: "border-box",
               }}
               onMouseDown={isMobile ? undefined : (e) => e.stopPropagation()}
               onClick={isMobile ? undefined : (e) => {
@@ -806,15 +985,34 @@ export default function RotorGallery({
                   border: "1px solid rgba(17,19,23,0.15)",
                 }}
               >
-                {list[activeCardIndex].title}
+                {list[displayRevealIdx].title}
               </span>
+              {isMobile && list[displayRevealIdx].shortDescription ? (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "clamp(11px, 3.1vw, 13px)",
+                    fontWeight: 400,
+                    lineHeight: 1.45,
+                    color: "rgba(17,19,23,0.62)",
+                    letterSpacing: "0.01em",
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                    textAlign: "center",
+                  }}
+                >
+                  {list[displayRevealIdx].shortDescription}
+                </p>
+              ) : null}
             </div>
           </>
         )}
       </div>
 
-      {/* "We are WeSee" fallback */}
-      {!showReveal && !isRevealVisible && (
+      {/* "We are WeSee" fallback (desktop only — mobile always shows a service when `list` is non-empty) */}
+      {!isMobile && !showReveal && !isRevealVisible && (
         <div
           style={{
             position: "fixed",
@@ -888,7 +1086,7 @@ export default function RotorGallery({
             baseCardRotY={cardRotYDeg}
             baseCardRotZ={cardRotZDeg}
             cardOpacity={1}
-            isHovered={activeCardIndex === i}
+            isHovered={(isMobile ? displayRevealIdx : activeCardIndex) === i}
             isMobile={isMobile}
             finePointer={finePointer}
             setInnerRef={(el) => { cardInnerRefs.current[i] = el; }}
