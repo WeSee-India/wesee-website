@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
+import { animate, motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import TextReveal from "@/components/TextReveal";
 import TiltCard from "@/components/TiltCard";
 import StaggerReveal from "@/components/StaggerReveal";
@@ -30,157 +30,178 @@ const directors = [
  
 ];
 
-const teamMembers = [
+const engineeringTeam = [
   { name: "sanjeev vishwakarma", title: "Full Stack Developer", photo: "/services/sanjiv.webp" },
-  { name: "yuvraj khanna", title: "graphic team lead", photo: "/client/yuvraj.png" },
+  { name: "yuvraj khanna", title: "graphic team lead", photo: "/client/yuvraj.webp" },
   { name: "deepak yadav", title: "full stack developer", photo: "/services/deepak.webp" },
   { name: "pranav ", title: "UX Designer", photo: "/client/pranav.webp" },
-  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.jpg" },
-  { name: "mani bajpai", title: "blockchain developer", photo: "/client/mani.png" },
+  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.png" },
+  { name: "mani bajpai", title: "blockchain developer", photo: "/client/manii.png" },
+ 
+  { name: "Shravani shinde", title: "ai developer", photo: "/client/shravani.png" },
+  { name: "Anjali Singh", title: "ui/ux designer", photo: "/client/anjali.png" },
+  { name: "suhani tiwari", title: "full stack developer", photo: "/client/suhani.png" },
   
 ];
 
-type ColumnProps = {
-  images: string[];
-  y: MotionValue<number>;
-  isMobile?: boolean;
-};
+const marqueePeople = engineeringTeam.map((m) => ({
+  name: m.name,
+  title: m.title,
+  photo: m.photo,
+}));
 
-const Column = ({ images, y, isMobile = false }: ColumnProps) => {
-  return (
-    <motion.div
-      className={`relative flex h-full flex-col ${isMobile ? '-top-[45%] first:top-[-45%] [&:nth-child(2)]:top-[-95%]' : '-top-[45%] flex-1 min-w-[250px] gap-[2vw] first:top-[-45%] [&:nth-child(2)]:top-[-95%] [&:nth-child(3)]:top-[-45%] [&:nth-child(4)]:top-[-75%]'}`}
-      style={{ 
-        y,
-        ...(isMobile && { width: "49%", flex: "0 0 49%", gap: "8px" })
-      }}
-    >
-      {images.map((src, i) => (
-        <div key={i} className={`relative w-full overflow-hidden ${isMobile ? '' : 'h-full flex-1'}`} style={{ flex: isMobile ? "0 0 auto" : "1 1 auto", display: isMobile ? "block" : "flex", alignItems: isMobile ? "normal" : "center", justifyContent: isMobile ? "normal" : "center" }}>
-          <img
-            src={src}
-            alt="image"
-            className={`pointer-events-none w-full ${isMobile ? "object-contain" : "object-cover h-full"}`}
-            style={{ height: isMobile ? "auto" : "100%", display: "block", width: "100%" }}
-          />
-        </div>
-      ))}
-    </motion.div>
-  );
-};
+const ARC_MAX_LIFT = 36;
+const ARC_MAX_TILT = 7;
+/** Top padding so center lift + tilt stays inside overflow clip */
+const MARQUEE_VIEWPORT_PAD_TOP = ARC_MAX_LIFT + 24;
+/** Horizontal speed (px per second) for the marquee */
+const MARQUEE_SPEED_PX_PER_SEC = 42;
 
-const TeamParallaxGallery = () => {
-  const gallery = useRef<HTMLDivElement>(null);
-  const [dimension, setDimension] = useState({ width: 0, height: 0 });
-  const [isMobile, setIsMobile] = useState(false);
-
-  const { scrollYProgress } = useScroll({
-    target: gallery,
-    offset: ["start end", "end start"],
-  });
-
-  const { height } = dimension;
-  const y = useTransform(scrollYProgress, [0, 1], [0, height * 2]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, height * 3.3]);
-  const y3 = useTransform(scrollYProgress, [0, 1], [0, height * 1.25]);
-  const y4 = useTransform(scrollYProgress, [0, 1], [0, height * 3]);
+const TeamMarqueeHero = () => {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [loopW, setLoopW] = useState(0);
+  const offsetX = useMotionValue(0);
+  const cardSmoothRef = useRef(new WeakMap<HTMLElement, { y: number; r: number }>());
 
   useEffect(() => {
-    const resize = () => {
-      setDimension({ width: window.innerWidth, height: window.innerHeight });
-      setIsMobile(window.innerWidth < 768);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    const el = measureRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setLoopW(el.offsetWidth));
+    ro.observe(el);
+    setLoopW(el.offsetWidth);
+    return () => ro.disconnect();
   }, []);
 
-  // Use all team member images
-  const sources = teamMembers.map((m) => m.photo);
-  
-  // Desktop: Distribute across 4 columns (looped to fill)
-  const pool = [...sources, ...sources, ...sources];
-  const col1 = pool.slice(0, 3);
-  const col2 = pool.slice(3, 6);
-  const col3 = pool.slice(6, 9);
-  const col4 = pool.slice(9, 12);
-  
-  // Mobile: Distribute all images across 2 columns (more in column 2)
-  const mobileCol1: string[] = [];
-  const mobileCol2: string[] = [];
-  
-  sources.forEach((src, index) => {
-    // Use a 5-item cycle: 1 item goes to col1, 4 items go to col2
-    // This gives approximately 20% to col1 and 80% to col2
-    const cyclePosition = index % 5;
-    if (cyclePosition === 0) {
-      mobileCol1.push(src);
-    } else {
-      mobileCol2.push(src);
-    }
-  });
-  
-  // Ensure column 2 has more images - move any extras from col1 to col2
-  while (mobileCol1.length >= mobileCol2.length && mobileCol1.length > 0) {
-    const extraImage = mobileCol1.pop();
-    if (extraImage) {
-      mobileCol2.push(extraImage);
-    }
-  }
-  
-  // Duplicate mobile images for smooth parallax scrolling.
-  // Pad using the full team photo list — column 1 often has only one real slot
-  // (every 5th index), so padding with col[i % col.length] repeated the same image.
-  const minMobileImagesPerColumn = 15;
-  const duplicateMobileIfNeeded = (col: string[], pool: string[], phase: number) => {
-    if (col.length >= minMobileImagesPerColumn || pool.length === 0) return col;
-    const needed = minMobileImagesPerColumn - col.length;
-    const duplicated = [...col];
-    for (let i = 0; i < needed; i++) {
-      duplicated.push(pool[(phase + i) % pool.length]);
-    }
-    return duplicated;
-  };
+  useEffect(() => {
+    if (loopW <= 0) return;
+    offsetX.set(0);
+    const controls = animate(offsetX, [0, -loopW], {
+      ease: "linear",
+      duration: loopW / MARQUEE_SPEED_PX_PER_SEC,
+      repeat: Infinity,
+      repeatType: "loop",
+    });
+    return () => controls.stop();
+  }, [loopW, offsetX]);
 
-  const finalMobileCol1 = duplicateMobileIfNeeded(mobileCol1, sources, 0);
-  const finalMobileCol2 = duplicateMobileIfNeeded(
-    mobileCol2,
-    sources,
-    Math.max(1, Math.floor(sources.length / 2))
-  );
+  useAnimationFrame((_, delta) => {
+    const dt = Math.min(delta, 48) / 1000;
+    const smooth = 1 - Math.exp(-14 * dt);
+
+    const root = viewportRef.current;
+    if (!root) return;
+    const cards = root.querySelectorAll<HTMLElement>("[data-marquee-card]");
+    if (!cards.length) return;
+    const rr = root.getBoundingClientRect();
+    const midX = rr.left + rr.width / 2;
+    const half = Math.max(rr.width / 2, 1);
+    cards.forEach((el) => {
+      const cr = el.getBoundingClientRect();
+      const cx = cr.left + cr.width / 2;
+      let norm = (cx - midX) / half;
+      norm = Math.max(-1, Math.min(1, norm));
+      const lift = (1 - norm * norm) * ARC_MAX_LIFT;
+      const tilt = norm * ARC_MAX_TILT;
+      const targetY = -lift;
+      let sm = cardSmoothRef.current.get(el);
+      if (!sm) {
+        sm = { y: targetY, r: tilt };
+        cardSmoothRef.current.set(el, sm);
+      }
+      sm.y += (targetY - sm.y) * smooth;
+      sm.r += (tilt - sm.r) * smooth;
+      el.style.transform = `translateY(${sm.y}px) rotate(${sm.r}deg)`;
+    });
+  });
 
   return (
-    <div className="w-full bg-[#eee] text-black rounded-3xl overflow-hidden mt-10">
-      <div className="font-geist relative flex h-[25vh] items-center justify-center gap-2">
-        <div className="absolute left-1/2 top-[10%] grid -translate-x-1/2 content-start justify-items-center gap-6 text-center text-black">
-          <span className="relative max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:from-white after:to-black after:content-['']">
-            scroll down to see
+    <div
+      className="relative mt-10 w-full overflow-hidden rounded-[2rem] text-[#1a1a1a]"
+      style={{ backgroundColor: "#FCFAF2" }}
+    >
+      <div className="relative px-4 pb-6 pt-14 sm:px-8 sm:pb-10 sm:pt-20 md:px-12">
+       
+
+        <div className="mx-auto max-w-4xl text-center">
+          <span
+            className="inline-block rounded-full px-4 py-1.5 text-xs font-medium tracking-wide sm:text-sm"
+            style={{ backgroundColor: "#F5E6A8", color: "#3d3d2a" }}
+          >
+            Meet the people behind WeSee
           </span>
+          <h2
+            className="mt-6 font-semibold leading-[1.08] tracking-tight"
+            style={{ fontSize: "clamp(2rem, 5.5vw, 3.75rem)" }}
+          >
+            Build with a team that ships.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#4a4a4a] sm:text-lg">
+            From leadership to engineering and design, we combine craft and automation so your product moves forward
+            without friction.
+          </p>
         </div>
       </div>
 
       <div
-        ref={gallery}
-        className="relative box-border flex overflow-hidden bg-white"
-        style={{ 
-          height: isMobile ? "250vh" : "175vh",
-          gap: isMobile ? "1vw" : "2vw",
-          padding: isMobile ? "0" : "2vw"
-        }}
+        ref={viewportRef}
+        className="relative w-full overflow-hidden pb-10 sm:pb-14"
+        style={{ paddingTop: MARQUEE_VIEWPORT_PAD_TOP }}
       >
-        {isMobile ? (
-          <>
-            <Column images={finalMobileCol1} y={y} isMobile={isMobile} />
-            <Column images={finalMobileCol2} y={y2} isMobile={isMobile} />
-          </>
-        ) : (
-          <>
-            <Column images={col1} y={y} isMobile={isMobile} />
-            <Column images={col2} y={y2} isMobile={isMobile} />
-            <Column images={col3} y={y3} isMobile={isMobile} />
-            <Column images={col4} y={y4} isMobile={isMobile} />
-          </>
-        )}
+        <motion.div className="flex w-max will-change-transform" style={{ x: offsetX }}>
+          <div ref={measureRef} className="flex shrink-0 items-end gap-3 sm:gap-5 md:gap-6 px-3 sm:px-6">
+            {marqueePeople.map((person, i) => (
+              <div
+                key={`a-${i}`}
+                data-marquee-card
+                className="shrink-0 origin-bottom will-change-transform"
+                style={{ width: "clamp(7.5rem, 22vw, 11rem)" }}
+              >
+                <div
+                  className="overflow-hidden shadow-lg shadow-black/5"
+                  style={{
+                    aspectRatio: "9 / 16",
+                    borderRadius: "clamp(1.25rem, 4vw, 2rem)",
+                  }}
+                >
+                  <img
+                    src={person.photo}
+                    alt={person.name}
+                    className="h-full w-full object-cover object-[center_28%]"
+                    loading="lazy"
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-end gap-3 sm:gap-5 md:gap-6 px-3 sm:px-6" aria-hidden>
+            {marqueePeople.map((person, i) => (
+              <div
+                key={`b-${i}`}
+                data-marquee-card
+                className="shrink-0 origin-bottom will-change-transform"
+                style={{ width: "clamp(7.5rem, 22vw, 11rem)" }}
+              >
+                <div
+                  className="overflow-hidden shadow-lg shadow-black/5"
+                  style={{
+                    aspectRatio: "9 / 16",
+                    borderRadius: "clamp(1.25rem, 4vw, 2rem)",
+                  }}
+                >
+                  <img
+                    src={person.photo}
+                    alt=""
+                    className="h-full w-full object-cover object-[center_28%]"
+                    loading="lazy"
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -319,13 +340,10 @@ export default function Team() {
         </div>
       </section>
 
-      {/* Team members — parallax gallery */}
+      {/* Team — marquee gallery */}
       <section className="section-padding" style={{ borderTop: "1px solid #EEEEEE" }}>
         <div className="container">
-          <TextReveal as="h2" className="section-heading" stagger={0.05}>
-            The team.
-          </TextReveal>
-          <TeamParallaxGallery />
+          <TeamMarqueeHero />
         </div>
       </section>
 

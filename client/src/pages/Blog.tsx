@@ -100,7 +100,7 @@ export default function Blog() {
             />
             <span
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 500,
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
@@ -110,10 +110,10 @@ export default function Blog() {
               (01) BLOG
             </span>
           </div>
-          <TextReveal as="h1" style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
+          <TextReveal as="h1" style={{ fontSize: "clamp(34px, 4.75vw, 52px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
             Insights & ideas.
           </TextReveal>
-          <p className="body-text gsap-reveal" style={{ marginTop: 16, maxWidth: 640 }}>Practical guides, case studies, and thought pieces on AI automation, marketing, and building smarter businesses.</p>
+          <p className="body-text gsap-reveal" style={{ marginTop: 14, maxWidth: 680, fontSize: "var(--text-body-lg)", lineHeight: 1.65 }}>Practical guides, case studies, and thought pieces on AI automation, marketing, and building smarter businesses.</p>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function Blog() {
                   <span style={{ fontSize: 11, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888" }}>{featured.category}</span>
                   <span style={{ fontSize: 12, fontWeight: 400, color: "#888888" }}>({featured.date})</span>
                 </div>
-                <h2 style={{ fontSize: 40, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.15, marginTop: 12, maxWidth: 720, transition: "transform 0.3s ease" }} className="group-hover:translate-x-3">{featured.title}</h2>
+                <h2 style={{ fontSize: "clamp(26px, 3.25vw, 32px)", fontWeight: 600, color: "#1A1A1A", lineHeight: 1.2, marginTop: 12, maxWidth: 720, transition: "transform 0.3s ease" }} className="group-hover:translate-x-3">{featured.title}</h2>
                 <p style={{ fontSize: 16, fontWeight: 400, color: "#3A3A3A", lineHeight: 1.7, marginTop: 12, maxWidth: 600 }}>{featured.excerpt}</p>
                 <span className="cta-link" style={{ marginTop: 16, display: "inline-block" }}>Read article ↗</span>
               </div>
@@ -172,7 +172,7 @@ export default function Blog() {
                         <div className="flex items-center gap-4">
                           <span
                             style={{
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: 400,
                               paddingBottom: 4,
                               letterSpacing: "0.12em",
@@ -184,9 +184,9 @@ export default function Blog() {
                           </span>
                           <span
                             style={{
-                              fontSize: 14,
-                              paddingBottom: 4,
+                              fontSize: 12,
                               fontWeight: 400,
+                              paddingBottom: 4,
                               color: "#888888",
                             }}
                           >
@@ -196,7 +196,7 @@ export default function Blog() {
                         <h3
                           className="blog-card-title group-hover:translate-x-2"
                           style={{
-                            fontSize: 22,
+                            fontSize: "clamp(17px, 2vw, 19px)",
                             fontWeight: 600,
                             color: "#1A1A1A",
                             lineHeight: 1.3,
@@ -208,7 +208,7 @@ export default function Blog() {
                         </h3>
                         <p
                           style={{
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: 400,
                             color: "#3A3A3A",
                             lineHeight: 1.6,
