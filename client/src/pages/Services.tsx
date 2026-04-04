@@ -5258,7 +5258,7 @@ export default function Services() {
     }
   };
 
-  // Prepare ring items - duplicate to reach 90 items
+  // Ring: ≤89 filtered → one card per service, evenly spaced. ≥90 → cap at 90 (no duplicate tiles).
   const ringItems = useMemo(() => {
     const baseItems = filtered.map((s, i) => ({
       title: s.name,
@@ -5267,15 +5267,11 @@ export default function Services() {
       category: s.category,
       categoryId: s.categoryId,
     }));
-    
-    // Duplicate items to reach 90 total
+    const n = baseItems.length;
+    if (n === 0) return [];
     const targetCount = 90;
-    const repeatedItems: typeof baseItems = [];
-    for (let i = 0; i < targetCount; i++) {
-      repeatedItems.push(baseItems[i % baseItems.length]);
-    }
-    
-    return repeatedItems;
+    if (n >= targetCount) return baseItems.slice(0, targetCount);
+    return baseItems;
   }, [filtered]);
 
   // Category labels for ring
@@ -5296,6 +5292,12 @@ export default function Services() {
     }
     return catPositions;
   }, [filtered]);
+
+  const ringFilterApplied =
+    selectedCategory !== null ||
+    selectedIndustry !== null ||
+    selectedSize !== null ||
+    selectedStatus !== null;
 
   const pageCursor =
     !finePointer
@@ -5429,7 +5431,15 @@ export default function Services() {
       {viewMode === "ring" && (
         <div style={{ position: "relative", paddingBottom: 10, paddingTop: 18 }}>
           <ParticleWrapper>
-            <RotorGallery items={ringItems} gapPx={500} speedSec={45} camY={5} categoryLabels={ringCategoryLabels} />
+            <RotorGallery
+              items={ringItems}
+              count={ringItems.length}
+              gapPx={500}
+              speedSec={45}
+              camY={5}
+              categoryLabels={ringCategoryLabels}
+              hideRingCardOverlay={ringFilterApplied}
+            />
           </ParticleWrapper>
         </div>
       )}

@@ -52,6 +52,8 @@ interface RotorGalleryProps {
   cardRotZDeg?: number;
   categoryLabels?: CategoryLabel[];
   onItemClick?: (item: RingItem) => void;
+  /** When true, no category/title gradient overlay on ring cards (e.g. filtered list). */
+  hideRingCardOverlay?: boolean;
 }
 
 const MAX_SAFE_COUNT = 90;
@@ -91,6 +93,7 @@ function RotorItem({
   isMobile,
   finePointer,
   setInnerRef,
+  hideRingCardOverlay,
 }: {
   item: RingItem;
   index: number;
@@ -108,6 +111,7 @@ function RotorItem({
   isMobile: boolean;
   finePointer: boolean;
   setInnerRef?: (el: HTMLDivElement | null) => void;
+  hideRingCardOverlay?: boolean;
 }) {
   const itemAngle = (index / total) * 360;
   const thicknessPx = 1;
@@ -167,51 +171,55 @@ function RotorItem({
             transition: "transform 0.5s cubic-bezier(0.16,1,0.3,1)",
           }}
         />
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "55%",
-            background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
-            pointerEvents: "none",
-          }}
-        />
-        {!isMobile && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: 10,
-              left: 10,
-              right: 10,
-              pointerEvents: "none",
-            }}
-          >
+        {!hideRingCardOverlay && (
+          <>
             <div
               style={{
-                fontSize: 10,
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.55)",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                marginBottom: 2,
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "55%",
+                background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
+                pointerEvents: "none",
               }}
-            >
-              {item.category.split("&")[0].trim()}
-            </div>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#FFFFFF",
-                lineHeight: 1.3,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {item.title}
-            </div>
-          </div>
+            />
+            {!isMobile && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 10,
+                  left: 10,
+                  right: 10,
+                  pointerEvents: "none",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.55)",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    marginBottom: 2,
+                  }}
+                >
+                  {item.category.split("&")[0].trim()}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#FFFFFF",
+                    lineHeight: 1.3,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {item.title}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -238,6 +246,7 @@ export default function RotorGallery({
   cardRotZDeg = 0,
   categoryLabels = [],
   onItemClick,
+  hideRingCardOverlay = false,
 }: RotorGalleryProps) {
   const finePointer = useFinePointer();
   const safeCount = Math.min(MAX_SAFE_COUNT, count);
@@ -883,6 +892,7 @@ export default function RotorGallery({
             isMobile={isMobile}
             finePointer={finePointer}
             setInnerRef={(el) => { cardInnerRefs.current[i] = el; }}
+            hideRingCardOverlay={hideRingCardOverlay}
           />
         ))}
       </div>
