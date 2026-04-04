@@ -6,11 +6,14 @@ export interface ContactPayload {
   company?: string;
   service?: string;
   message: string;
+  phone?: string;
+  consentNonMarketing?: boolean;
+  consentMarketing?: boolean;
 }
 
 export async function sendContactEmail(payload: ContactPayload) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const { name, email, company, service, message } = payload;
+  const { name, email, company, service, message, phone, consentNonMarketing, consentMarketing } = payload;
 
   const toAddress = process.env.CONTACT_TO || "hr@weseegpt.com";
 
@@ -45,6 +48,21 @@ export async function sendContactEmail(payload: ContactPayload) {
               <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Service</td>
               <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1A1A1A; font-size: 15px;">${service}</td>
             </tr>` : ""}
+            ${phone ? `
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Phone</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1A1A1A; font-size: 15px;">${phone}</td>
+            </tr>` : ""}
+            ${consentNonMarketing !== undefined ? `
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Non-marketing SMS</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1A1A1A; font-size: 15px;">${consentNonMarketing ? "Yes" : "No"}</td>
+            </tr>` : ""}
+            ${consentMarketing !== undefined ? `
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Marketing SMS</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1A1A1A; font-size: 15px;">${consentMarketing ? "Yes" : "No"}</td>
+            </tr>` : ""}
           </table>
           <div style="margin-top: 24px;">
             <div style="color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Message</div>
@@ -54,6 +72,6 @@ export async function sendContactEmail(payload: ContactPayload) {
         <p style="color: #aaaaaa; font-size: 12px; text-align: center; margin-top: 24px;">WeSee AI Automation · weseegpt.com</p>
       </div>
     `,
-    text: `New contact form submission\n\nName: ${name}\nEmail: ${email}${company ? `\nCompany: ${company}` : ""}${service ? `\nService: ${service}` : ""}\n\nMessage:\n${message}`,
+    text: `New contact form submission\n\nName: ${name}\nEmail: ${email}${company ? `\nCompany: ${company}` : ""}${service ? `\nService: ${service}` : ""}${phone ? `\nPhone: ${phone}` : ""}${consentNonMarketing !== undefined ? `\nNon-marketing SMS: ${consentNonMarketing ? "Yes" : "No"}` : ""}${consentMarketing !== undefined ? `\nMarketing SMS: ${consentMarketing ? "Yes" : "No"}` : ""}\n\nMessage:\n${message}`,
   });
 }
