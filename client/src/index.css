@@ -728,6 +728,13 @@
     display: block;
   }
 
+  /* Home “We partner with ambitious businesses” marquee: larger brand marks */
+  .home-page .home-clients .clients-marquee-outer .client-tag-icon-wrap,
+  .home-page .home-clients .clients-marquee-outer .client-tag-icon {
+    width: 32px;
+    height: 32px;
+  }
+
   .client-tag-icon-fallback {
     display: none;
     width: 18px;
@@ -742,48 +749,12 @@
     line-height: 1;
   }
 
-  /* ── Section label ─── */
-  .section-label {
-    font-size: var(--text-label);
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ink-30);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .section-label::before {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 1px;
-    background: var(--accent);
-    flex-shrink: 0;
-  }
-
   @media (max-width: 767px) {
     .about-mobile-center-block {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-    }
-
-    .about-mobile-center-label {
-      flex-direction: column;
-      gap: 8px;
-      margin-inline: auto;
-      width: fit-content;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .about-mobile-center-label::before {
-      order: 2;
-      width: 24px;
     }
 
     .about-mobile-center-title {
@@ -1178,28 +1149,6 @@
       margin-top: 32px !important;
     }
 
-    .home-page .home-what-we-do-label {
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .home-page .home-what-we-do-label::before {
-      order: 2;
-      width: 24px;
-    }
-
-    .home-page .home-our-work-label {
-      flex-direction: column;
-      gap: 8px;
-      margin-inline: auto;
-      width: fit-content;
-    }
-
-    .home-page .home-our-work-label::before {
-      order: 2;
-      width: 24px;
-    }
-
     .home-page .home-our-work-col {
       text-align: center;
     }
@@ -1207,19 +1156,6 @@
     .home-page .home-our-work-col .sr {
       margin-left: auto;
       margin-right: auto;
-    }
-
-    .home-page .home-our-services-label {
-      flex-direction: column;
-      gap: 8px;
-      margin-inline: auto;
-      width: fit-content;
-      justify-content: center !important;
-    }
-
-    .home-page .home-our-services-label::before {
-      order: 2;
-      width: 24px;
     }
 
     .home-page .home-services-head {
@@ -1233,18 +1169,6 @@
       text-align: center;
     }
 
-    .home-page .home-our-clients-label {
-      flex-direction: column;
-      gap: 8px;
-      margin-inline: auto;
-      width: fit-content;
-      justify-content: center !important;
-    }
-
-    .home-page .home-our-clients-label::before {
-      order: 2;
-      width: 24px;
-    }
   }
 
   @media (min-width: 768px) and (max-width: 1280px) {

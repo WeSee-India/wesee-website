@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import SectionLabel from "@/components/SectionLabel";
 import TextReveal from "@/components/TextReveal";
 import StaggerReveal from "@/components/StaggerReveal";
 import MagneticButton from "@/components/MagneticButton";
@@ -71,35 +70,6 @@ export default function Careers() {
     <div className="careers-page" style={{ paddingTop: 20 }}>
       <div className="section-padding">
         <div className="container">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 18,
-            }}
-          >
-            <span
-              className="hidden md:inline-block"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#C9A84C",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "#999999",
-              }}
-            >
-              (01) CAREERS
-            </span>
-          </div>
           <TextReveal
             as="h1"
             className="careers-hero-title"
