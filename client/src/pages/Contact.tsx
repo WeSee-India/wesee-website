@@ -249,35 +249,6 @@ export default function Contact() {
     <div className="contact-page" style={{ paddingTop: "clamp(48px, 6vw, 64px)" }}>
       <div className="section-padding">
         <div className="container">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 18,
-            }}
-          >
-            <span
-              className="hidden md:inline-block"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#C9A84C",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "#999999",
-              }}
-            >
-              (01) CONTACT
-            </span>
-          </div>
           <TextReveal
             as="h1"
             className="contact-hero-title"

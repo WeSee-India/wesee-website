@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
 import { services, categories } from "@/data/services";
-import SectionLabel from "@/components/SectionLabel";
 
 import RotorGallery from "@/components/RotorGallery";
 
@@ -317,9 +316,6 @@ const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string
             <p className="body-text" style={{ maxWidth: "min(640px, 100%)", fontSize: "clamp(14px, 1.8vw, 16px)", color: "#3A3A3A", lineHeight: 1.6 }}>
               9 categories, 43 services — everything your business needs to automate, grow, and scale intelligently.
             </p>
-            <div className="md:hidden" style={{ marginTop: 14 }}>
-              <SectionLabel number="01" title="SERVICES" />
-            </div>
           </div>
         </div>
         <div className="absolute left-1/2 bottom-[10%] grid -translate-x-1/2 content-start justify-items-center gap-6 text-center text-black">

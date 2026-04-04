@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import InteractiveParticles from "@/components/InteractiveParticles";
-import StaggerReveal from "@/components/StaggerReveal";
+
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -277,8 +277,7 @@ export default function About() {
             gap: "clamp(28px, 5vw, 60px)", alignItems: "start",
           }}>
             <div className="about-mobile-center-block">
-              <span className="section-label gsap-reveal about-mobile-center-label">(01) Our Mission</span>
-              <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 12 }}>
+              <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 0 }}>
                 Automation that changes how business works.
               </h2>
             </div>
@@ -312,8 +311,7 @@ export default function About() {
       <section className="section-pad" style={{ background: "var(--paper)" }}>
         <div className="container">
           <div className="about-mobile-center-block">
-            <span className="section-label gsap-reveal about-mobile-center-label">(02) Our Journey</span>
-            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 12, marginBottom: 60 }}>
+            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 0, marginBottom: 60 }}>
               Building for the long run.
             </h2>
           </div>
@@ -376,8 +374,7 @@ export default function About() {
       <section className="section-pad" style={{ background: "var(--paper-dark)" }}>
         <div className="container">
           <div className="about-mobile-center-block">
-            <span className="section-label gsap-reveal about-mobile-center-label" style={{ marginBottom: 8 }}>(03) Our Values</span>
-            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginBottom: 52, marginTop: 12 }}>
+            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginBottom: 52, marginTop: 0 }}>
               How we operate.
             </h2>
           </div>

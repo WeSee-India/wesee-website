@@ -59,6 +59,13 @@ interface RotorGalleryProps {
 
 const MAX_SAFE_COUNT = 90;
 
+/** Mobile drag: degrees per horizontal pixel (linear — easier to tune than atan2 arcs). */
+const MOBILE_RING_DX_TO_DEG = 0.052;
+/** Clamp each touchmove to avoid rare jumps when events are sparse. */
+const MOBILE_RING_DRAG_DEG_CAP = 4.2;
+/** Idle auto-rotation multiplier when viewport width < 640px (desktop unchanged). */
+const MOBILE_AUTO_SPIN_SCALE = 0.38;
+
 // ── mat4 helpers — kept only for mobile updateClosestImageMobile ──────────────
 type M4 = Float64Array;
 function m4id(): M4 { const m = new Float64Array(16); m[0]=m[5]=m[10]=m[15]=1; return m; }
@@ -140,7 +147,6 @@ function RotorItem({
   baseCardRotZ,
   cardOpacity,
   isHovered,
-  isMobile,
   finePointer,
   setInnerRef,
   hideRingCardOverlay,
@@ -158,7 +164,6 @@ function RotorItem({
   baseCardRotZ: number;
   cardOpacity: number;
   isHovered: boolean;
-  isMobile: boolean;
   finePointer: boolean;
   setInnerRef?: (el: HTMLDivElement | null) => void;
   hideRingCardOverlay?: boolean;
@@ -222,54 +227,17 @@ function RotorItem({
           }}
         />
         {!hideRingCardOverlay && (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "55%",
-                background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
-                pointerEvents: "none",
-              }}
-            />
-            {!isMobile && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 10,
-                  left: 10,
-                  right: 10,
-                  pointerEvents: "none",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 400,
-                    color: "rgba(255,255,255,0.55)",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    marginBottom: 2,
-                  }}
-                >
-                  {item.category.split("&")[0].trim()}
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "#FFFFFF",
-                    lineHeight: 1.3,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {item.title}
-                </div>
-              </div>
-            )}
-          </>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "55%",
+              background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
+              pointerEvents: "none",
+            }}
+          />
         )}
       </div>
     </div>
@@ -474,7 +442,8 @@ export default function RotorGallery({
       last = t;
 
       if (!isDraggingRef.current && !isHoveringRef.current && targetAngleRef.current === null) {
-        angleRef.current += speed * dt;
+        const spinMul = window.innerWidth < 640 ? MOBILE_AUTO_SPIN_SCALE : 1;
+        angleRef.current += speed * dt * spinMul;
       }
       if (Math.abs(velocityRef.current) > 0.01 && targetAngleRef.current === null && !isHoveringRef.current) {
         angleRef.current += velocityRef.current * dt;
@@ -619,14 +588,21 @@ export default function RotorGallery({
       const now = performance.now();
       const dt = Math.max(now - lastPosRef.current.time, 1);
       const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const currentAngle = Math.atan2(clientY - centerY, clientX - centerX);
-      const prevAngle = Math.atan2(lastPosRef.current.y - centerY, lastPosRef.current.x - centerX);
-      let angleDelta = currentAngle - prevAngle;
-      if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
-      if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
-      const rotationDelta = angleDelta * (180 / Math.PI);
+      let rotationDelta: number;
+      if (isMobile) {
+        const dx = clientX - lastPosRef.current.x;
+        rotationDelta = dx * MOBILE_RING_DX_TO_DEG;
+        rotationDelta = Math.max(-MOBILE_RING_DRAG_DEG_CAP, Math.min(MOBILE_RING_DRAG_DEG_CAP, rotationDelta));
+      } else {
+        const refX = rect.left + rect.width / 2;
+        const refY = rect.top + rect.height / 2;
+        const currentAngle = Math.atan2(clientY - refY, clientX - refX);
+        const prevAngle = Math.atan2(lastPosRef.current.y - refY, lastPosRef.current.x - refX);
+        let angleDelta = currentAngle - prevAngle;
+        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+        rotationDelta = angleDelta * (180 / Math.PI);
+      }
       angleRef.current += rotationDelta;
       targetAngleRef.current = null;
       velocityRef.current = rotationDelta / (dt / 1000);
@@ -1087,7 +1063,6 @@ export default function RotorGallery({
             baseCardRotZ={cardRotZDeg}
             cardOpacity={1}
             isHovered={(isMobile ? displayRevealIdx : activeCardIndex) === i}
-            isMobile={isMobile}
             finePointer={finePointer}
             setInnerRef={(el) => { cardInnerRefs.current[i] = el; }}
             hideRingCardOverlay={hideRingCardOverlay}

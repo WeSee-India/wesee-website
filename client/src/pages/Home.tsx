@@ -635,11 +635,10 @@ export default function Home() {
         <div className="container">
           {/* Header */}
           <div className="sr" style={{ textAlign: "center", marginBottom: 52 }}>
-            <div className="section-label home-what-we-do-label" style={{ justifyContent: "center" }}>What we do</div>
             <h2 style={{
               fontSize: "clamp(30px, 3.8vw, 50px)", fontWeight: 450,
               letterSpacing: "-0.03em", color: "var(--ink)",
-              marginTop: 12, lineHeight: 1.1, maxWidth: "30ch", margin: "12px auto 0",
+              lineHeight: 1.1, maxWidth: "30ch", margin: "0 auto",
             }}>
               End-to-end automation for modern businesses.
             </h2>
@@ -709,10 +708,9 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
               {/* Text col */}
               <div className="home-our-work-col">
-                <div className="section-label sr home-our-work-label">Our Work</div>
                 <h2 className="sr" style={{
                   fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
-                  letterSpacing: "-0.03em", marginTop: 12, lineHeight: 1.1,
+                  letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
                 }}>
                   We build AI that works<em style={{ fontWeight: 300, fontStyle: "italic", color: "rgba(17,19,23,0.45)" }}>.</em>
                 </h2>
@@ -876,12 +874,11 @@ export default function Home() {
         <div className="container">
           <div className="home-services-head" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 48 }}>
             <div className="home-services-head-main">
-              <div className="section-label sr home-our-services-label">Our Services</div>
               <h2
                 className="sr"
                 style={{
                   fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
-                  letterSpacing: "-0.03em", marginTop: 10, lineHeight: 1.1,
+                  letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
                 }}
               >
                 Built for Growth. Powered by AI. Driven by Automation.
@@ -1000,10 +997,9 @@ export default function Home() {
       >
         <div className="container" style={{ marginBottom: 52 }}>
           <div className="sr" style={{ textAlign: "center" }}>
-            <div className="section-label home-our-clients-label" style={{ justifyContent: "center" }}>Our Clients</div>
             <h2 style={{
               fontSize: "clamp(28px, 3.5vw, 46px)", fontWeight: 450,
-              letterSpacing: "-0.03em", marginTop: 12, lineHeight: 1.1,
+              letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
             }}>
               We partner with ambitious businesses.
             </h2>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { animate, motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import TextReveal from "@/components/TextReveal";
@@ -21,7 +21,7 @@ const directors = [
   },
   {
     name: "Takeshi",
-    title: "Head of AI Engineering",
+    title: "Co Founder & Partner",
     bio: "Takeshi is a passionate crypto and blockchain enthusiast who leads Japanese client management at WeSee, ensuring strong relationships, clear communication, and seamless collaboration. He understands how to align business vision with client expectations, especially in fast-moving and innovation-driven markets.",
       email: "takeshi.shoyama@weseegpt.com",
       photo: "/client/takeshi.webp",
@@ -56,6 +56,13 @@ const ARC_MAX_TILT = 7;
 const MARQUEE_VIEWPORT_PAD_TOP = ARC_MAX_LIFT + 24;
 /** Horizontal speed (px per second) for the marquee */
 const MARQUEE_SPEED_PX_PER_SEC = 42;
+/** Repeat the team cycle this many times in one loop strip (grown until strip ≥ viewport) */
+const MAX_STRIP_COPIES = 12;
+
+function repeatMarqueePeople(people: typeof marqueePeople, copies: number) {
+  if (copies <= 1) return people;
+  return Array.from({ length: copies }, () => people).flat();
+}
 
 function wrapMarqueeOffset(x: number, loopWidth: number): number {
   if (loopWidth <= 0) return x;
@@ -68,6 +75,14 @@ function wrapMarqueeOffset(x: number, loopWidth: number): number {
 const TeamMarqueeHero = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
+  const [stripCopies, setStripCopies] = useState(() =>
+    Math.max(2, Math.min(MAX_STRIP_COPIES, Math.ceil(1400 / Math.max(160, marqueePeople.length * 120))))
+  );
+  const stripPeople = useMemo(
+    () => repeatMarqueePeople(marqueePeople, stripCopies),
+    [stripCopies]
+  );
+
   const [loopW, setLoopW] = useState(0);
   const loopWRef = useRef(0);
   const offsetX = useMotionValue(0);
@@ -81,27 +96,57 @@ const TeamMarqueeHero = () => {
     loopWRef.current = loopW;
   }, [loopW]);
 
-  useEffect(() => {
-    const el = measureRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setLoopW(el.offsetWidth));
-    ro.observe(el);
-    setLoopW(el.offsetWidth);
-    return () => ro.disconnect();
-  }, []);
+  useLayoutEffect(() => {
+    if (marqueePeople.length === 0) return;
+    const vp = viewportRef.current;
+    const row = measureRef.current;
+    if (!vp || !row) return;
+
+    let raf = 0;
+    const measureAndMaybeGrow = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const vw = vp.clientWidth;
+        const sw = row.offsetWidth;
+        if (sw > 0) {
+          const next = Math.round(sw);
+          setLoopW((prev) => {
+            if (next <= 0) return prev;
+            if (prev > 0 && Math.abs(next - prev) < 2) return prev;
+            return next;
+          });
+        }
+        if (sw > 0 && vw > 0 && sw < vw + 32) {
+          setStripCopies((n) => (n < MAX_STRIP_COPIES ? n + 1 : n));
+        }
+      });
+    };
+
+    const ro = new ResizeObserver(measureAndMaybeGrow);
+    ro.observe(vp);
+    ro.observe(row);
+    measureAndMaybeGrow();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [stripCopies]);
 
   const startMarqueeAnimation = useCallback(
     (fromOffset?: number) => {
-      const w = loopWRef.current;
+      const w = Math.round(loopWRef.current);
       if (w <= 0) return;
       animControlsRef.current?.stop();
-      const start = fromOffset !== undefined ? wrapMarqueeOffset(fromOffset, w) : 0;
+      const start =
+        fromOffset !== undefined ? Math.round(wrapMarqueeOffset(fromOffset, w)) : 0;
       offsetX.set(start);
-      const controls = animate(offsetX, [start, start - w], {
+      const end = start - w;
+      const controls = animate(offsetX, [start, end], {
         ease: "linear",
         duration: w / MARQUEE_SPEED_PX_PER_SEC,
         repeat: Infinity,
         repeatType: "loop",
+        repeatDelay: 0,
       });
       animControlsRef.current = controls;
     },
@@ -111,13 +156,15 @@ const TeamMarqueeHero = () => {
   useEffect(() => {
     if (loopW <= 0) return;
     if (isDraggingRef.current) return;
+    const vp = viewportRef.current;
+    if (vp && loopW < vp.clientWidth + 16 && stripCopies < MAX_STRIP_COPIES) return;
     startMarqueeAnimation(0);
     return () => animControlsRef.current?.stop();
-  }, [loopW, startMarqueeAnimation]);
+  }, [loopW, stripCopies, startMarqueeAnimation]);
 
   const onPointerDownMarquee = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    const w = loopWRef.current;
+    const w = Math.round(loopWRef.current);
     if (w <= 0) return;
     isDraggingRef.current = true;
     animControlsRef.current?.stop();
@@ -128,7 +175,7 @@ const TeamMarqueeHero = () => {
 
   const onPointerMoveMarquee = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
-    const w = loopWRef.current;
+    const w = Math.round(loopWRef.current);
     if (w <= 0) return;
     const dx = e.clientX - dragStartClientXRef.current;
     offsetX.set(wrapMarqueeOffset(dragStartOffsetRef.current + dx, w));
@@ -140,7 +187,7 @@ const TeamMarqueeHero = () => {
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
-    const w = loopWRef.current;
+    const w = Math.round(loopWRef.current);
     if (w <= 0) return;
     const wrapped = wrapMarqueeOffset(offsetX.get(), w);
     offsetX.set(wrapped);
@@ -173,7 +220,7 @@ const TeamMarqueeHero = () => {
       }
       sm.y += (targetY - sm.y) * smooth;
       sm.r += (tilt - sm.r) * smooth;
-      el.style.transform = `translateY(${sm.y}px) rotate(${sm.r}deg)`;
+      el.style.transform = `translate3d(0, ${sm.y}px, 0) rotate(${sm.r}deg)`;
     });
   });
 
@@ -217,13 +264,16 @@ const TeamMarqueeHero = () => {
         onPointerUp={onPointerUpMarquee}
         onPointerCancel={onPointerUpMarquee}
       >
-        <motion.div className="flex w-max will-change-transform" style={{ x: offsetX }}>
+        <motion.div
+          className="flex w-max will-change-transform"
+          style={{ x: offsetX, backfaceVisibility: "hidden" }}
+        >
           <div ref={measureRef} className="flex shrink-0 items-end gap-3 sm:gap-5 md:gap-6 px-3 sm:px-6">
-            {marqueePeople.map((person, i) => (
+            {stripPeople.map((person, i) => (
               <div
-                key={`a-${i}`}
+                key={`a-${i}-${person.photo}`}
                 data-marquee-card
-                className="shrink-0 origin-bottom will-change-transform"
+                className="shrink-0 origin-bottom will-change-transform [backface-visibility:hidden]"
                 style={{ width: "clamp(7.5rem, 22vw, 11rem)" }}
               >
                 <div
@@ -237,7 +287,8 @@ const TeamMarqueeHero = () => {
                     src={person.photo}
                     alt={person.name}
                     className="h-full w-full object-cover object-[center_28%]"
-                    loading="lazy"
+                    loading="eager"
+                    decoding="async"
                     draggable={false}
                   />
                 </div>
@@ -245,11 +296,11 @@ const TeamMarqueeHero = () => {
             ))}
           </div>
           <div className="flex shrink-0 items-end gap-3 sm:gap-5 md:gap-6 px-3 sm:px-6" aria-hidden>
-            {marqueePeople.map((person, i) => (
+            {stripPeople.map((person, i) => (
               <div
-                key={`b-${i}`}
+                key={`b-${i}-${person.photo}`}
                 data-marquee-card
-                className="shrink-0 origin-bottom will-change-transform"
+                className="shrink-0 origin-bottom will-change-transform [backface-visibility:hidden]"
                 style={{ width: "clamp(7.5rem, 22vw, 11rem)" }}
               >
                 <div
@@ -263,7 +314,8 @@ const TeamMarqueeHero = () => {
                     src={person.photo}
                     alt=""
                     className="h-full w-full object-cover object-[center_28%]"
-                    loading="lazy"
+                    loading="eager"
+                    decoding="async"
                     draggable={false}
                   />
                 </div>
@@ -292,79 +344,103 @@ export default function Team() {
     return () => { clearTimeout(timer); localTriggers.forEach(t => t.kill()); };
   }, []);
 
+  const teamHeroCollage = [
+    {
+      src: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&q=80",
+      alt: "Team collaborating around a table",
+      objectPosition: "center 38%",
+    },
+    {
+      src: "/tropy.jpg",
+      alt: "Discussion and gestures in a meeting",
+      objectPosition: "center 55%",
+    },
+    {
+      src: "/team.jpg",
+      alt: "WeSee team celebrating a win",
+      objectPosition: "center 42%",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=900&q=80",
+      alt: "Colleagues working together",
+      objectPosition: "center 40%",
+    },
+  ] as const;
+
   return (
     <div style={{ paddingTop: 64 }}>
-      <div className="section-padding">
-        <div className="container">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-            <span
-              className="hidden sm:inline-block"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#C9A84C",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "#999999",
-              }}
-            >
-              (01) TEAM
-            </span>
-          </div>
-          <TextReveal as="h1" style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
-            We are a community of builders.
-          </TextReveal>
-          <p className="body-text gsap-reveal" style={{ marginTop: 24, maxWidth: 640 }}>
-            To work at WeSee means to build intelligent systems in an ambitious and relentless spirit — transcending industries and disciplines.
-          </p>
-        </div>
-      </div>
-
-      {/* 2x2 team collage — hover: blurred bg + smaller sharp center image */}
-      <div className="container">
-        <div className="grid grid-cols-2 gap-1 sm:gap-2">
-          {[
-            { src: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80", h: "clamp(180px, 30vw, 320px)" },
-            { src: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80", h: "clamp(140px, 22vw, 220px)" },
-            { src: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80", h: "clamp(140px, 22vw, 220px)" },
-            { src: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600&q=80", h: "clamp(180px, 30vw, 320px)" },
-          ].map((img, i) => (
-            <div
-              key={i}
-              className="group relative overflow-hidden rounded-2xl bg-[#E8E8E5] cursor-pointer"
-              style={{ height: img.h, borderRadius: 16 }}
-            >
-              {/* Blurred background — same image, visible on hover */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out"
-                aria-hidden
-              >
-                <img
-                  src={img.src}
-                  alt=""
-                  className="w-full h-full object-cover block scale-105"
-                  style={{ filter: "blur(14px)" }}
-                />
+      {/* Hero: soft backdrop + headline beside collage on large screens */}
+      <section className="relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[min(72vh,640px)] bg-gradient-to-b from-[#F5F3EE] via-[#FAFAF8] to-transparent"
+          aria-hidden
+        />
+        <div className="section-padding relative pb-6 sm:pb-10">
+          <div className="container">
+            <div className="grid items-start gap-10 lg:gap-12 xl:grid-cols-12 xl:gap-14">
+              <div className="xl:col-span-5 xl:pt-2">
+                <TextReveal
+                  as="h1"
+                  style={{
+                    fontSize: "clamp(40px, 5.2vw, 68px)",
+                    fontWeight: 700,
+                    color: "#1A1A1A",
+                    lineHeight: 1.12,
+                  }}
+                  stagger={0.06}
+                  onScroll={false}
+                >
+                  We are a community of builders.
+                </TextReveal>
+                <p
+                  className="gsap-reveal mt-5 text-[15px] leading-relaxed text-[#5A5A5A] sm:text-base sm:leading-relaxed"
+                  style={{ maxWidth: 520 }}
+                >
+                  We ship intelligent systems with an ambitious, collaborative spirit — across industries, time zones, and disciplines.
+                </p>
+                <p
+                  className="gsap-reveal mt-4 text-[13px] font-medium uppercase tracking-[0.14em] text-[#9A9A9A]"
+                  style={{ maxWidth: 520 }}
+                >
+                  Engineering · Design · Operations
+                </p>
               </div>
-              {/* Sharp center image — shrinks on hover to reveal blurred bg */}
-              <img
-                src={img.src}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover block transition-transform duration-400 ease-out group-hover:scale-95 rounded-[20px]"
-                style={{ transformOrigin: "center center" }}
-                loading="lazy"
-              />
+
+              {/* 2×2 collage — uniform tiles so no cell looks “chopped”; hover: blurred bg + sharp inset */}
+              <div className="xl:col-span-7">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+                  {teamHeroCollage.map((img, i) => (
+                    <div
+                      key={img.src}
+                      className="group relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl bg-[#E8E8E5] shadow-sm shadow-black/[0.04] ring-1 ring-black/[0.04] sm:aspect-[4/3] sm:rounded-[1.25rem]"
+                    >
+                      <div
+                        className="absolute inset-0 opacity-0 transition-opacity duration-400 ease-out group-hover:opacity-100"
+                        aria-hidden
+                      >
+                        <img
+                          src={img.src}
+                          alt=""
+                          className="block h-full w-full scale-105 object-cover"
+                          style={{ filter: "blur(14px)", objectPosition: img.objectPosition }}
+                        />
+                      </div>
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        className="absolute inset-0 block h-full w-full object-cover transition-transform duration-400 ease-out group-hover:scale-95 sm:rounded-[1.25rem]"
+                        style={{ transformOrigin: "center center", objectPosition: img.objectPosition }}
+                        loading={i === 0 ? "eager" : "lazy"}
+                        decoding="async"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Leadership — TiltCard + hover grayscale-to-color */}
       <section className="section-padding">

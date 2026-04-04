@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
-import SectionLabel from "@/components/SectionLabel";
 import TextReveal from "@/components/TextReveal";
 import TiltCard from "@/components/TiltCard";
 import StaggerReveal from "@/components/StaggerReveal";
@@ -81,35 +80,6 @@ export default function Blog() {
     <div className="blog-route" style={{ paddingTop: 44 }}>
       <div style={{ paddingTop: 30, paddingBottom: 40 }}>
         <div className="container">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 18,
-            }}
-          >
-            <span
-              className="hidden md:inline-block"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#C9A84C",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 500,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "#999999",
-              }}
-            >
-              (01) BLOG
-            </span>
-          </div>
           <TextReveal as="h1" style={{ fontSize: "clamp(34px, 4.75vw, 52px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }} stagger={0.06} onScroll={false}>
             Insights & ideas.
           </TextReveal>

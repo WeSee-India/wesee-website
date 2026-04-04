@@ -159,9 +159,6 @@ export default function BookCall() {
                 animationDelay: "0.05s",
               }}
             >
-              <div className="section-label" style={{ marginBottom: 18 }}>
-                Book a call
-              </div>
               <h1
                 style={{
                   fontSize: "clamp(32px, 4.4vw, 56px)",
