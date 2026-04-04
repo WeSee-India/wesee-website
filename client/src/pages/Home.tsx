@@ -751,7 +751,7 @@ export default function Home() {
                   {workImages.map((img, i) => (
                     <div
                       key={i}
-                      className="rounded-2xl bg-[#E8E8E5]"
+                      className={`rounded-2xl bg-[#E8E8E5]${i >= 4 ? " hidden sm:block" : ""}`}
                       style={{
                         height: 210,
                         borderRadius: 16,

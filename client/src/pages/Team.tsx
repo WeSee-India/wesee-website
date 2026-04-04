@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { animate, motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import TextReveal from "@/components/TextReveal";
@@ -22,7 +22,7 @@ const directors = [
   {
     name: "Takeshi",
     title: "Head of AI Engineering",
-    bio: "Takeshi  leads WeSee's AI engineering team, overseeing the development of conversational AI agents, workflow automation systems, and custom integrations. With deep expertise in LangChain, OpenAI, and enterprise AI architecture, she ensures every solution is production-ready.",
+    bio: "Takeshi is a passionate crypto and blockchain enthusiast who leads Japanese client management at WeSee, ensuring strong relationships, clear communication, and seamless collaboration. He understands how to align business vision with client expectations, especially in fast-moving and innovation-driven markets.",
       email: "takeshi.shoyama@weseegpt.com",
       photo: "/client/takeshi.webp",
     
@@ -57,12 +57,29 @@ const MARQUEE_VIEWPORT_PAD_TOP = ARC_MAX_LIFT + 24;
 /** Horizontal speed (px per second) for the marquee */
 const MARQUEE_SPEED_PX_PER_SEC = 42;
 
+function wrapMarqueeOffset(x: number, loopWidth: number): number {
+  if (loopWidth <= 0) return x;
+  let v = x;
+  while (v <= -loopWidth) v += loopWidth;
+  while (v > 0) v -= loopWidth;
+  return v;
+}
+
 const TeamMarqueeHero = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [loopW, setLoopW] = useState(0);
+  const loopWRef = useRef(0);
   const offsetX = useMotionValue(0);
   const cardSmoothRef = useRef(new WeakMap<HTMLElement, { y: number; r: number }>());
+  const animControlsRef = useRef<ReturnType<typeof animate> | null>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartClientXRef = useRef(0);
+  const dragStartOffsetRef = useRef(0);
+
+  useEffect(() => {
+    loopWRef.current = loopW;
+  }, [loopW]);
 
   useEffect(() => {
     const el = measureRef.current;
@@ -73,17 +90,62 @@ const TeamMarqueeHero = () => {
     return () => ro.disconnect();
   }, []);
 
+  const startMarqueeAnimation = useCallback(
+    (fromOffset?: number) => {
+      const w = loopWRef.current;
+      if (w <= 0) return;
+      animControlsRef.current?.stop();
+      const start = fromOffset !== undefined ? wrapMarqueeOffset(fromOffset, w) : 0;
+      offsetX.set(start);
+      const controls = animate(offsetX, [start, start - w], {
+        ease: "linear",
+        duration: w / MARQUEE_SPEED_PX_PER_SEC,
+        repeat: Infinity,
+        repeatType: "loop",
+      });
+      animControlsRef.current = controls;
+    },
+    [offsetX]
+  );
+
   useEffect(() => {
     if (loopW <= 0) return;
-    offsetX.set(0);
-    const controls = animate(offsetX, [0, -loopW], {
-      ease: "linear",
-      duration: loopW / MARQUEE_SPEED_PX_PER_SEC,
-      repeat: Infinity,
-      repeatType: "loop",
-    });
-    return () => controls.stop();
-  }, [loopW, offsetX]);
+    if (isDraggingRef.current) return;
+    startMarqueeAnimation(0);
+    return () => animControlsRef.current?.stop();
+  }, [loopW, startMarqueeAnimation]);
+
+  const onPointerDownMarquee = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const w = loopWRef.current;
+    if (w <= 0) return;
+    isDraggingRef.current = true;
+    animControlsRef.current?.stop();
+    dragStartClientXRef.current = e.clientX;
+    dragStartOffsetRef.current = offsetX.get();
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMoveMarquee = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    const w = loopWRef.current;
+    if (w <= 0) return;
+    const dx = e.clientX - dragStartClientXRef.current;
+    offsetX.set(wrapMarqueeOffset(dragStartOffsetRef.current + dx, w));
+  };
+
+  const onPointerUpMarquee = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    const w = loopWRef.current;
+    if (w <= 0) return;
+    const wrapped = wrapMarqueeOffset(offsetX.get(), w);
+    offsetX.set(wrapped);
+    startMarqueeAnimation(wrapped);
+  };
 
   useAnimationFrame((_, delta) => {
     const dt = Math.min(delta, 48) / 1000;
@@ -145,8 +207,15 @@ const TeamMarqueeHero = () => {
 
       <div
         ref={viewportRef}
-        className="relative w-full overflow-hidden pb-10 sm:pb-14"
+        role="region"
+        aria-label="Team gallery — drag horizontally to explore"
+        title="Drag to scroll"
+        className="relative w-full cursor-grab touch-none overflow-hidden pb-10 select-none active:cursor-grabbing sm:pb-14"
         style={{ paddingTop: MARQUEE_VIEWPORT_PAD_TOP }}
+        onPointerDown={onPointerDownMarquee}
+        onPointerMove={onPointerMoveMarquee}
+        onPointerUp={onPointerUpMarquee}
+        onPointerCancel={onPointerUpMarquee}
       >
         <motion.div className="flex w-max will-change-transform" style={{ x: offsetX }}>
           <div ref={measureRef} className="flex shrink-0 items-end gap-3 sm:gap-5 md:gap-6 px-3 sm:px-6">
