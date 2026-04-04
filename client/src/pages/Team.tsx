@@ -32,10 +32,12 @@ const directors = [
 
 const teamMembers = [
   { name: "sanjeev vishwakarma", title: "Full Stack Developer", photo: "/services/sanjiv.webp" },
-  { name: "harsh khanna", title: "Growth Marketing Lead", photo: "/client/harsh.webp" },
-  { name: "deepak yadav", title: "Automation Engineer", photo: "/services/deepak.webp" },
-  { name: "alex", title: "UX Designer", photo: "/client/takeshi.webp" },
-  { name: "virendra singh", title: "Data Analyst", photo: "/client/virendra.jpg" },
+  { name: "yuvraj khanna", title: "graphic team lead", photo: "/client/yuvraj.png" },
+  { name: "deepak yadav", title: "full stack developer", photo: "/services/deepak.webp" },
+  { name: "pranav ", title: "UX Designer", photo: "/client/pranav.webp" },
+  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.jpg" },
+  { name: "mani bajpai", title: "blockchain developer", photo: "/client/mani.png" },
+  
 ];
 
 type ColumnProps = {
