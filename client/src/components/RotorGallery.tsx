@@ -787,8 +787,7 @@ export default function RotorGallery({
                   fontSize: isMobile ? 11 : 14,
                   fontWeight: 600,
                   color: "#111317",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
+                  letterSpacing: "-0.02em",
                   display: "inline-block",
                   background: "rgba(248,248,246,0.95)",
                   backdropFilter: "blur(8px)",
@@ -798,7 +797,7 @@ export default function RotorGallery({
                   border: "1px solid rgba(17,19,23,0.15)",
                 }}
               >
-                {list[activeCardIndex].category.split("&")[0].trim()}
+                {list[activeCardIndex].title}
               </span>
             </div>
           </>
