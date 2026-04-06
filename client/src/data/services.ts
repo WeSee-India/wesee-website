@@ -1,4 +1,4 @@
-/** Optional line chart on service detail: before vs after midpoint % metrics. */
+/** Optional impact metrics on service detail: headline outcomes with before/after context. */
 export interface ServiceGrowthComparisonChart {
   title: string;
   description?: string;
@@ -32,7 +32,7 @@ export interface Service {
 export const defaultServiceGrowthComparisonChart: ServiceGrowthComparisonChart = {
   title: "Business growth over six months",
   description:
-    "Representative before-and-after trajectory using midpoint percentages from typical ranges (e.g. repeat purchase 15–20% → 35–50%).",
+    "The kind of momentum teams often see within six months—your outcome depends on your market, timing, and how we execute together.",
   beforeLabel: "Before",
   afterLabel: "After 6 Months",
   rows: [
@@ -704,7 +704,7 @@ export const services: Service[] = [
     growthComparisonChart: {
       title: "Business growth over six months",
       description:
-        "Representative before-and-after trajectory for technical SEO (typical ranges on a 0–100 scale where higher is better).",
+        "Example gains in visibility, speed, and coverage—your results depend on where you start and what we prioritize first.",
       beforeLabel: "Before",
       afterLabel: "After 6 Months",
       rows: [

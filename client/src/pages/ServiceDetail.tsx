@@ -20,7 +20,7 @@ import TiltCard from "@/components/TiltCard";
 import MagneticButton from "@/components/MagneticButton";
 import StaggerReveal from "@/components/StaggerReveal";
 import FloatingParticles from "@/components/FloatingParticles";
-import GrowthComparisonChart from "@/components/GrowthComparisonChart";
+import ServiceImpactMetrics from "@/components/ServiceImpactMetrics";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -129,13 +129,8 @@ export default function ServiceDetail() {
   const heroImage = getServiceImage(service, serviceIndex);
   const growthChartConfig = service.growthComparisonChart ?? defaultServiceGrowthComparisonChart;
 
-  /** Crisp dashed rule (browser `border-dashed` is faint + uneven). */
-  const sectionDivider = (
-    <div
-      className="h-px w-full my-8 md:my-10 [background-image:repeating-linear-gradient(90deg,rgb(115_115_115)_0_6px,transparent_6px_13px)]"
-      aria-hidden
-    />
-  );
+  /** Same vertical rhythm as the old dashed dividers (`my-8 md:my-10`). */
+  const sectionGap = <div className="my-8 md:my-10" aria-hidden />;
 
   return (
     <div className="service-detail-page bg-white text-neutral-900 md:bg-[var(--paper)] md:text-[var(--foreground)]">
@@ -205,7 +200,7 @@ export default function ServiceDetail() {
             </article>
           </div>
 
-          {sectionDivider}
+          {sectionGap}
 
           <div className="w-full text-left">
             <article className="gsap-reveal">
@@ -259,7 +254,7 @@ export default function ServiceDetail() {
             </>
           ) : null}
 
-          {sectionDivider}
+          {sectionGap}
 
           <article className="gsap-reveal w-full max-w-none">
             <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
@@ -316,16 +311,13 @@ export default function ServiceDetail() {
             </article>
           </div>
 
-          {sectionDivider}
+          {sectionGap}
 
-          {/* Full-bleed chart: use full viewport width while keeping readable side padding */}
-          <div className="relative ml-[calc(50%-50vw)] w-screen max-w-[100vw] px-6 pt-0 text-left md:px-12 lg:px-[60px]">
-            <article className="gsap-reveal w-full max-w-none">
-              <GrowthComparisonChart config={growthChartConfig} />
-            </article>
-          </div>
+          <article className="gsap-reveal w-full max-w-none text-left">
+            <ServiceImpactMetrics config={growthChartConfig} />
+          </article>
 
-          {sectionDivider}
+          {sectionGap}
 
           <div className="w-full pt-0 text-left">
             <article className="gsap-reveal">
