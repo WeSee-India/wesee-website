@@ -1,3 +1,12 @@
+/** Optional line chart on service detail: before vs after midpoint % metrics. */
+export interface ServiceGrowthComparisonChart {
+  title: string;
+  description?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  rows: { label: string; before: number; after: number }[];
+}
+
 export interface Service {
   id: number;
   slug: string;
@@ -13,7 +22,27 @@ export interface Service {
   serviceType: string;
   status: "Live" | "In Progress" | "Case Study";
   engagementSize: "Starter" | "Growth" | "Enterprise";
+  /** Optional per-service FAQs; when omitted, ServiceDetail uses sensible defaults. */
+  faqs?: { question: string; answer: string }[];
+  /** Optional override for the growth chart; defaults to `defaultServiceGrowthComparisonChart`. */
+  growthComparisonChart?: ServiceGrowthComparisonChart;
 }
+
+/** Shown on every service detail page unless a service sets `growthComparisonChart`. */
+export const defaultServiceGrowthComparisonChart: ServiceGrowthComparisonChart = {
+  title: "Business growth over six months",
+  description:
+    "Representative before-and-after trajectory using midpoint percentages from typical ranges (e.g. repeat purchase 15–20% → 35–50%).",
+  beforeLabel: "Before",
+  afterLabel: "After 6 Months",
+  rows: [
+    { label: "Repeat Purchase Rate", before: 17.5, after: 42.5 },
+    { label: "Customer Lifetime Value Increase", before: 0, after: 32.5 },
+    { label: "Referral-driven Customers", before: 0, after: 20 },
+    { label: "Churn Recovery", before: 0, after: 15 },
+    { label: "Program Engagement", before: 0, after: 50 },
+  ],
+};
 
 export interface Category {
   id: number;
@@ -656,25 +685,64 @@ export const services: Service[] = [
       "Fix technical issues that prevent your website from ranking on search engines.",
 
     fullDescription:
-      "Comprehensive technical SEO audits and optimizations — including site speed, mobile responsiveness, crawlability, indexing, schema markup, and Core Web Vitals — ensuring your website is fully optimized for search engines.",
+      "We fix the technical issues on your website that quietly hurt your rankings — things like slow load times, broken links, missing tags, and crawl errors. These aren't minor problems. They're often why competitors rank higher, even when your content is better. And we don't just point them out — we fix them, test everything, and keep monitoring so issues don't come back.",
 
     benefits:
-      "Improve search rankings by fixing foundational issues that limit visibility and performance in search results.",
+      "Most websites quietly lose traffic because of simple technical issues like slow pages, broken links, and crawl errors. We fix these so you stop missing out on easy rankings and start building traffic that grows over time. Unlike ads, this isn't temporary — a strong technical foundation helps every page perform better and keeps working long-term. Since most businesses ignore these basics, fixing them gives you a clear edge over competitors. It also makes your site more stable and less affected by Google updates, so your rankings don't suddenly drop.",
 
-    automationPoints: [
-      "Automated site crawling and monitoring",
-      "Speed and performance optimization",
-      "Schema implementation",
-      "Index and crawl management",
-      "Core Web Vitals tracking"
-    ],
+    automationPoints: [],
 
     deliverables: [
-      "Technical SEO audit",
-      "Site speed optimization",
-      "Schema markup implementation",
-      "XML sitemap setup",
-      "Ongoing monitoring reports"
+      "Discovery & crawl analysis — Full-site crawl (Screaming Frog, Ahrefs, Search Console) to surface broken links, redirect chains, thin content, and crawl traps — prioritised by impact.",
+      "Speed & performance audit — Benchmark Core Web Vitals on mobile and desktop; flag render-blocking assets, heavy images, and slow responses; produce a fix list ordered by effort vs. impact.",
+      "Prioritised action plan — A short, plain-English roadmap: what to fix first, rough cost, and expected traffic impact — no jargon or bloated PDFs.",
+      "Implementation — We ship the fixes in your stack or alongside your devs: speed work, schema, meta, sitemap & robots, internal links, redirect cleanup, mobile hardening, and security basics.",
+      "Validation & submission — Re-crawl to confirm fixes, resubmit sitemaps, request re-indexing for key URLs, and verify Core Web Vitals in Google’s tools.",
+      "Ongoing monitoring — Monthly automated crawl checks plus a concise report: site health, rank movement, and any new actions needed."
+    ],
+
+    growthComparisonChart: {
+      title: "Business growth over six months",
+      description:
+        "Representative before-and-after trajectory for technical SEO (typical ranges on a 0–100 scale where higher is better).",
+      beforeLabel: "Before",
+      afterLabel: "After 6 Months",
+      rows: [
+        { label: "Organic traffic (index)", before: 42, after: 72 },
+        { label: "Mobile speed score", before: 35, after: 90 },
+        { label: "Core Web Vitals pass rate", before: 28, after: 95 },
+        { label: "Indexed pages (% of site)", before: 52, after: 96 },
+        { label: "Crawl health score", before: 32, after: 92 },
+        { label: "Rich results coverage", before: 5, after: 82 },
+      ],
+    },
+
+    faqs: [
+      {
+        question: "How is this different from content SEO or link building?",
+        answer:
+          "Technical SEO is the foundation. Content and links build the house. If the foundation is broken — slow site, crawl errors, missing schema — even the best content won't rank. We fix the foundation first; then content and links become two to three times more effective.",
+      },
+      {
+        question: "How long before I see results?",
+        answer:
+          "Technical fixes often show impact within 2–6 weeks as Google re-crawls and re-indexes your site. Significant traffic gains typically appear within 3–6 months. Unlike paid ads, these gains are durable — they don't stop when the budget runs out.",
+      },
+      {
+        question: "Do I need this if my site is new?",
+        answer:
+          "Especially if your site is new. Getting the technical foundation right from the start means every blog post, landing page, and product you add can rank faster. It's far cheaper to build it right than to fix it later.",
+      },
+      {
+        question: "Will you work with my existing dev team?",
+        answer:
+          "Absolutely. We can implement fixes directly if we have access, or provide a developer-ready action plan with exact changes, file-by-file notes, and priority levels. We've worked with in-house teams, freelance developers, and agencies.",
+      },
+      {
+        question: "What tools do you use?",
+        answer:
+          "Google Search Console, Screaming Frog, Ahrefs, PageSpeed Insights, GTmetrix, Lighthouse, Schema.org Validator, and custom crawl scripts. We use real data, not guesswork.",
+      },
     ],
 
     industries: [
