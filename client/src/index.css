@@ -1288,6 +1288,11 @@
     line-height: 1.1 !important;
   }
 
+  .service-detail-page h1.service-detail-hero-title {
+    font-size: clamp(28px, 8vw, 44px) !important;
+    line-height: 1.1 !important;
+  }
+
   .careers-page h2.careers-team-heading {
     font-size: clamp(18px, 4.8vw, 24px) !important;
     line-height: 1.12 !important;
