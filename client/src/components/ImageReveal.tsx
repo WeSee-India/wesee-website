@@ -171,8 +171,11 @@ export default function ImageReveal({
         alt={alt}
         style={{
           width: "100%",
-          height: "100%",
+          // Taller than the clip when parallax shifts translateY up, so the bottom
+          // of the frame never shows the parent grey (transform doesn't reflow layout).
+          height: parallax ? `calc(100% + ${parallaxAmount}px)` : "100%",
           objectFit: "cover",
+          objectPosition: "center",
           display: "block",
           willChange: "transform",
           position: "relative",
