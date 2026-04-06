@@ -1,6 +1,22 @@
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
-import { Check } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  Building2,
+  Check,
+  ChevronLeft,
+  Globe,
+  LayoutDashboard,
+  MessageSquare,
+  Radio,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  TrendingUp,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import { services } from "@/data/services";
 import { getServiceImage } from "@/pages/Services";
 import TextReveal from "@/components/TextReveal";
@@ -14,14 +30,38 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const META_ITEMS = (service: (typeof services)[number]) =>
-  [
-    { label: "Service type", value: service.serviceType },
-    { label: "Industries", value: service.industries.slice(0, 4).join(", ") },
-    { label: "Engagement size", value: service.engagementSize },
-    { label: "Status", value: service.status },
-    { label: "Delivery", value: "Remote" },
-  ] as const;
+const SCOPE_ICONS: LucideIcon[] = [
+  Smartphone,
+  MessageSquare,
+  Workflow,
+  ShieldCheck,
+  BarChart3,
+  LayoutDashboard,
+  Sparkles,
+];
+
+function parseDeliverable(text: string): { title: string; subtitle?: string } {
+  const em = text.split(/\s[—–]\s/);
+  if (em.length >= 2) {
+    return { title: em[0].trim(), subtitle: em.slice(1).join(" — ").trim() };
+  }
+  const idx = text.indexOf(" - ");
+  if (idx > 0 && idx < 96) {
+    return { title: text.slice(0, idx).trim(), subtitle: text.slice(idx + 3).trim() };
+  }
+  return { title: text };
+}
+
+function buildTagChips(service: (typeof services)[number]) {
+  const chips: { Icon: LucideIcon; label: string }[] = [
+    { Icon: Bot, label: service.serviceType },
+    ...service.industries.slice(0, 2).map((ind) => ({ Icon: Building2, label: ind })),
+    { Icon: TrendingUp, label: service.engagementSize },
+    { Icon: Radio, label: service.status },
+    { Icon: Globe, label: "Remote" },
+  ];
+  return chips.slice(0, 5);
+}
 
 export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -56,40 +96,70 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <div className="min-h-[50vh] bg-[var(--paper)] px-4 pt-[calc(72px+48px)] pb-24 text-left md:pt-[calc(80px+56px)]">
-        <p className="text-sm text-[var(--muted-foreground)] md:text-base">Service not found.</p>
-        <Link href="/services" className="cta-link mt-4 inline-block text-base font-medium md:text-lg">
-          ← All services
+      <div className="container min-h-[50vh] bg-[var(--paper)] pt-[calc(72px+48px)] pb-24 text-left md:pt-[calc(80px+56px)]">
+        <p className="text-sm text-neutral-600 md:text-base">Service not found.</p>
+        <Link
+          href="/services"
+          className="mt-4 inline-flex items-center gap-1 text-base font-medium text-neutral-900 no-underline hover:opacity-80 md:text-lg"
+        >
+          <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />
+          Services
         </Link>
       </div>
     );
   }
 
   const heroImage = getServiceImage(service, serviceIndex);
-  const metaItems = META_ITEMS(service);
+  const tagChips = buildTagChips(service);
+
+  /** Crisp dashed rule (browser `border-dashed` is faint + uneven). */
+  const sectionDivider = (
+    <div
+      className="h-px w-full my-8 md:my-10 [background-image:repeating-linear-gradient(90deg,rgb(115_115_115)_0_6px,transparent_6px_13px)]"
+      aria-hidden
+    />
+  );
 
   return (
-    <div className="service-detail-page bg-[var(--paper)] text-[var(--foreground)]">
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="pt-[calc(72px+12px)] md:pt-[calc(80px+20px)]">
+    <div className="service-detail-page bg-white text-neutral-900 md:bg-[var(--paper)] md:text-[var(--foreground)]">
+      {/* ── Hero (mobile: back → image → title → tags → CTA) ─────── */}
+      <section className="overflow-x-hidden pt-[calc(72px+8px)] md:pt-[calc(80px+20px)]">
         <div className="container">
-          <div className="max-w-[40rem] text-left">
-            <Link
-              href="/services?view=grid"
-              className="cta-link inline-flex text-sm font-medium tracking-[0.02em] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)] md:text-[15px]"
-            >
-              ← All services
-            </Link>
+          <Link
+            href="/services?view=grid"
+            className="inline-flex items-center gap-0.5 text-[15px] font-medium text-neutral-600 no-underline transition-colors hover:text-neutral-900 md:text-[var(--muted-foreground)] md:hover:text-[var(--foreground)]"
+          >
+            <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+            Services
+          </Link>
 
-            <div className="mt-4 border-l-[3px] border-[var(--accent)] pl-4 md:mt-5 md:pl-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)] md:text-[13px] md:tracking-[0.12em]">
-                {service.category}
-              </p>
+          <div className="relative mt-6 md:mt-8">
+            <div className="relative isolate overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
+              <ImageReveal
+                src={heroImage}
+                alt={service.name}
+                direction="up"
+                duration={1.3}
+                parallax
+                parallaxAmount={44}
+                zoom={false}
+                className="rounded-2xl h-[min(52vh,380px)] min-h-[260px] md:h-[min(52vh,560px)] md:min-h-[320px]"
+                style={{ width: "100%" }}
+              />
             </div>
+          </div>
 
+          <div className="mt-6 md:mt-8 md:max-w-[40rem]">
+            <p className="hidden text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500 md:mb-3 md:block md:text-[13px]">
+              {service.category}
+            </p>
+
+            <h1 className="text-[1.65rem] font-bold leading-[1.2] tracking-[-0.03em] text-neutral-900 md:hidden">
+              {service.name}
+            </h1>
             <TextReveal
               as="h1"
-              className="service-detail-hero-title mt-3 md:mt-6 lg:whitespace-nowrap"
+              className="service-detail-hero-title hidden md:block lg:whitespace-nowrap"
               style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "var(--foreground)", lineHeight: 1.15 }}
               stagger={0.06}
               onScroll={false}
@@ -97,97 +167,49 @@ export default function ServiceDetail() {
               {service.name}
             </TextReveal>
 
-            <p
-              className="gsap-reveal mt-1.5 text-[17px] leading-[1.65] text-[var(--ink-80)] md:mt-3 md:max-w-[36rem] md:text-[18px] md:leading-[1.7]"
-              style={{ fontWeight: 400 }}
-            >
+            <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 md:mt-3 md:max-w-[36rem] md:text-[18px] md:leading-[1.7] md:text-[var(--ink-80)]">
               {service.shortDescription}
             </p>
 
-            <div className="mt-5 md:mt-6">
-              <MagneticButton
-                as="a"
-                href="/book-call"
-                className="shine-on-hover inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] px-5 py-2.5 text-[13px] font-medium text-[var(--foreground)] no-underline shadow-sm transition-[box-shadow,border-color] hover:border-[var(--ink-12)] hover:shadow-md md:px-6 md:py-3 md:text-sm"
-                strength={0.2}
-              >
-                Book a discovery call
-              </MagneticButton>
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:mt-6 md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden">
+              {tagChips.map(({ Icon, label }, i) => (
+                <span
+                  key={`${label}-${i}`}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-neutral-700 md:border-[var(--border)] md:bg-[var(--card)] md:text-[var(--foreground)]"
+                >
+                  <Icon className="h-3 w-3 text-neutral-500 md:text-[var(--muted-foreground)]" strokeWidth={2} aria-hidden />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Full-bleed on md+ (outside .container), inset on small screens — matches earlier layout */}
-        <div className="relative mt-11 -translate-y-2 pb-0 md:mt-14 md:-translate-y-4">
-          <div className="relative isolate mx-3 overflow-hidden rounded-2xl md:mx-0 md:rounded-none">
-            <ImageReveal
-              src={heroImage}
-              alt={service.name}
-              direction="up"
-              duration={1.3}
-              parallax
-              parallaxAmount={44}
-              zoom={false}
-              className="rounded-2xl md:rounded-none"
-              style={{
-                width: "100%",
-                height: "min(62vh, 680px)",
-                minHeight: 340,
-              }}
-            />
-          </div>
+          {sectionDivider}
         </div>
       </section>
 
-      {/* ── Meta + What it is + Problem (single stacked section) ─── */}
-      <section className="overflow-x-hidden border-b border-[var(--border)] bg-[var(--paper)] py-12 md:py-16">
+      {/* ── What it is + problem ─────────────────────────────────── */}
+      <section className="overflow-x-hidden bg-white pt-6 pb-6 md:bg-[var(--paper)] md:pt-8 md:pb-8">
         <div className="container">
-          {/* 1 — Metadata row (full container width so columns spread edge-to-edge) */}
-          <StaggerReveal stagger={0.06} y={12}>
-            <div className="grid w-full grid-cols-1 gap-8 pb-10 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-10 sm:pb-12 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-0 lg:pb-14 xl:gap-x-10 2xl:gap-x-12">
-              {metaItems.map((item, i) => (
-                <div key={i} className="min-w-0">
-                  <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted-foreground)] md:text-[11px]">
-                    {item.label}
-                  </div>
-                  <div className="mt-2 text-[14px] font-semibold leading-snug tracking-[-0.01em] text-[var(--foreground)] md:mt-2.5 md:text-[15px]">
-                    {item.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </StaggerReveal>
-
-          <div
-            className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 border-t border-[var(--border)]"
-            aria-hidden
-          />
-
           <div className="max-w-[52rem] text-left lg:max-w-[56rem]">
-            {/* 2 — What it is */}
-            <article className="gsap-reveal pt-10 md:pt-12">
-              <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] md:text-[1.75rem]">
+            <article className="gsap-reveal">
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
                 What it is
               </h2>
-              <p className="mt-4 text-[15px] leading-[1.8] text-[var(--ink-80)] md:mt-5 md:text-[17px] md:leading-[1.78]">
+              <p className="mt-3 text-[15px] leading-[1.75] text-neutral-600 md:mt-5 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
                 {service.fullDescription}
               </p>
             </article>
           </div>
 
-          {/* Full-viewport-width divider (breaks out of max-width column) */}
-          <div
-            className="relative left-1/2 mt-12 w-screen max-w-[100vw] -translate-x-1/2 border-t border-[var(--border)] md:mt-14"
-            aria-hidden
-          />
+          {sectionDivider}
 
           <div className="max-w-[52rem] text-left lg:max-w-[56rem]">
-            {/* 3 — The problem it solves */}
-            <article className="gsap-reveal pt-12 md:pt-14">
-              <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] md:text-[1.75rem]">
+            <article className="gsap-reveal">
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
                 The problem it solves
               </h2>
-              <p className="mt-4 text-[15px] leading-[1.8] text-[var(--ink-80)] md:mt-5 md:text-[17px] md:leading-[1.78]">
+              <p className="mt-3 text-[15px] leading-[1.75] text-neutral-600 md:mt-5 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
                 {service.benefits}
               </p>
             </article>
@@ -195,102 +217,95 @@ export default function ServiceDetail() {
         </div>
       </section>
 
-      {/* ── Mid image (grey band — no padding; image fills band) ─ */}
-      <div className="border-b border-[var(--border)] bg-[var(--paper-dark)]">
-        <div className="w-full overflow-hidden">
-          <ImageReveal
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=2000&q=80"
-            alt=""
-            direction="left"
-            parallax
-            parallaxAmount={36}
-            zoom={false}
-            className="rounded-none"
-            style={{
-              width: "100%",
-              height: "min(52vh, 620px)",
-              minHeight: 320,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* ── Automation + How we build + Deliverables ─────────────── */}
-      <section className="overflow-x-hidden bg-[var(--paper)] py-16 md:py-24">
+      {/* ── Automation + How we build + Scope ─────────────────── */}
+      <section className="overflow-x-hidden bg-white pt-4 pb-10 md:bg-[var(--paper)] md:pt-6 md:pb-24">
         <div className="container">
           <div className="max-w-[42rem] text-left">
             <article className="gsap-reveal">
-              <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] md:text-[1.75rem]">
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
                 What automation brings
               </h2>
-              <StaggerReveal stagger={0.05} y={10}>
-                <ul className="mt-8 grid list-none gap-3 p-0 md:mt-10 md:gap-4">
-                  {service.automationPoints.map((point, i) => (
-                    <li
-                      key={i}
-                      className="flex flex-nowrap items-center gap-4 rounded-xl border border-[var(--ink-6)] bg-[var(--card)] p-4 shadow-[0_1px_0_rgba(17,19,23,0.04)] md:gap-5 md:p-5"
-                    >
+              <ul className="relative mt-6 list-none space-y-0 p-0 md:mt-10">
+                {service.automationPoints.map((point, i) => {
+                  const isLast = i === service.automationPoints.length - 1;
+                  return (
+                    <li key={i} className="relative flex gap-3 pb-6 last:pb-0 md:gap-4">
+                      {!isLast && (
+                        <span
+                          className="absolute left-[15px] top-9 bottom-0 w-px bg-neutral-200 md:bg-[var(--border)]"
+                          aria-hidden
+                        />
+                      )}
                       <span
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg bg-[var(--accent-pale)] text-[11px] font-bold leading-none tabular-nums text-[var(--accent)] md:h-10 md:w-10 md:text-xs"
+                        className="relative z-[1] inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-100 text-neutral-900 md:border-[var(--border)] md:bg-[var(--card)]"
                         aria-hidden
                       >
-                        {String(i + 1).padStart(2, "0")}
+                        <Check className="h-4 w-4" strokeWidth={2.5} />
                       </span>
-                      <p className="min-w-0 flex-1 text-left text-[15px] leading-[1.7] text-[var(--ink-80)] md:text-[16px] md:leading-[1.75]">
+                      <p className="min-w-0 flex-1 pt-1 text-left text-[15px] leading-[1.65] text-neutral-600 md:pt-0.5 md:text-[16px] md:leading-[1.75] md:text-[var(--ink-80)]">
                         {point}
                       </p>
                     </li>
-                  ))}
-                </ul>
-              </StaggerReveal>
+                  );
+                })}
+              </ul>
             </article>
           </div>
 
-          <div
-            className="relative left-1/2 mt-16 w-screen max-w-[100vw] -translate-x-1/2 border-t border-[var(--border)] md:mt-20"
-            aria-hidden
-          />
+          {sectionDivider}
 
-          {/* Full container width — body copy uses full readable line length across the section */}
-          <article className="gsap-reveal w-full max-w-none pt-16 md:pt-20">
-            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] md:text-[1.75rem]">
+          <article className="gsap-reveal w-full max-w-none">
+            <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
               How we build it
             </h2>
-            <p className="mt-5 max-w-none text-[15px] leading-[1.8] text-[var(--ink-80)] md:mt-6 md:text-[17px] md:leading-[1.78]">
+            <p className="mt-3 max-w-none text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
               At WeSee, we approach {service.name.toLowerCase()} with a rigorous discovery-first methodology. We begin by
               mapping your current workflows, identifying bottlenecks, and defining clear success metrics before writing a
               single line of code.
             </p>
-            <p className="mt-5 max-w-none text-[15px] leading-[1.8] text-[var(--ink-80)] md:mt-6 md:text-[17px] md:leading-[1.78]">
+            <p className="mt-4 max-w-none text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
               Our team of AI engineers and strategists then design, build, and deploy the solution in iterative sprints —
               with full transparency and client collaboration at every stage. Post-launch, we provide ongoing optimization
               and support to ensure the system scales with your business.
             </p>
           </article>
 
-          <div
-            className="relative left-1/2 mt-16 w-screen max-w-[100vw] -translate-x-1/2 border-t border-[var(--border)] md:mt-20"
-            aria-hidden
-          />
+          {sectionDivider}
 
-          <div className="max-w-[42rem] pt-16 text-left md:pt-20">
+          <div className="max-w-[42rem] pt-0 text-left">
             <article className="gsap-reveal">
-              <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] md:text-[1.75rem]">
-                Deliverables
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
+                Scope of work
               </h2>
               <StaggerReveal stagger={0.05} y={8}>
-                <ul className="mt-8 grid list-none gap-3 p-0 md:mt-10 md:gap-3.5">
-                  {service.deliverables.map((d, i) => (
-                    <li
-                      key={i}
-                      className="flex gap-3.5 rounded-xl border border-[var(--ink-6)] bg-[var(--paper-dark)]/80 px-4 py-3.5 md:gap-4 md:px-5 md:py-4"
-                    >
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--accent)]">
-                        <Check className="h-3.5 w-3.5 stroke-[2.5]" aria-hidden />
-                      </span>
-                      <p className="min-w-0 text-[15px] leading-[1.7] text-[var(--ink-80)] md:text-[16px]">{d}</p>
-                    </li>
-                  ))}
+                <ul className="mt-6 flex list-none flex-col gap-5 p-0 md:mt-10 md:gap-6">
+                  {service.deliverables.map((d, i) => {
+                    const { title, subtitle } = parseDeliverable(d);
+                    const Icon = SCOPE_ICONS[i % SCOPE_ICONS.length];
+                    return (
+                      <li
+                        key={i}
+                        className={`flex min-w-0 flex-nowrap gap-3.5 md:gap-4 ${subtitle ? "items-start" : "items-center"}`}
+                      >
+                        <span
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-neutral-800 md:border-[var(--border)] md:bg-[var(--paper)] md:text-[var(--foreground)] ${subtitle ? "mt-0.5" : ""}`}
+                          aria-hidden
+                        >
+                          <Icon className="h-[1.125rem] w-[1.125rem] md:h-5 md:w-5" strokeWidth={1.75} />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[15px] font-bold leading-snug text-neutral-900 md:text-base md:text-[var(--foreground)]">
+                            {title}
+                          </p>
+                          {subtitle ? (
+                            <p className="mt-1 text-[13px] font-normal leading-relaxed text-neutral-500 md:text-sm md:text-[var(--muted-foreground)]">
+                              {subtitle}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </StaggerReveal>
             </article>
@@ -299,30 +314,32 @@ export default function ServiceDetail() {
       </section>
 
       {/* ── Bottom CTA ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-t border-white/10 bg-[#0c0c0c] py-20 md:py-28">
+      <section className="relative overflow-hidden border-t border-neutral-200 bg-neutral-50 py-14 md:border-white/10 md:bg-[#0c0c0c] md:py-28">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(201,168,76,0.12),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(201,168,76,0.12),transparent)] max-md:hidden"
           aria-hidden
         />
-        <FloatingParticles count={24} color="rgba(255, 255, 255, 0.035)" maxSize={2} speed={0.12} />
-        <div className="container relative z-10">
-          <div className="mx-auto max-w-xl text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45 md:text-[11px]">Next step</p>
+        <FloatingParticles count={24} color="rgba(255, 255, 255, 0.035)" maxSize={2} speed={0.12} className="max-md:hidden" />
+        <div className="relative z-10 container">
+          <div className="mx-auto max-w-xl text-center md:max-w-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500 md:text-[11px] md:text-white/45">
+              Next step
+            </p>
             <TextReveal
               as="h2"
-              className="mt-4 text-center text-[clamp(1.5rem,4vw,2rem)] font-semibold leading-tight tracking-[-0.03em] text-white md:text-[2.125rem]"
+              className="mt-3 text-[clamp(1.35rem,4vw,2rem)] font-semibold leading-tight tracking-[-0.03em] text-neutral-900 md:mt-4 md:text-white md:text-[2.125rem]"
               stagger={0.04}
               onScroll={false}
             >
               Interested in this service?
             </TextReveal>
-            <p className="gsap-reveal mx-auto mt-5 max-w-md text-[15px] leading-[1.75] text-white/55 md:mt-6 md:text-[17px]">
+            <p className="gsap-reveal mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:text-white/55">
               Book a free discovery call and we&apos;ll show you exactly how this can work for your business.
             </p>
             <MagneticButton
               as="a"
               href="/book-call"
-              className="shine-on-hover mt-9 inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-[13px] font-semibold text-[#0c0c0c] no-underline shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] transition-[transform,box-shadow] hover:shadow-[0_12px_40px_-6px_rgba(0,0,0,0.45)] md:mt-10 md:px-10 md:py-4 md:text-sm"
+              className="shine-on-hover mt-8 inline-flex items-center justify-center rounded-full border border-neutral-200 bg-neutral-900 px-8 py-3.5 text-[13px] font-semibold text-white no-underline shadow-sm transition-[transform,box-shadow] hover:bg-neutral-800 md:mt-10 md:border-0 md:bg-white md:px-10 md:py-4 md:text-sm md:font-semibold md:text-[#0c0c0c] md:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] md:hover:shadow-[0_12px_40px_-6px_rgba(0,0,0,0.45)]"
               strength={0.22}
             >
               Book a call ↗
@@ -332,17 +349,17 @@ export default function ServiceDetail() {
       </section>
 
       {/* ── Related ──────────────────────────────────────────────── */}
-      <div className="border-t border-[var(--border)] bg-[var(--paper)] py-14 md:py-20">
+      <div className="border-t border-neutral-200 bg-white py-12 md:border-[var(--border)] md:bg-[var(--paper)] md:py-20">
         <div className="container">
           <TextReveal
             as="h2"
-            className="text-xl font-semibold tracking-[-0.02em] text-[var(--foreground)] md:text-2xl"
+            className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)]"
             stagger={0.04}
             onScroll={false}
           >
             Related services
           </TextReveal>
-          <div className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-2xl bg-[var(--border)] ring-1 ring-[var(--border)] md:mt-12 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-3 overflow-hidden rounded-2xl md:mt-12 md:grid-cols-3 md:gap-px md:bg-[var(--border)] md:ring-1 md:ring-[var(--border)]">
             {services
               .filter((s) => s.categoryId === service.categoryId && s.id !== service.id)
               .slice(0, 3)
@@ -350,9 +367,9 @@ export default function ServiceDetail() {
                 <TiltCard key={s.id} maxTilt={5} scale={1.01}>
                   <Link
                     href={`/services/${s.slug}`}
-                    className="block bg-[var(--card)] transition-colors hover:bg-[var(--paper-dark)] group"
+                    className="block overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-colors hover:bg-neutral-50 md:rounded-none md:border-0 md:bg-[var(--card)] md:hover:bg-[var(--paper-dark)] group"
                   >
-                    <div className="img-hover-zoom h-[200px] md:h-[220px]">
+                    <div className="img-hover-zoom h-[180px] md:h-[220px]">
                       <img
                         src={getServiceImage(s, i)}
                         alt={s.name}
@@ -361,10 +378,12 @@ export default function ServiceDetail() {
                       />
                     </div>
                     <div className="px-4 py-4 md:px-5 md:py-5">
-                      <div className="text-base font-semibold tracking-[-0.02em] text-[var(--foreground)] transition-transform group-hover:translate-x-1 md:text-lg">
+                      <div className="text-base font-semibold tracking-[-0.02em] text-neutral-900 transition-transform group-hover:translate-x-1 md:text-lg md:text-[var(--foreground)]">
                         {s.name}
                       </div>
-                      <div className="mt-1 text-[11px] text-[var(--muted-foreground)] md:text-xs">{s.category}</div>
+                      <div className="mt-1 text-[11px] text-neutral-500 md:text-xs md:text-[var(--muted-foreground)]">
+                        {s.category}
+                      </div>
                     </div>
                   </Link>
                 </TiltCard>
