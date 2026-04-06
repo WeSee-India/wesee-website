@@ -15,7 +15,6 @@ const directors = [
     name: "Harsh khanna",
     title: "Founder & CEO",
     bio: "Harsh founded WeSee in 2024 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
-    email: "harsh.khanna@weseegpt.com",
     photo: "/client/harsh.webp",
     linkedin: "https://www.linkedin.com/in/harshkhanna96/",
   },
@@ -23,9 +22,8 @@ const directors = [
     name: "Takeshi",
     title: "Co Founder & Partner",
     bio: "Takeshi is a passionate crypto and blockchain enthusiast who leads Japanese client management at WeSee, ensuring strong relationships, clear communication, and seamless collaboration. He understands how to align business vision with client expectations, especially in fast-moving and innovation-driven markets.",
-      email: "takeshi.shoyama@weseegpt.com",
-      photo: "/client/takeshi.webp",
-    
+    photo: "/client/takeshi.webp",
+    twitter: "https://x.com/S7_SECTORSEVEN",
   },
  
 ];
@@ -474,7 +472,29 @@ export default function Team() {
                             LinkedIn
                           </a>
                         ) : null}
-                        <span style={{ fontSize: 13, color: "#888888" }}>{d.email}</span>
+                        {"twitter" in d && d.twitter ? (
+                          <a
+                            href={d.twitter}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cta-link inline-flex items-center"
+                            aria-label="X"
+                            style={{ fontSize: 13, color: "#1A1A1A" }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                              className="h-[14px] w-[14px] shrink-0"
+                              style={{ display: "block" }}
+                            >
+                              <path
+                                fill="currentColor"
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                              />
+                            </svg>
+                          </a>
+                        ) : null}
                       </div>
                     </div>
                   </div>

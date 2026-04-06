@@ -69,7 +69,7 @@ export default function ServiceDetail() {
   const metaItems = META_ITEMS(service);
 
   return (
-    <div className="bg-[var(--paper)] text-[var(--foreground)]">
+    <div className="service-detail-page bg-[var(--paper)] text-[var(--foreground)]">
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="pt-[calc(72px+12px)] md:pt-[calc(80px+20px)]">
         <div className="container">
@@ -89,8 +89,9 @@ export default function ServiceDetail() {
 
             <TextReveal
               as="h1"
-              className="mt-3 text-[clamp(1.625rem,4.2vw,2.65rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-[var(--foreground)] md:mt-6 md:text-[clamp(1.875rem,3.5vw,3rem)] lg:whitespace-nowrap"
-              stagger={0.045}
+              className="service-detail-hero-title mt-3 md:mt-6 lg:whitespace-nowrap"
+              style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "var(--foreground)", lineHeight: 1.15 }}
+              stagger={0.06}
               onScroll={false}
             >
               {service.name}
