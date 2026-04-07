@@ -303,8 +303,8 @@ export default function Contact() {
                       <img
                         src={ct.photo}
                         alt={ct.person}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", filter: "grayscale(100%)", transition: "filter 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
-                        className="group-hover:!grayscale-0"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", transition: "filter 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                        className="md:grayscale md:group-hover:!grayscale-0"
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = "scale(1.1)";
                         }}
@@ -365,11 +365,19 @@ export default function Contact() {
                       e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
-                    <div className="flex-1">
-                      <span style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 600, color: "#1A1A1A", transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)", display: "inline-block" }} className="group-hover:translate-x-1">{office.city}</span>
-                      <span style={{ fontSize: "clamp(13px, 1.5vw, 15px)", fontWeight: 400, color: "#888888", marginLeft: 12 }}>{office.country}</span>
+                    <div className="flex-1 flex items-center justify-between sm:block">
+                      <div>
+                        <span style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 600, color: "#1A1A1A", transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)", display: "inline-block" }} className="group-hover:translate-x-1">{office.city}</span>
+                        <span style={{ fontSize: "clamp(13px, 1.5vw, 15px)", fontWeight: 400, color: "#888888", marginLeft: 12 }}>{office.country}</span>
+                      </div>
+                      <span
+                        className="sm:hidden"
+                        style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease", transform: openOffice === i ? "rotate(45deg)" : "none" }}
+                      >
+                        {openOffice === i ? "×" : "+"}
+                      </span>
                     </div>
-                    <span style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease", transform: openOffice === i ? "rotate(45deg)" : "none", marginTop: "8px", alignSelf: "flex-start" }} className="sm:mt-0">{openOffice === i ? "×" : "+"}</span>
+                    <span className="hidden sm:inline" style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease", transform: openOffice === i ? "rotate(45deg)" : "none", marginTop: "8px", alignSelf: "flex-start" }}>{openOffice === i ? "×" : "+"}</span>
                   </button>
                 </ParticleWrapper>
                 <div 
@@ -423,13 +431,37 @@ export default function Contact() {
                           aria-hidden
                         />
                       </a>
-                      <div style={{ fontSize: "clamp(14px, 1.6vw, 16px)", fontWeight: 400, color: "#3A3A3A", lineHeight: 1.6, flex: 1, minWidth: 0 }}>
+                      <a
+                        href={
+                          office.map ??
+                          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(office.address.trim())}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          fontSize: "clamp(14px, 1.6vw, 16px)",
+                          fontWeight: 400,
+                          color: "#3A3A3A",
+                          lineHeight: 1.6,
+                          flex: 1,
+                          minWidth: 0,
+                          textDecoration: "none",
+                          transition: "color 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = "#1A1A1A";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = "#3A3A3A";
+                        }}
+                      >
                         {office.address.trim()}
-                      </div>
+                      </a>
                     </div>
                     <a 
                       href={`tel:${office.phone.replace(/\s/g, "")}`} 
-                      style={{ fontSize: "clamp(14px, 1.6vw, 16px)", fontWeight: 400, color: "#1A1A1A", textDecoration: "none", transition: "color 0.3s ease", display: "inline-block" }}
+                      style={{ fontSize: "clamp(14px, 1.6vw, 16px)", fontWeight: 400, color: "#1A1A1A", textDecoration: "none", transition: "color 0.3s ease", display: "inline-flex", alignItems: "center", gap: 8 }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.color = "#666666";
                         gsap.to(e.currentTarget, { x: 3, duration: 0.3, ease: "power2.out" });
@@ -438,7 +470,14 @@ export default function Contact() {
                         e.currentTarget.style.color = "#1A1A1A";
                         gsap.to(e.currentTarget, { x: 0, duration: 0.3, ease: "power2.out" });
                       }}
-                    >{office.phone}</a>
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden>
+                        <path d="M14 2C14 2 16.2 2.2 19 5C21.8 7.8 22 10 22 10" stroke="#252627" strokeWidth="1.5" strokeLinecap="round"></path>
+                        <path d="M14.207 5.53564C14.207 5.53564 15.197 5.81849 16.6819 7.30341C18.1668 8.78834 18.4497 9.77829 18.4497 9.77829" stroke="#252627" strokeWidth="1.5" strokeLinecap="round"></path>
+                        <path d="M4.00655 7.93309C3.93421 9.84122 4.41713 13.0817 7.6677 16.3323C8.45191 17.1165 9.23553 17.7396 10 18.2327M5.53781 4.93723C6.93076 3.54428 9.15317 3.73144 10.0376 5.31617L10.6866 6.4791C11.2723 7.52858 11.0372 8.90532 10.1147 9.8278C10.1147 9.8278 10.1147 9.8278 10.1147 9.8278C10.1146 9.82792 8.99588 10.9468 11.0245 12.9755C13.0525 15.0035 14.1714 13.8861 14.1722 13.8853C14.1722 13.8853 14.1722 13.8853 14.1722 13.8853C15.0947 12.9628 16.4714 12.7277 17.5209 13.3134L18.6838 13.9624C20.2686 14.8468 20.4557 17.0692 19.0628 18.4622C18.2258 19.2992 17.2004 19.9505 16.0669 19.9934C15.2529 20.0243 14.1963 19.9541 13 19.6111" stroke="#252627" strokeWidth="1.5" strokeLinecap="round"></path>
+                      </svg>
+                      <span>{office.phone}</span>
+                    </a>
                   </div>
                 </div>
               </div>
