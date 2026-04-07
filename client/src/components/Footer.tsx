@@ -23,7 +23,7 @@ const companyLinks = [
 const socials = [
   { label: "LinkedIn", href: "https://www.linkedin.com/company/wesee-agi" },
   { label: "Instagram", href: "https://www.instagram.com/weseeventures" },
-  { label: "X / Twitter", href: "https://twitter.com/weseecc" },
+  { label: "X ", href: "https://x.com/WeSeeIndia" },
 ];
 
 export default function Footer() {

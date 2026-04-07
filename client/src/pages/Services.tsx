@@ -124,7 +124,7 @@ export function getServiceImage(service: { id: number; categoryId: number }, ind
 
 const industries = ["Healthcare", "Real Estate", "E-Commerce", "SaaS", "Financial Services", "Education", "Hospitality", "Manufacturing", "Legal", "Logistics"];
 const engagementSizes = ["Starter", "Growth", "Enterprise"];
-const statuses = ["Live", "In Progress", "Case Study"];
+const statuses = ["Live", "In Progress"];
 
 type ColumnProps = {
   images: Array<{ src: string; title?: string; subtitle?: string; href?: string }>;
