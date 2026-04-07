@@ -42,8 +42,8 @@ export default function Footer() {
       }} />
 
       {/* "Let's Talk" CTA strip */}
-      <div className="container" style={{ paddingTop: 96, paddingBottom: 72, position: "relative", zIndex: 1 }}>
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 72, marginBottom: 72 }}>
+      <div className="container" style={{ paddingTop: 36, paddingBottom: 32, position: "relative", zIndex: 1 }}>
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 32, marginBottom: 22 }}>
 
           <span style={{
             fontSize: 11, fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase",
@@ -200,7 +200,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div style={{
-          marginTop: 56, paddingTop: 24,
+          marginTop: 16, paddingTop: 14,
           borderTop: "1px solid rgba(255,255,255,0.06)",
           display: "flex", flexWrap: "wrap",
           justifyContent: "space-between",
