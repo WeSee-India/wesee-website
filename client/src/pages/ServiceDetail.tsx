@@ -129,6 +129,14 @@ export default function ServiceDetail() {
   const heroImage = getServiceImage(service, serviceIndex);
   const growthChartConfig = service.growthComparisonChart ?? defaultServiceGrowthComparisonChart;
 
+  const relatedServices =
+    service.relatedServiceSlugs && service.relatedServiceSlugs.length > 0
+      ? service.relatedServiceSlugs
+          .map((slug) => services.find((x) => x.slug === slug))
+          .filter((item): item is (typeof services)[number] => item != null && item.id !== service.id)
+          .slice(0, 3)
+      : services.filter((s) => s.categoryId === service.categoryId && s.id !== service.id).slice(0, 3);
+
   /** Same vertical rhythm as the old dashed dividers (`my-8 md:my-10`). */
   const sectionGap = <div className="my-8 md:my-10" aria-hidden />;
 
@@ -396,10 +404,7 @@ export default function ServiceDetail() {
             Related services
           </TextReveal>
           <div className="mt-8 grid grid-cols-1 gap-3 overflow-hidden rounded-2xl md:mt-12 md:grid-cols-3 md:gap-px md:bg-[var(--border)] md:ring-1 md:ring-[var(--border)]">
-            {services
-              .filter((s) => s.categoryId === service.categoryId && s.id !== service.id)
-              .slice(0, 3)
-              .map((s, i) => (
+            {relatedServices.map((s, i) => (
                 <TiltCard key={s.id} maxTilt={5} scale={1.01} className="h-full min-h-0">
                   <Link
                     href={`/services/${s.slug}`}

@@ -36,7 +36,7 @@ const serviceCategories: Array<{
       { label: "AI Receptionist & Scheduler", slug: "ai-receptionist" },
       { label: "Internal Knowledge AI (HR / IT / Ops)", slug: "internal-ai-assistant" },
       { label: "Voice AI & Smart IVR", slug: "voice-ai-ivr" },
-      { label: "Custom AI Agent Development", categoryId: 1 },
+      { label: "Custom AI Agent Development", slug: "custom-ai-agent-development" },
     ],
   },
   {
@@ -56,7 +56,7 @@ const serviceCategories: Array<{
     subServices: [
       { label: "Meta Ads — Facebook & Instagram", slug: "meta-ads" },
       { label: "Google Ads — Search, Display & Shopping", slug: "google-ads" },
-      { label: "YouTube Video Advertising", slug: "google-ads" },
+      { label: "YouTube Video Advertising", slug: "youtube-ads" },
       { label: "LinkedIn B2B Campaigns", slug: "linkedin-ads" },
       { label: "Retargeting & Programmatic", slug: "retargeting" },
       { label: "Influencer-Paid Hybrid Campaigns", slug: "influencer-affiliate" },
@@ -69,8 +69,8 @@ const serviceCategories: Array<{
       { label: "Technical & On-Page SEO", slug: "technical-seo" },
       { label: "Local SEO & Google Business", slug: "local-seo" },
       { label: "Content Strategy & Authority Building", slug: "content-seo" },
-      { label: "AI-Powered Content at Scale", slug: "content-seo" },
-      { label: "Answer Engine Optimisation (AEO)", slug: "content-seo" },
+      { label: "AI-Powered Content at Scale", slug: "ai-powered-content" },
+      { label: "Answer Engine Optimisation (AEO)", slug: "answer-engine-optimisation" },
     ],
   },
   {
@@ -93,18 +93,18 @@ const serviceCategories: Array<{
       { label: "Brand Identity & Visual Systems", slug: "brand-identity" },
       { label: "Video Production & Motion Graphics", slug: "video-production" },
       { label: "UI/UX Design & Prototyping", slug: "ui-ux-design" },
-      { label: "Social Media Creative & Content Design", slug: "social-media-management" },
+      { label: "Social Media Creative & Content Design", slug: "social-media-creative" },
     ],
   },
   {
     name: "E-Commerce & D2C Growth Engine",
     description: "Full-stack e-commerce solutions from store setup to marketplace management and optimization.",
     subServices: [
-      { label: "D2C Brand Launch & Growth", slug: "ecommerce-store" },
-      { label: "E-Commerce Storefront Design", slug: "ecommerce-store" },
+      { label: "D2C Brand Launch & Growth", slug: "d2c-brand-launch" },
+      { label: "E-Commerce Storefront Design", slug: "ecommerce-storefront-design" },
       { label: "Marketplace Onboarding & Management", slug: "marketplace-management" },
       { label: "Product Listing & Catalog Optimisation", slug: "product-feed" },
-      { label: "Subscription & Recurring Revenue Systems", slug: "ecommerce-store" },
+      { label: "Subscription & Recurring Revenue Systems", slug: "subscription-recurring-revenue" },
     ],
   },
   {
@@ -115,7 +115,7 @@ const serviceCategories: Array<{
       { label: "Sales Funnel & Conversion Automation", slug: "sales-funnel" },
       { label: "Lead Generation — Inbound & Outbound", slug: "lead-generation" },
       { label: "Influencer & Affiliate Program Management", slug: "influencer-affiliate" },
-      { label: "Loyalty, Referral & Retention Programs", slug: "referral-loyalty" },
+      { label: "Loyalty, Referral & Retention Programs", slug: "loyalty-referral" },
     ],
   },
   {
