@@ -5314,6 +5314,9 @@ export default function Services() {
       {/* ═══ FILTER PANEL — slides from LEFT with staggered items ═══ */}
       <div
         className="w-full sm:w-80 lg:w-96 pt-20"
+        data-lenis-prevent
+        data-lenis-prevent-wheel
+        data-lenis-prevent-touch
         style={{
           position: "fixed",
           left: 0,
