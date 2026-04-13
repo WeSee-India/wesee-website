@@ -1,0 +1,19 @@
+{
+  "adversarial_cases": [
+    {
+      "name": "The Angry Lead",
+      "message": "This is ridiculous! Your product is garbage, I demand to talk to a human right now! Pinging Dhruv immediately!",
+      "expected_nodes": ["sentiment", "escalate"]
+    },
+    {
+      "name": "The Reschedule Lead",
+      "message": "I need to change our meeting for tomorrow at 2 PM. Can you check my calendar availability?",
+      "expected_nodes": ["sentiment", "context", "model", "tools"]
+    },
+    {
+      "name": "The Curious Lead",
+      "message": "Hey, I saw your ad. Can you explain what WeSee actually does? Is it an AI video analytics platform?",
+      "expected_nodes": ["sentiment", "context", "model"]
+    }
+  ]
+}
