@@ -491,37 +491,6 @@ export default function Header() {
 
           {/* ── Right: CTA + hamburger ── */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, zIndex: 2 }}>
-            {/* Book a Call — desktop only */}
-            {isDesktop && (
-              <ParticleWrapper>
-                <Link
-                  href="/book-call"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "8px 18px",
-                    background: "var(--ink)",
-                    color: "#fff",
-                    fontSize: 13, fontWeight: 500, letterSpacing: "0.005em",
-                    borderRadius: 999,
-                    border: "1.5px solid var(--ink)",
-                    textDecoration: "none",
-                    transition: "background 0.25s ease, transform 0.25s ease",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = "#2a2d33";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = "var(--ink)";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  }}
-                >
-                  Book a Call <span style={{ fontSize: 11, opacity: 0.75 }}>↗</span>
-                </Link>
-              </ParticleWrapper>
-            )}
-
             {/* Hamburger / close — mobile only; fixed size so navbar doesn't shift */}
             {!isDesktop && (
               <button
@@ -780,7 +749,7 @@ export default function Header() {
             }}
           >
             <Link
-              href="/book-call"
+              href="/contact"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -798,7 +767,7 @@ export default function Header() {
               }}
               onClick={() => setOpen(false)}
             >
-              Book a Call <span style={{ fontSize: 12, opacity: 0.85 }}>↗</span>
+              Contact <span style={{ fontSize: 12, opacity: 0.85 }}>↗</span>
             </Link>
           </div>
         </div>

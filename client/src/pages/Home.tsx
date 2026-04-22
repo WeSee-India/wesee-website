@@ -526,48 +526,21 @@ export default function Home() {
           >
             <ParticleWrapper>
               <Link
-                href="/book-call"
+                href="/services"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 26px",
                   width: 220,
                   justifyContent: "center",
-                  background: "var(--ink)",
-                  color: "#fff",
+                  background: "rgba(255,255,255,0.80)",
+                  backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                  color: "var(--ink)",
                   fontSize: 13.5, fontWeight: 500,
-                  borderRadius: 999, border: "none",
+                  borderRadius: 999, border: "1px solid rgba(17,19,23,0.11)",
                   textDecoration: "none",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  transition: "background 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
                   cursor: finePointer ? "none" : "pointer",
                 }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(17,19,23,0.25)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                }}
-              >
-                Book a Discovery Call
-                <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
-              </Link>
-            </ParticleWrapper>
-            <ParticleWrapper>
-              <Link href="/services" style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "13px 26px",
-                width: 220,
-                justifyContent: "center",
-                background: "rgba(255,255,255,0.80)",
-                backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-                color: "var(--ink)",
-                fontSize: 13.5, fontWeight: 500,
-                borderRadius: 999, border: "1px solid rgba(17,19,23,0.11)",
-                textDecoration: "none",
-                transition: "background 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
-                cursor: finePointer ? "none" : "pointer",
-              }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.95)";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
@@ -1109,30 +1082,6 @@ export default function Home() {
             AI-powered workflows designed to remove bottlenecks and unlock scale for your business.          </p>
 
           <div className="sr" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
-            <ParticleWrapper>
-              <Link
-                href="/book-call"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "14px 28px",
-                  background: "#FFFFFF", color: "var(--ink)",
-                  fontSize: 14, fontWeight: 500,
-                  borderRadius: 999, border: "none",
-                  textDecoration: "none", cursor: finePointer ? "none" : "pointer",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.4)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                }}
-              >
-                Book a Discovery Call <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
-              </Link>
-            </ParticleWrapper>
             <ParticleWrapper>
               <a
                 href="mailto:hr@weseegpt.com"

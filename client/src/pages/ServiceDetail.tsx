@@ -380,14 +380,6 @@ export default function ServiceDetail() {
             <p className="gsap-reveal mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:text-white/55">
               Book a free discovery call and we&apos;ll show you exactly how this can work for your business.
             </p>
-            <MagneticButton
-              as="a"
-              href="/book-call"
-              className="shine-on-hover mt-8 inline-flex items-center justify-center rounded-full border border-neutral-200 bg-neutral-900 px-8 py-3.5 text-[13px] font-semibold text-white no-underline shadow-sm transition-[transform,box-shadow] hover:bg-neutral-800 md:mt-10 md:border-0 md:bg-white md:px-10 md:py-4 md:text-sm md:font-semibold md:text-[#0c0c0c] md:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] md:hover:shadow-[0_12px_40px_-6px_rgba(0,0,0,0.45)]"
-              strength={0.22}
-            >
-              Book a call ↗
-            </MagneticButton>
           </div>
         </div>
       </section>

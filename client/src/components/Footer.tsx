@@ -66,23 +66,6 @@ export default function Footer() {
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <ParticleWrapper>
-                <a
-                  href="/book-call"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary shine-on-hover"
-                  style={{
-                    background: "#FFFFFF",
-                    color: "var(--ink)",
-                    border: "1.5px solid #FFFFFF",
-                    padding: "13px 28px",
-                    fontSize: 14,
-                  }}
-                >
-                  Book Discovery Call ↗
-                </a>
-              </ParticleWrapper>
-              <ParticleWrapper>
                 <a href="mailto:hr@weseegpt.com" style={{
                   fontSize: 14, color: "rgba(255,255,255,0.35)",
                   transition: "color 0.3s ease", textDecoration: "none",
