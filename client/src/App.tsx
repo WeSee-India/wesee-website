@@ -12,6 +12,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import { useLenis } from "./hooks/useLenis";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import GlobalConnectWidget from "./components/GlobalConnectWidget";
 
 const Services = lazy(() => import("./pages/Services"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
@@ -21,7 +22,6 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 const Careers = lazy(() => import("./pages/Careers"));
-const BookCall = lazy(() => import("./pages/BookCall"));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -58,7 +58,6 @@ function Router() {
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogDetail} />
         <Route path="/careers" component={Careers} />
-        <Route path="/book-call" component={BookCall} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -112,6 +111,7 @@ function App() {
             <main>
               <Router />
             </main>
+            <GlobalConnectWidget />
             <Footer />
           </div>
         </TooltipProvider>

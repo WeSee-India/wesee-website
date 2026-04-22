@@ -176,15 +176,6 @@ export default function BlogDetail() {
                     <p className="gsap-reveal" style={{ fontSize: 16, fontWeight: 400, color: "#AAAAAA", marginTop: 16, maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
                         Book a free discovery call and we'll show you exactly how AI and automation can work for you.
                     </p>
-                    <MagneticButton
-                        as="a"
-                        href="/book-call"
-                        className="btn-fill-sweep-dark"
-                        style={{ display: "inline-block", marginTop: 24, padding: "16px 32px", background: "#FFFFFF", color: "#1A1A1A", fontSize: 13, fontWeight: 500, textDecoration: "none" }}
-                        strength={0.25}
-                    >
-                        Book a Call ↗
-                    </MagneticButton>
                 </div>
             </div>
         </div>
