@@ -9,6 +9,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 const jobs = [
   {
+    title: "Blockchain Developer ",
+    location: "Mumbai ",
+    skills: "Blockchain, Smart Contracts, Web3 Integrations",
+    profile: "0-2 years of experience building and deploying blockchain-based solutions. Proficiency with smart contract development and decentralized application architecture. Strong problem-solving skills for scalable and secure systems.",
+    description: "Build and maintain blockchain-based applications and smart contracts. Work on decentralized systems, integrations, and scalable solutions in a fast-paced environment.",
+  },
+  {
     title: "Marketing Intern",
     location: "Mumbai ",
     skills: "Digital Marketing, Content Planning, Social Media",
@@ -29,13 +36,7 @@ const jobs = [
     profile: "Currently pursuing or recently completed a degree in Computer Science or related field. Familiar with frontend and backend development concepts. Passion for building real-world products and learning modern development workflows.",
     description: "Support the development of web applications across frontend and backend. Work with modern frameworks, APIs, and real-world projects while gaining hands-on experience.",
   },
-  {
-    title: "Blockchain Developer ",
-    location: "Mumbai ",
-    skills: "Blockchain, Smart Contracts, Web3 Integrations",
-    profile: "0-2 years of experience building and deploying blockchain-based solutions. Proficiency with smart contract development and decentralized application architecture. Strong problem-solving skills for scalable and secure systems.",
-    description: "Build and maintain blockchain-based applications and smart contracts. Work on decentralized systems, integrations, and scalable solutions in a fast-paced environment.",
-  },
+ 
   
  
 ];
