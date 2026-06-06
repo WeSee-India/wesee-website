@@ -4,6 +4,7 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/contact", "destination": "/api/contact" },
+    { "source": "/landing", "destination": "/landing/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

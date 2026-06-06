@@ -156,6 +156,31 @@ function vitePluginManusDebugCollector(): Plugin {
 }
 
 /**
+ * Serve the standalone landing page at /landing in dev mode
+ */
+function vitePluginLandingPage(): Plugin {
+  const landingDir = path.join(PROJECT_ROOT, "client", "public", "landing");
+
+  return {
+    name: "landing-page",
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split("?")[0] ?? "";
+        if (url === "/landing" || url === "/landing/") {
+          const file = path.join(landingDir, "index.html");
+          if (fs.existsSync(file)) {
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            fs.createReadStream(file).pipe(res);
+            return;
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
+/**
  * Vite plugin to handle /api/contact in dev mode
  */
 function vitePluginContactApi(): Plugin {
@@ -188,7 +213,7 @@ function vitePluginContactApi(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginContactApi()];
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginLandingPage(), vitePluginContactApi()];
 
 export default defineConfig({
   plugins,
