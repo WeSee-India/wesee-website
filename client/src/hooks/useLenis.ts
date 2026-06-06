@@ -38,6 +38,14 @@ export function useLenis() {
   useEffect(() => {
     if (lenisInstance) return;
 
+    // Respect users who prefer reduced motion — don't hijack native scrolling.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
     lenisInstance = new Lenis({
       lerp: 0.08,
       smoothWheel: true,

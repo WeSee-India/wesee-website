@@ -23,7 +23,7 @@ const companyLinks = [
 const socials = [
   { label: "LinkedIn", href: "https://www.linkedin.com/company/wesee-agi" },
   { label: "Instagram", href: "https://www.instagram.com/weseeventures" },
-  { label: "X ", href: "https://x.com/WeSeeIndia" },
+  { label: "X", href: "https://x.com/weseeventures" },
 ];
 
 export default function Footer() {
@@ -66,14 +66,14 @@ export default function Footer() {
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <ParticleWrapper>
-                <a href="mailto:hr@weseegpt.com" style={{
+                <a href="mailto:careers@weseegpt.com" style={{
                   fontSize: 14, color: "rgba(255,255,255,0.35)",
                   transition: "color 0.3s ease", textDecoration: "none",
                 }}
                   onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
                 >
-                  hr@weseegpt.com
+                  careers@weseegpt.com
                 </a>
               </ParticleWrapper>
             </div>

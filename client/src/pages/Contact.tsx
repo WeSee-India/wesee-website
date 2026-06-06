@@ -11,8 +11,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const contactTypes = [
-  { label: "General enquiries", email: "hr@weseegpt.com", person: "WeSee Team", title: "General", photo: "/client/yuvraj.webp" },
-  { label: "Business enquiries", email: "careers@weseegpt.com", person: "harsh khanna", title: "Founder & CEO", photo: "/client/harsh.webp" },
+  { label: "General enquiries", email: "careers@weseegpt.com", person: "WeSee Team", title: "General", photo: "/client/yuvraj.webp" },
+  { label: "Business enquiries", email: "harsh.khanna@weseegpt.com", person: "Harsh Khanna", title: "Founder & CEO", photo: "/client/harsh.webp" },
 ];
 
 const offices = [
