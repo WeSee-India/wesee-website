@@ -2,7 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
-import { sendContactEmail, type ContactPayload } from "./email.js";
+import { sendContactEmail, validateContactPayload } from "./email.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,11 +16,11 @@ async function startServer() {
   // Contact form endpoint
   app.post("/api/contact", async (req, res) => {
     try {
-      const payload = req.body as ContactPayload;
-      if (!payload.name || !payload.email || !payload.message) {
-        return res.status(400).json({ error: "Name, email and message are required." });
+      const result = validateContactPayload(req.body);
+      if (!result.ok) {
+        return res.status(400).json({ error: result.error });
       }
-      await sendContactEmail(payload);
+      await sendContactEmail(result.payload);
       return res.json({ success: true });
     } catch (err) {
       console.error("Contact email error:", err);

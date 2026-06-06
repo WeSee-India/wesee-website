@@ -176,6 +176,27 @@ export default function BlogDetail() {
                     <p className="gsap-reveal" style={{ fontSize: 16, fontWeight: 400, color: "#AAAAAA", marginTop: 16, maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.75 }}>
                         Book a free discovery call and we'll show you exactly how AI and automation can work for you.
                     </p>
+                    <div className="gsap-reveal" style={{ marginTop: 32 }}>
+                        <MagneticButton as="div" style={{ display: "inline-block" }}>
+                            <Link
+                                href="/book"
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    background: "#C9A84C",
+                                    color: "#0c0c0c",
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    padding: "14px 28px",
+                                    borderRadius: 999,
+                                    textDecoration: "none",
+                                }}
+                            >
+                                Book a free discovery call →
+                            </Link>
+                        </MagneticButton>
+                    </div>
                 </div>
             </div>
         </div>

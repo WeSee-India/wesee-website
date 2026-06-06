@@ -380,6 +380,16 @@ export default function ServiceDetail() {
             <p className="gsap-reveal mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:text-white/55">
               Book a free discovery call and we&apos;ll show you exactly how this can work for your business.
             </p>
+            <div className="gsap-reveal mt-7 md:mt-9">
+              <MagneticButton as="div" style={{ display: "inline-block" }}>
+                <Link
+                  href="/book"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#C9A84C] px-7 py-3.5 text-sm font-semibold text-[#0c0c0c] transition-transform hover:scale-[1.02]"
+                >
+                  Book a free discovery call →
+                </Link>
+              </MagneticButton>
+            </div>
           </div>
         </div>
       </section>

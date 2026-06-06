@@ -233,6 +233,10 @@ export default function InteractiveParticles({
     // with a random cycleOffset so they don't sync up.
     // holdTime is long (8-18s) so the logo stays ~85-90% formed at any moment.
 
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const animate = () => {
       ctx.clearRect(0, 0, w, h);
       const particles = particlesRef.current;
@@ -347,7 +351,8 @@ export default function InteractiveParticles({
       }
 
       ctx.globalAlpha = 1;
-      animRef.current = requestAnimationFrame(animate);
+      // Reduced-motion: render a single static frame instead of an endless loop.
+      if (!prefersReducedMotion) animRef.current = requestAnimationFrame(animate);
     };
 
     animate();

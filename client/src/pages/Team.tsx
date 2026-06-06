@@ -33,12 +33,12 @@ const engineeringTeam = [
   { name: "yuvraj khanna", title: "graphic team lead", photo: "/client/yuvraj.webp" },
   { name: "deepak yadav", title: "full stack developer", photo: "/services/deepak.webp" },
   { name: "pranav ", title: "UX Designer", photo: "/client/pranav.webp" },
-  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.png" },
+  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.jpg" },
   { name: "mani bajpai", title: "blockchain developer", photo: "/client/manii.png" },
  
   { name: "Shravani shinde", title: "ai developer", photo: "/client/shravani.png" },
   { name: "Anjali Singh", title: "ui/ux designer", photo: "/client/anjali.png" },
-  { name: "suhani tiwari", title: "full stack developer", photo: "/client/suhani.png" },
+  { name: "suhani tiwari", title: "full stack developer", photo: "/client/suhani.jpg" },
   
 ];
 
@@ -312,7 +312,7 @@ const TeamMarqueeHero = () => {
                     src={person.photo}
                     alt=""
                     className="h-full w-full object-cover object-[center_28%]"
-                    loading="eager"
+                    loading="lazy"
                     decoding="async"
                     draggable={false}
                   />

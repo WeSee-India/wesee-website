@@ -36,6 +36,17 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       return;
     }
 
+    // Respect reduced-motion: skip the animated intro entirely.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(false);
+      safeSessionSet("wesee-loaded", "true");
+      completeOnce();
+      return;
+    }
+
     const timeouts: number[] = [];
     timeouts.push(window.setTimeout(() => setPhase(1), 200));
     timeouts.push(window.setTimeout(() => setPhase(2), 600));

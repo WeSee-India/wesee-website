@@ -77,7 +77,7 @@ const features = [
 const workImages = [
   { src: "/aitalent.jpg", h: 220, label: "AI Infrastructure" },
   { src: "/aisoftware.jpg", h: 160, label: "Workspace" },
-  { src: "/wesee.png", h: 160, label: "Operations" },
+  { src: "/wesee.jpg", h: 160, label: "Operations" },
   { src: "/voice.jpg", h: 220, label: "Tech Systems" },
   { src: "/dashboard.jpg", h: 190, label: "Team at Work" },
   { src: "/roi.jpg", h: 190, label: "Cloud Scale" },
@@ -1084,7 +1084,7 @@ export default function Home() {
           <div className="sr" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
             <ParticleWrapper>
               <a
-                href="mailto:hr@weseegpt.com"
+                href="mailto:careers@weseegpt.com"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 24px",
@@ -1104,7 +1104,7 @@ export default function Home() {
                   (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.60)";
                 }}
               >
-                hr@weseegpt.com
+                careers@weseegpt.com
               </a>
             </ParticleWrapper>
           </div>

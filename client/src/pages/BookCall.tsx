@@ -40,6 +40,7 @@ export default function BookCall() {
   const [message, setMessage] = useState("");
   const [consentNonMarketing, setConsentNonMarketing] = useState(false);
   const [consentMarketing, setConsentMarketing] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // spam trap — must stay empty
   const [formState, setFormState] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [formError, setFormError] = useState("");
   const [submittedEmail, setSubmittedEmail] = useState("");
@@ -57,6 +58,7 @@ export default function BookCall() {
       phone: phone.trim(),
       consentNonMarketing,
       consentMarketing,
+      honeypot,
     };
     try {
       const res = await fetch("/api/contact", {
@@ -331,7 +333,7 @@ export default function BookCall() {
                 <div>
                   Prefer email instead?{" "}
                   <a
-                    href="mailto:hr@weseegpt.com"
+                    href="mailto:harsh.khanna@weseegpt.com"
                     style={{
                       color: "var(--ink)",
                       textDecoration: "none",
@@ -339,7 +341,7 @@ export default function BookCall() {
                       paddingBottom: 1,
                     }}
                   >
-                    hr@weseegpt.com
+                    harsh.khanna@weseegpt.com
                   </a>
                 </div>
                 <div style={{ marginTop: 4 }}>
@@ -401,6 +403,17 @@ export default function BookCall() {
               </h2>
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                {/* Honeypot — hidden from users, bots fill it. */}
+                <input
+                  type="text"
+                  name="company_website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+                />
                 <div>
                   <label htmlFor="bookcall-name" style={fieldLabel}>
                     Full Name
@@ -561,6 +574,8 @@ export default function BookCall() {
 
                 {formState === "success" && (
                   <div
+                    role="status"
+                    aria-live="polite"
                     style={{
                       padding: "14px 16px",
                       background: "rgba(34, 120, 72, 0.08)",
@@ -572,10 +587,30 @@ export default function BookCall() {
                     }}
                   >
                     Thanks—we received your request. We&apos;ll follow up at {submittedEmail} shortly.
+                    <button
+                      type="button"
+                      onClick={() => setFormState("idle")}
+                      style={{
+                        display: "block",
+                        marginTop: 12,
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        color: "rgb(24, 100, 58)",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Send another message
+                    </button>
                   </div>
                 )}
                 {formState === "error" && (
                   <div
+                    role="alert"
+                    aria-live="assertive"
                     style={{
                       padding: "14px 16px",
                       background: "rgba(176, 44, 44, 0.06)",

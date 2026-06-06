@@ -1615,3 +1615,24 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+
+/* ── Accessibility: visible keyboard focus indicator ──
+   Only shows for keyboard navigation (:focus-visible), never on mouse click. */
+:focus-visible {
+  outline: 2px solid var(--accent, #c9a84c);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Accessibility: honour reduced-motion globally ──
+   Neutralises decorative CSS animations/transitions for users who request it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

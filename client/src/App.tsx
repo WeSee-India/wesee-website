@@ -22,6 +22,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 const Careers = lazy(() => import("./pages/Careers"));
+const BookCall = lazy(() => import("./pages/BookCall"));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -34,7 +35,7 @@ function ScrollToTop() {
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <span style={{ fontSize: 11, fontWeight: 300, letterSpacing: "0.15em", textTransform: "uppercase", color: "#888888" }}>
+      <span style={{ fontSize: 11, fontWeight: 400, letterSpacing: "0.15em", textTransform: "uppercase", color: "#6b6b6b" }}>
         Loading...
       </span>
     </div>
@@ -42,10 +43,6 @@ function PageLoader() {
 }
 
 function Router() {
-  const isMobile =
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 767px)").matches;
-
   return (
     <Suspense fallback={<PageLoader />}>
       <Switch>
@@ -58,6 +55,7 @@ function Router() {
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogDetail} />
         <Route path="/careers" component={Careers} />
+        <Route path="/book" component={BookCall} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

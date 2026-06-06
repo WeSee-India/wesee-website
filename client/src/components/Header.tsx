@@ -122,20 +122,20 @@ const serviceCategories: Array<{
     name: "Data Intelligence & Analytics",
     description: "Custom dashboards and BI solutions that turn raw data into actionable insights for smarter decision-making.",
     subServices: [
-      { label: "Custom BI Dashboards & Reporting", slug: "analytics-dashboards" },
-      { label: "Marketing Attribution & ROI Tracking", slug: "analytics-dashboards" },
-      { label: "Customer Analytics & Churn Prediction", slug: "analytics-dashboards" },
-      { label: "A/B Testing & Experimentation Frameworks", slug: "analytics-dashboards" },
-      { label: "AI-Powered Forecasting & Trend Analysis", slug: "analytics-dashboards" },
+      { label: "Custom BI Dashboards & Reporting", slug: "analytics-bi" },
+      { label: "Marketing Attribution & ROI Tracking", slug: "analytics-bi" },
+      { label: "Customer Analytics & Churn Prediction", slug: "analytics-bi" },
+      { label: "A/B Testing & Experimentation Frameworks", slug: "analytics-bi" },
+      { label: "AI-Powered Forecasting & Trend Analysis", slug: "analytics-bi" },
     ],
   },
   {
     name: "Cloud, Security & Business Operations",
     description: "Cloud infrastructure, analytics dashboards, HR automation, and operational excellence.",
     subServices: [
-      { label: "Cloud Architecture & DevOps", slug: "cloud-infrastructure" },
+      { label: "Cloud Architecture & DevOps", slug: "cloud-devops" },
       { label: "Cybersecurity & Compliance", slug: "data-security" },
-      { label: "HR & Recruitment Automation", slug: "hr-recruitment" },
+      { label: "HR & Recruitment Automation", slug: "hr-automation" },
       { label: "Reputation & Review Management", categoryId: 9 },
       { label: "Business Strategy & Growth Consulting", categoryId: 9 },
       { label: "Government Subsidy & Scheme Marketing", categoryId: 9 },
@@ -286,6 +286,8 @@ export default function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      aria-haspopup={isServices ? "menu" : undefined}
+                      aria-expanded={isServices ? servicesDropdownOpen : undefined}
                       style={{
                         padding: "6px 13px",
                         borderRadius: 999,
@@ -305,6 +307,12 @@ export default function Header() {
                       onMouseLeave={e => {
                         if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(17,19,23,0.48)";
                         if (isServices) closeServicesDropdown();
+                      }}
+                      onFocus={() => {
+                        if (isServices) openServicesDropdown();
+                      }}
+                      onKeyDown={e => {
+                        if (isServices && e.key === "Escape") closeServicesDropdown();
                       }}
                     >
                       {item.label}
@@ -408,20 +416,24 @@ export default function Header() {
                       {serviceCategories.map((category, idx) => {
                         const isExpanded = expandedCategoryIndex === idx;
                         return (
-                          <p 
+                          <p
                             key={idx}
-                            style={{ 
-                              fontSize: 13, 
-                              fontWeight: 600, 
-                              color: isExpanded ? "var(--ink)" : "rgba(17,19,23,0.7)", 
-                              letterSpacing: "0.02em", 
-                              margin: 0, 
+                            tabIndex={0}
+                            role="button"
+                            aria-expanded={isExpanded}
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: isExpanded ? "var(--ink)" : "rgba(17,19,23,0.7)",
+                              letterSpacing: "0.02em",
+                              margin: 0,
                               textTransform: "uppercase",
                               whiteSpace: "nowrap",
                               cursor: "pointer",
                               transition: "color 0.2s ease",
                             }}
                             onMouseEnter={() => setExpandedCategoryIndex(idx)}
+                            onFocus={() => setExpandedCategoryIndex(idx)}
                           >
                             {category.name}
                           </p>
@@ -496,6 +508,8 @@ export default function Header() {
               <button
                 onClick={() => setOpen(!open)}
                 aria-label={open ? "Close menu" : "Open menu"}
+                aria-expanded={open}
+                aria-controls="mobile-nav"
                 style={{
                   width: 36, height: 36, minWidth: 36, minHeight: 36,
                   display: "flex", flexDirection: "column",
@@ -536,6 +550,7 @@ export default function Header() {
       {/* ── Mobile full-screen overlay: covers entire viewport, hides page content ── */}
       {!isDesktop && (
         <div
+          id="mobile-nav"
           aria-hidden={!open}
           style={{
             position: "fixed",

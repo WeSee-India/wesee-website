@@ -57,7 +57,7 @@
     "name": "WeSee",
     "alternateName": "WeSee AI Automation",
     "url": "https://www.weseegpt.com/",
-    "logo": "https://www.weseegpt.com/assets/logo-mark.png",
+    "logo": "https://www.weseegpt.com/landing/assets/logo-mark.png",
     "description": "Product and engineering studio building custom software, web platforms, automation, and AI systems for ambitious companies.",
     "sameAs": [
       "https://www.linkedin.com/company/wesee-agi",
@@ -772,8 +772,7 @@
           <div class="reveal">
             <h3 style="font-size:1.2rem;color:var(--cream);margin-bottom:6px">Send us your project</h3>
             <p style="color:var(--muted-d);font-size:.92rem;margin-bottom:20px">Tell us the details and we'll reply within one business day.</p>
-            <!-- TODO: to receive submissions hands-free, point action to a Formspree/endpoint; JS currently opens the user's mail client to support@weseegpt.com -->
-            <form class="lead-form" id="leadForm" action="https://formsubmit.co/careers@weseegpt.com" method="POST">
+            <form class="lead-form" id="leadForm" action="https://formsubmit.co/harsh.khanna@weseegpt.com" method="POST">
               <input type="hidden" name="_subject" value="New project enquiry — WeSee" />
               <input type="hidden" name="_template" value="table" />
               <input type="hidden" name="_captcha" value="false" />
@@ -815,8 +814,7 @@
       <div class="foot-cta">
         <span class="eyebrow">Ready to start?</span>
         <h2>Let's Talk<span class="dot">.</span></h2>
-        <!-- TODO: confirm the public contact address (currently a friendly default) -->
-        <a href="mailto:support@weseegpt.com" style="color:var(--gold-lt);font-size:1.1rem;font-weight:600;display:inline-block;margin-top:20px">support@weseegpt.com</a>
+        <a href="mailto:harsh.khanna@weseegpt.com" style="color:var(--gold-lt);font-size:1.1rem;font-weight:600;display:inline-block;margin-top:20px">harsh.khanna@weseegpt.com</a>
       </div>
 
       <div class="foot-grid">
@@ -937,13 +935,13 @@
         var btn = form.querySelector('button[type=submit]');
         if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
         var done = function(){ form.style.display = 'none'; document.getElementById('formSuccess').classList.add('show'); };
-        fetch('https://formsubmit.co/ajax/careers@weseegpt.com', {
+        fetch('https://formsubmit.co/ajax/harsh.khanna@weseegpt.com', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify(data)
         }).then(function(r){ return r.json(); }).then(done).catch(function(){
           var body = 'Name: ' + data.name + '\nEmail: ' + data.email + '\nCompany: ' + data.company + '\n\n' + data.message;
-          window.location.href = 'mailto:careers@weseegpt.com?subject=' + encodeURIComponent(data._subject) + '&body=' + encodeURIComponent(body);
+          window.location.href = 'mailto:harsh.khanna@weseegpt.com?subject=' + encodeURIComponent(data._subject) + '&body=' + encodeURIComponent(body);
           done();
         });
       });
