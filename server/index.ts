@@ -40,6 +40,22 @@ async function startServer() {
     res.sendFile(path.join(staticPath, "landing", "index.html"));
   });
 
+  app.get(["/privacy", "/privacy/"], (_req, res) => {
+    res.sendFile(path.join(staticPath, "landing", "privacy.html"));
+  });
+
+  app.get(["/terms", "/terms/"], (_req, res) => {
+    res.sendFile(path.join(staticPath, "landing", "terms.html"));
+  });
+
+  app.get("/landing/privacy.html", (_req, res) => {
+    res.redirect(301, "/privacy");
+  });
+
+  app.get("/landing/terms.html", (_req, res) => {
+    res.redirect(301, "/terms");
+  });
+
   // Handle client-side routing - serve index.html for all routes
   app.get("*", (_req, res) => {
     res.sendFile(path.join(staticPath, "index.html"));

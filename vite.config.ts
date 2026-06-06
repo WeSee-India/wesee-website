@@ -166,13 +166,32 @@ function vitePluginLandingPage(): Plugin {
     configureServer(server: ViteDevServer) {
       server.middlewares.use((req, res, next) => {
         const url = req.url?.split("?")[0] ?? "";
-        if (url === "/landing" || url === "/landing/") {
-          const file = path.join(landingDir, "index.html");
+        const landingRoutes: Record<string, string> = {
+          "/landing": "index.html",
+          "/landing/": "index.html",
+          "/privacy": "privacy.html",
+          "/privacy/": "privacy.html",
+          "/terms": "terms.html",
+          "/terms/": "terms.html",
+        };
+        const fileName = landingRoutes[url];
+        if (fileName) {
+          const file = path.join(landingDir, fileName);
           if (fs.existsSync(file)) {
             res.setHeader("Content-Type", "text/html; charset=utf-8");
             fs.createReadStream(file).pipe(res);
             return;
           }
+        }
+        if (url === "/landing/privacy.html") {
+          res.writeHead(301, { Location: "/privacy" });
+          res.end();
+          return;
+        }
+        if (url === "/landing/terms.html") {
+          res.writeHead(301, { Location: "/terms" });
+          res.end();
+          return;
         }
         next();
       });

@@ -5,6 +5,12 @@
   "rewrites": [
     { "source": "/api/contact", "destination": "/api/contact" },
     { "source": "/landing", "destination": "/landing/index.html" },
+    { "source": "/privacy", "destination": "/landing/privacy.html" },
+    { "source": "/terms", "destination": "/landing/terms.html" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/landing/privacy.html", "destination": "/privacy", "permanent": true },
+    { "source": "/landing/terms.html", "destination": "/terms", "permanent": true }
   ]
 }
