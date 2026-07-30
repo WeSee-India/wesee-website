@@ -193,7 +193,18 @@ export default function Footer() {
             © {new Date().getFullYear()} WeSee AI Automation. All rights reserved.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-           
+            <a href="/terms" style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", textDecoration: "none", transition: "color 0.3s ease" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.18)"; }}
+            >
+              Terms
+            </a>
+            <a href="/privacy" style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", textDecoration: "none", transition: "color 0.3s ease" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.18)"; }}
+            >
+              Privacy
+            </a>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               style={{
