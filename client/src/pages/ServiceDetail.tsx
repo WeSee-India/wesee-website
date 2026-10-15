@@ -378,7 +378,7 @@ export default function ServiceDetail() {
             <div className="gsap-reveal mt-7 md:mt-9">
               <MagneticButton as="div" style={{ display: "inline-block" }}>
                 <Link
-                  href="/book"
+                  href={`/book?service=${service.slug}`}
                   className="inline-flex items-center gap-2 rounded-full bg-[#C9A84C] px-7 py-3.5 text-sm font-semibold text-[#0c0c0c] transition-transform hover:scale-[1.02]"
                 >
                   Book a free discovery call →

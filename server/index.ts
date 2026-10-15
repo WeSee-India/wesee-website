@@ -18,8 +18,9 @@ async function startServer() {
     try {
       const result = validateContactPayload(req.body);
       if (!result.ok) {
-        return res.status(400).json({ error: result.error });
+        return res.status(400).json({ error: result.error, fields: result.fields });
       }
+      if (result.spam) return res.json({ success: true });
       await sendContactEmail(result.payload);
       return res.json({ success: true });
     } catch (err) {

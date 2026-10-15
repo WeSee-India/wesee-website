@@ -9,17 +9,30 @@ import { z } from "zod";
 const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(100),
-  email: z.string().trim().email("A valid email is required.").max(200),
-  message: z.string().trim().min(1, "Message is required.").max(5000),
+  name: z.string().trim().min(1, "Enter your name.").max(100, "Use 100 characters or fewer for your name."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Enter your email address.")
+    .email("Enter a valid email address, like name@company.com.")
+    .max(200, "Use 200 characters or fewer for your email."),
+  message: z.string().trim().min(1, "Add a short message about what you need.").max(5000, "Keep your message under 5,000 characters."),
   company: optionalText(150),
   service: optionalText(100),
   phone: optionalText(40),
   consentNonMarketing: z.boolean().optional(),
   consentMarketing: z.boolean().optional(),
-  // Honeypot — bots fill it, humans never see it. Must be empty.
-  honeypot: z.string().max(0).optional(),
+  // Spam traps. The honeypot is hidden from people; formAge is how long the form was open (ms).
+  honeypot: z.string().optional(),
+  formAge: z.number().optional(),
 });
+
+/** Real people need a moment to fill the form; anything faster than this, or any honeypot content, is a bot. */
+const MIN_FORM_AGE_MS = 1000;
+
+function isSpam(data: { honeypot?: string; formAge?: number }): boolean {
+  return Boolean(data.honeypot) || (data.formAge !== undefined && data.formAge < MIN_FORM_AGE_MS);
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -55,8 +68,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const parsed = contactSchema.safeParse(req.body);
   if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    return res.status(400).json({ error: first?.message || "Name, email and message are required." });
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "form");
+      if (!fields[key]) fields[key] = issue.message;
+    }
+    return res.status(400).json({ error: Object.values(fields)[0] || "Check the form and try again.", fields });
+  }
+
+  // Pretend success so bots get no signal to adapt to; nothing is sent.
+  if (isSpam(parsed.data)) {
+    return res.status(200).json({ success: true });
   }
 
   const { name, email, company, service, message, phone, consentNonMarketing, consentMarketing } = parsed.data;
@@ -134,6 +156,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Contact email error:", err);
-    return res.status(500).json({ error: "Failed to send message. Please try again." });
+    return res.status(500).json({ error: "We couldn't send your message. Please try again in a moment, or email us directly." });
   }
 }
