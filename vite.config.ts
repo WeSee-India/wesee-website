@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import type { ContactPayload } from "./server/email.js";
-import { absoluteUrl, DEFAULT_OG_IMAGE, getAllIndexableRoutes, getRouteMeta, SITE_URL } from "./client/src/data/seo";
+import { absoluteUrl, DEFAULT_OG_IMAGE, getAllIndexableRoutes, getRouteMeta, getSitemapEntries, getStructuredData, SITE_URL } from "./client/src/data/seo";
 
 // Load .env into process.env so server-side code (Resend) can access it in dev
 const env = loadEnv("development", process.cwd(), "");
@@ -128,6 +128,10 @@ function vitePluginRouteMeta(): Plugin {
         html = setContent(html, /(<meta name="twitter:title"\s+content=")[^"]*(")/, t);
         html = setContent(html, /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/, d);
         html = setContent(html, /(<meta name="twitter:image" content=")[^"]*(")/, image);
+        const ld = getStructuredData(route)
+          .map((o) => `    <script type="application/ld+json" data-route-ld>${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`)
+          .join("\n");
+        if (ld) html = html.replace("</head>", () => `${ld}\n  </head>`);
         if (route === "/") {
           fs.writeFileSync(path.join(outDir, "index.html"), html);
         } else {
@@ -136,6 +140,14 @@ function vitePluginRouteMeta(): Plugin {
           fs.writeFileSync(path.join(dir, "index.html"), html);
         }
       }
+      // Sitemap lists exactly the canonical, live URLs above plus the standalone static pages.
+      const urls = getSitemapEntries()
+        .map((e) => `  <url>\n    <loc>${SITE_URL}${e.path === "/" ? "/" : e.path}</loc>\n    <priority>${e.priority.toFixed(1)}</priority>\n  </url>`)
+        .join("\n");
+      fs.writeFileSync(
+        path.join(outDir, "sitemap.xml"),
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+      );
     },
   };
 }
