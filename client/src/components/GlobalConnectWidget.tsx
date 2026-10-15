@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import gsap from "gsap";
+import { prefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type Phase = "idle" | "typing" | "ready";
 
@@ -40,7 +41,7 @@ export default function GlobalConnectWidget() {
 
   // Dot pulse
   useEffect(() => {
-    if (!dotRef.current) return;
+    if (!dotRef.current || prefersReducedMotion()) return;
     const tl = gsap.to(dotRef.current, {
       scale: 1.8,
       opacity: 0,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useSearch } from "wouter";
 import { services } from "@/data/services";
+import { track } from "@/lib/analytics";
 
 const fieldLabel: CSSProperties = {
   display: "block",
@@ -146,6 +147,14 @@ export default function BookCall() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submittedEmail, setSubmittedEmail] = useState("");
   const statusRef = useRef<HTMLDivElement>(null);
+  const formStarted = useRef(false);
+
+  // Fires once per visit, on the first interaction with any field. Reports no field values.
+  const trackFormStart = () => {
+    if (formStarted.current) return;
+    formStarted.current = true;
+    track("form_start", { form_name: "book_call" });
+  };
 
   // /book?service=<slug> from a service page's CTA pre-selects that service. Unknown slugs are ignored.
   useEffect(() => {
@@ -189,6 +198,7 @@ export default function BookCall() {
 
     const errors = validate(values);
     if (Object.keys(errors).length > 0) {
+      track("form_submit_error", { form_name: "book_call", error_type: "validation", error_count: Object.keys(errors).length });
       setFieldErrors(errors);
       setFormState("error");
       setFormError("");
@@ -227,6 +237,7 @@ export default function BookCall() {
           if (FIELD_ORDER.includes(k)) serverErrors[k] = msg;
         }
         if (Object.keys(serverErrors).length > 0) {
+          track("form_submit_error", { form_name: "book_call", error_type: "validation", error_count: Object.keys(serverErrors).length });
           setFieldErrors(serverErrors);
           setFormState("error");
           focusFirstInvalid();
@@ -234,6 +245,8 @@ export default function BookCall() {
         }
         throw new Error(data.error || "Something went wrong on our side.");
       }
+      track("form_submit_success", { form_name: "book_call", service: selectedService?.slug ?? "none" });
+      formStarted.current = false;
       setSubmittedEmail(body.email);
       setFormState("success");
       setName("");
@@ -246,6 +259,7 @@ export default function BookCall() {
       setConsentMarketing(false);
       openedAt.current = Date.now();
     } catch (err: unknown) {
+      track("form_submit_error", { form_name: "book_call", error_type: err instanceof TypeError ? "network" : "server" });
       // Entered data is kept so nothing needs retyping.
       setFormState("error");
       setFormError(
@@ -575,7 +589,7 @@ export default function BookCall() {
                 Request a discovery call
               </h2>
 
-              <form onSubmit={handleSubmit} noValidate aria-busy={formState === "sending"} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <form onSubmit={handleSubmit} onFocusCapture={trackFormStart} noValidate aria-busy={formState === "sending"} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 {/* Honeypot — hidden from people and assistive tech, bots fill it. No CAPTCHA, so nobody is blocked. */}
                 <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
                   <label>

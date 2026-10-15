@@ -1,5 +1,7 @@
 import { services } from "./services";
 import { serviceDefinitions } from "./serviceDefinitions";
+import { caseStudies } from "./caseStudies";
+import { projects } from "./projects";
 
 export const SITE_URL = "https://www.weseegpt.com";
 export const SITE_NAME = "WeSee";
@@ -25,6 +27,16 @@ const pages: Record<string, Omit<RouteMeta, "path">> = {
     title: "Services — AI Agents, Automation, Marketing & Web | WeSee",
     description:
       "Explore 50+ WeSee services: AI agents and voice bots, workflow automation, performance marketing, SEO, web and e-commerce development, CRM, analytics and more.",
+  },
+  "/case-studies": {
+    title: "Case Studies — AI Agents, Automation & Software Results | WeSee",
+    description:
+      "How WeSee has used AI agents, workflow automation and custom software to take work off client teams: the problem, what we built, and measured results.",
+  },
+  "/projects": {
+    title: "Projects — AI Agents, Automations & Apps We Have Built | WeSee",
+    description:
+      "A portfolio of AI agents, workflow automations, apps and dashboards designed and shipped by WeSee, with the tools and platforms behind each one.",
   },
   "/about": {
     title: "About WeSee — AI & Engineering Studio, Tokyo to Mumbai",
@@ -108,7 +120,23 @@ export function absoluteUrl(urlOrPath: string): string {
 export function getRouteMeta(rawPath: string): RouteMeta {
   const path = rawPath.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
 
+  // Collection pages stay out of search until they have approved entries.
+  if (path === "/case-studies" && caseStudies.length === 0) return { ...pages[path], path, noindex: true };
+  if (path === "/projects" && projects.length === 0) return { ...pages[path], path, noindex: true };
   if (pages[path]) return { ...pages[path], path };
+
+  const caseMatch = path.match(/^\/case-studies\/([^/]+)$/);
+  if (caseMatch) {
+    const cs = caseStudies.find((c) => c.slug === caseMatch[1]);
+    if (cs) {
+      return {
+        title: `${cs.client} — ${cs.service} Case Study | WeSee`,
+        description: truncate(cs.summary),
+        image: cs.image?.src,
+        path,
+      };
+    }
+  }
 
   const serviceMatch = path.match(/^\/services\/([^/]+)$/);
   if (serviceMatch) {
@@ -133,7 +161,10 @@ export function getRouteMeta(rawPath: string): RouteMeta {
 /** Every indexable route, used by the build step to emit per-route HTML. */
 export function getAllIndexableRoutes(): string[] {
   return [
-    ...Object.keys(pages),
+    ...Object.keys(pages).filter(
+      (p) => !(p === "/case-studies" && caseStudies.length === 0) && !(p === "/projects" && projects.length === 0),
+    ),
+    ...caseStudies.map((c) => `/case-studies/${c.slug}`),
     ...services.map((s) => `/services/${s.slug}`),
     ...Object.keys(blogPosts).map((s) => `/blog/${s}`),
   ];
@@ -153,6 +184,12 @@ export function getBreadcrumbs(rawPath: string): Crumb[] | null {
   if (serviceMatch) {
     const service = services.find((s) => s.slug === serviceMatch[1]);
     if (service) return [home, { name: "Services", path: "/services" }, { name: service.name, path }];
+  }
+
+  const caseMatch = path.match(/^\/case-studies\/([^/]+)$/);
+  if (caseMatch) {
+    const cs = caseStudies.find((c) => c.slug === caseMatch[1]);
+    if (cs) return [home, { name: "Case Studies", path: "/case-studies" }, { name: cs.client, path }];
   }
 
   const blogMatch = path.match(/^\/blog\/([^/]+)$/);

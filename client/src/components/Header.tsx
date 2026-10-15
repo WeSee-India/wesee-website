@@ -5,6 +5,8 @@ import ParticleWrapper from "./ParticleWrapper";
 
 const navItems = [
   { label: "Services", href: "/services", hasDropdown: true },
+  { label: "Case Studies", href: "/case-studies", hasDropdown: false },
+  { label: "Projects", href: "/projects", hasDropdown: false },
   { label: "About", href: "/about", hasDropdown: false },
   { label: "Team", href: "/team", hasDropdown: false },
   { label: "Blog", href: "/blog", hasDropdown: false },
@@ -155,6 +157,8 @@ export default function Header() {
   const [expandedCategoryIndex, setExpandedCategoryIndex] = useState<number | null>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
   const [location] = useLocation();
 
   const openServicesDropdown = () => {
@@ -187,6 +191,33 @@ export default function Header() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Escape closes whichever menu is open; focus returns to the hamburger so keyboard users keep their place.
+  useEffect(() => {
+    if (!open && !servicesDropdownOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (open) {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
+      if (servicesDropdownOpen) {
+        setServicesDropdownOpen(false);
+        setExpandedCategoryIndex(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, servicesDropdownOpen]);
+
+  // Move focus into the mobile menu when it opens.
+  useEffect(() => {
+    if (open) mobileNavRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+    // The overlay covers the page, so keep the page out of the tab order and the accessibility tree meanwhile.
+    const page = document.getElementById("page-content");
+    page?.toggleAttribute("inert", open);
+    return () => page?.removeAttribute("inert");
+  }, [open]);
 
   // Close on navigation
   useEffect(() => {
@@ -289,6 +320,7 @@ export default function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      className="hdr-nav-link"
                       aria-haspopup={isServices ? "menu" : undefined}
                       aria-expanded={isServices ? servicesDropdownOpen : undefined}
                       style={{
@@ -509,6 +541,8 @@ export default function Header() {
             {/* Hamburger / close — mobile only; fixed size so navbar doesn't shift */}
             {!isDesktop && (
               <button
+                ref={menuButtonRef}
+                type="button"
                 onClick={() => setOpen(!open)}
                 aria-label={open ? "Close menu" : "Open menu"}
                 aria-expanded={open}
@@ -554,7 +588,8 @@ export default function Header() {
       {!isDesktop && (
         <div
           id="mobile-nav"
-          aria-hidden={!open}
+          ref={mobileNavRef}
+          inert={!open}
           style={{
             position: "fixed",
             top: 0,

@@ -166,7 +166,36 @@ export default function InteractiveParticles({
       }
 
       // Assign closest grid particles to logo points using greedy nearest-neighbor
-      const usedParticles = new Set<number>();
+      const used = new Uint8Array(particles.length);
+      // Particles sit on a regular grid, so the nearest unused one is found by scanning cells outward
+      // from the target (ring by ring) instead of comparing against every particle.
+      const nearestUnused = (tx: number, ty: number): number => {
+        const cx = Math.min(cols - 1, Math.max(0, Math.round((tx - GRID_SPACING / 2) / GRID_SPACING)));
+        const cy = Math.min(rows - 1, Math.max(0, Math.round((ty - GRID_SPACING / 2) / GRID_SPACING)));
+        const maxRing = Math.max(cols, rows);
+        let bestDist = Infinity;
+        let bestIdx = -1;
+        let foundAtRing = -1;
+        for (let ring = 0; ring <= maxRing; ring++) {
+          // A hit in ring r can still be beaten by a diagonal neighbour in ring r+1, so scan one more ring.
+          if (foundAtRing >= 0 && ring > foundAtRing + 1) break;
+          for (let row = cy - ring; row <= cy + ring; row++) {
+            if (row < 0 || row >= rows) continue;
+            const onEdgeRow = row === cy - ring || row === cy + ring;
+            const step = onEdgeRow ? 1 : ring * 2 || 1;
+            for (let col = cx - ring; col <= cx + ring; col += step) {
+              if (col < 0 || col >= cols) continue;
+              const idx = row * cols + col;
+              if (used[idx]) continue;
+              const dx = particles[idx].homeX - tx;
+              const dy = particles[idx].homeY - ty;
+              const d = dx * dx + dy * dy;
+              if (d < bestDist) { bestDist = d; bestIdx = idx; if (foundAtRing < 0) foundAtRing = ring; }
+            }
+          }
+        }
+        return bestIdx;
+      };
       // Sort logo targets from center outward for nicer stagger
       const logoCenterX = ox + lw / 2;
       const logoCenterY = oy + lh / 2;
@@ -181,19 +210,10 @@ export default function InteractiveParticles({
       for (let si = 0; si < sortedLogoIndices.length; si++) {
         const li = sortedLogoIndices[si];
         const target = logoTargets[li];
-        let bestDist = Infinity;
-        let bestIdx = -1;
-
-        for (let pi = 0; pi < particles.length; pi++) {
-          if (usedParticles.has(pi)) continue;
-          const dx = particles[pi].homeX - target.x;
-          const dy = particles[pi].homeY - target.y;
-          const d = dx * dx + dy * dy;
-          if (d < bestDist) { bestDist = d; bestIdx = pi; }
-        }
+        const bestIdx = nearestUnused(target.x, target.y);
 
         if (bestIdx >= 0) {
-          usedParticles.add(bestIdx);
+          used[bestIdx] = 1;
           const p = particles[bestIdx];
           p.hasTarget = true;
           p.targetX = target.x;
@@ -237,10 +257,18 @@ export default function InteractiveParticles({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    let lastPaint = 0;
     const animate = () => {
+      const now = performance.now() / 1000;
+      // The idle twinkle is slow, so 30 fps looks identical and halves the canvas work.
+      // Hover transitions (and the one-off first paint) always run at full rate.
+      if (!externalIsHovered && !prevHoveredRef.current && lastPaint && now - lastPaint < 1 / 30 - 0.002) {
+        if (!prefersReducedMotion && onScreen) animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastPaint = now;
       ctx.clearRect(0, 0, w, h);
       const particles = particlesRef.current;
-      const now = performance.now() / 1000;
 
       // Track hover state transitions
       if (externalIsHovered && !prevHoveredRef.current) {
@@ -352,11 +380,20 @@ export default function InteractiveParticles({
 
       ctx.globalAlpha = 1;
       // Reduced-motion: render a single static frame instead of an endless loop.
-      if (!prefersReducedMotion) animRef.current = requestAnimationFrame(animate);
+      // Otherwise stop looping while the canvas is scrolled off screen.
+      if (!prefersReducedMotion && onScreen) animRef.current = requestAnimationFrame(animate);
     };
 
+    let onScreen = true;
     animate();
+    const observer = new IntersectionObserver(([entry]) => {
+      const wasOnScreen = onScreen;
+      onScreen = entry.isIntersecting;
+      if (onScreen && !wasOnScreen && !prefersReducedMotion) animRef.current = requestAnimationFrame(animate);
+    });
+    observer.observe(container);
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", resize);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };

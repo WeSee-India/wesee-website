@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { prefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface FloatingParticlesProps {
   count?: number;
@@ -57,12 +58,17 @@ export default function FloatingParticles({
       opacity: Math.random() * 0.5 + 0.2,
     }));
 
+    const reduced = prefersReducedMotion();
+    let visible = true;
+
     const animate = () => {
       ctx.clearRect(0, 0, w, h);
 
       particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
+        if (!reduced) {
+          p.x += p.vx;
+          p.y += p.vy;
+        }
 
         // Wrap around
         if (p.x < -10) p.x = w + 10;
@@ -78,12 +84,21 @@ export default function FloatingParticles({
       });
 
       ctx.globalAlpha = 1;
-      raf.current = requestAnimationFrame(animate);
+      // Reduced motion: paint one still frame. Otherwise only animate while on screen.
+      if (!reduced && visible) raf.current = requestAnimationFrame(animate);
     };
 
-    raf.current = requestAnimationFrame(animate);
+    animate();
+
+    const observer = new IntersectionObserver(([entry]) => {
+      const wasVisible = visible;
+      visible = entry.isIntersecting;
+      if (visible && !wasVisible && !reduced) raf.current = requestAnimationFrame(animate);
+    });
+    observer.observe(canvas);
 
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(raf.current);
       window.removeEventListener("resize", resize);
     };

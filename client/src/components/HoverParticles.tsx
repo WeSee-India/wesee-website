@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface HoverParticlesProps {
   className?: string;
@@ -11,8 +12,10 @@ export default function HoverParticles({ className = "" }: HoverParticlesProps) 
   const particlesRef = useRef<any[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const [isHovered, setIsHovered] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    if (reducedMotion) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -76,7 +79,6 @@ export default function HoverParticles({ className = "" }: HoverParticlesProps) 
       if (!isHovered) {
         particlesRef.current = [];
         ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-        animRef.current = requestAnimationFrame(animate);
         return;
       }
 
@@ -174,7 +176,7 @@ export default function HoverParticles({ className = "" }: HoverParticlesProps) 
       parent.removeEventListener("touchend", onTouchEnd);
       parent.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [isHovered]);
+  }, [isHovered, reducedMotion]);
 
   return (
     <div

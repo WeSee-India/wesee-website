@@ -13,6 +13,8 @@ const serviceLinks = [
 ];
 
 const companyLinks = [
+  { label: "Case Studies", href: "/case-studies" },
+  { label: "Projects", href: "/projects" },
   { label: "About", href: "/about" },
   { label: "Team", href: "/team" },
   { label: "Blog", href: "/blog" },
@@ -47,7 +49,7 @@ export default function Footer() {
 
           <span style={{
             fontSize: 11, fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase",
-            color: "rgba(255,255,255,0.30)", display: "block", marginBottom: 20,
+            color: "rgba(255,255,255,0.56)", display: "block", marginBottom: 20,
           }}>
             Ready to start?
           </span>
@@ -67,11 +69,11 @@ export default function Footer() {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <ParticleWrapper>
                 <a href="mailto:careers@weseegpt.com" style={{
-                  fontSize: 14, color: "rgba(255,255,255,0.35)",
+                  fontSize: 14, color: "rgba(255,255,255,0.62)",
                   transition: "color 0.3s ease", textDecoration: "none",
                 }}
                   onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.62)")}
                 >
                   careers@weseegpt.com
                 </a>
@@ -90,7 +92,7 @@ export default function Footer() {
               </span>
             </Link>
             <p style={{
-              fontSize: 13, color: "rgba(255,255,255,0.30)",
+              fontSize: 13, color: "rgba(255,255,255,0.56)",
               lineHeight: 1.7, marginTop: 14, maxWidth: 240,
             }}>
               India's leading AI automation agency  building intelligent systems that help businesses operate smarter, faster, and at scale.
@@ -99,9 +101,9 @@ export default function Footer() {
               {socials.map(s => (
                 <ParticleWrapper key={s.label}>
                   <a href={s.href} target="_blank" rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", transition: "color 0.3s ease", textDecoration: "none" }}
+                    style={{ fontSize: 12, color: "rgba(255,255,255,0.56)", transition: "color 0.3s ease", textDecoration: "none" }}
                     onMouseEnter={e => (e.currentTarget.style.color = "var(--accent)")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.56)")}
                   >
                     {s.label}
                   </a>
@@ -112,9 +114,9 @@ export default function Footer() {
 
           {/* Services */}
           <div>
-            <h4 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.20)", marginBottom: 18 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.52)", marginBottom: 18 }}>
               Services
-            </h4>
+            </h3>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
               {serviceLinks.map(l => (
                 <li key={l.label}>
@@ -123,10 +125,10 @@ export default function Footer() {
                       href={l.href}
                       onClick={() => scrollToTop()}
                       style={{
-                        fontSize: 14, color: "rgba(255,255,255,0.35)", transition: "color 0.3s ease", textDecoration: "none",
+                        fontSize: 14, color: "rgba(255,255,255,0.62)", transition: "color 0.3s ease", textDecoration: "none",
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.35)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.62)"; }}
                     >
                       {l.label}
                     </Link>
@@ -138,18 +140,18 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.20)", marginBottom: 18 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.52)", marginBottom: 18 }}>
               Company
-            </h4>
+            </h3>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
               {companyLinks.map(l => (
                 <li key={l.label}>
                   <ParticleWrapper>
                     <Link href={l.href} style={{
-                      fontSize: 14, color: "rgba(255,255,255,0.35)", transition: "color 0.3s ease", textDecoration: "none",
+                      fontSize: 14, color: "rgba(255,255,255,0.62)", transition: "color 0.3s ease", textDecoration: "none",
                     }}
                       onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.9)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.35)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.62)"; }}
                     >
                       {l.label}
                     </Link>
@@ -161,9 +163,9 @@ export default function Footer() {
 
           {/* Offices */}
           <div>
-            <h4 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.20)", marginBottom: 18 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.52)", marginBottom: 18 }}>
               Offices
-            </h4>
+            </h3>
             {[
               { city: "Japan", sub: "Japan — HQ" },
               { city: "Mumbai", sub: "India — Operations" },
@@ -173,7 +175,7 @@ export default function Footer() {
                 <div style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.55)", letterSpacing: "-0.01em" }}>
                   {o.city}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.20)", letterSpacing: "0.04em", marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.52)", letterSpacing: "0.04em", marginTop: 2 }}>
                   {o.sub}
                 </div>
               </div>
@@ -189,30 +191,30 @@ export default function Footer() {
           justifyContent: "space-between",
           alignItems: "center", gap: 12,
         }}>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", letterSpacing: "0.03em" }}>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.52)", letterSpacing: "0.03em" }}>
             © {new Date().getFullYear()} WeSee AI Automation. All rights reserved.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <a href="/terms" style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", textDecoration: "none", transition: "color 0.3s ease" }}
+            <a href="/terms" style={{ fontSize: 12, color: "rgba(255,255,255,0.52)", textDecoration: "none", transition: "color 0.3s ease" }}
               onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.18)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.52)"; }}
             >
               Terms
             </a>
-            <a href="/privacy" style={{ fontSize: 12, color: "rgba(255,255,255,0.18)", textDecoration: "none", transition: "color 0.3s ease" }}
+            <a href="/privacy" style={{ fontSize: 12, color: "rgba(255,255,255,0.52)", textDecoration: "none", transition: "color 0.3s ease" }}
               onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.18)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.52)"; }}
             >
               Privacy
             </a>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               style={{
-                fontSize: 12, color: "rgba(255,255,255,0.18)", background: "none",
+                fontSize: 12, color: "rgba(255,255,255,0.52)", background: "none",
                 border: "none", transition: "color 0.3s ease", cursor: finePointer ? "none" : "pointer",
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.18)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.52)"; }}
             >
               ↑ Top
             </button>

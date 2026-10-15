@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import HoverParticles from "@/components/HoverParticles";
 import ParticleWrapper from "@/components/ParticleWrapper";
 import InteractiveParticles from "@/components/InteractiveParticles";
+import OurWorkStack from "@/components/OurWorkStack";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { categories, services as allServices } from "@/data/services";
@@ -75,44 +76,43 @@ const features = [
   { icon: "⬡", title: "Infrastructure", desc: "Reliable cloud, data, and system architecture that supports your business operations and keeps everything running smoothly." },
 ];
 
-const workImages = [
-  { src: "/aitalent.jpg", h: 220, label: "AI Infrastructure" },
-  { src: "/aisoftware.jpg", h: 160, label: "Workspace" },
-  { src: "/wesee.jpg", h: 160, label: "Operations" },
-  { src: "/voice.jpg", h: 220, label: "Tech Systems" },
-  { src: "/dashboard.jpg", h: 190, label: "Team at Work" },
-  { src: "/roi.jpg", h: 190, label: "Cloud Scale" },
-];
-
 /** Plain-text presales answers, shown in full on the page. */
 const faqs = [
   {
+    topic: "General",
     q: "What does WeSee build?",
     a: "We build custom AI agents (sales, customer support, receptionist and voice), workflow automation, marketing and growth systems, websites and e-commerce stores, and the CRM, analytics and cloud setup behind them.",
   },
   {
+    topic: "Process & pricing",
     q: "How does a project start?",
     a: "With a free 30-minute discovery call. We walk through your current tools and bottlenecks, pick two or three automation or AI-agent opportunities, and talk through feasibility, timelines and likely return before anyone commits.",
   },
   {
+    topic: "Process & pricing",
     q: "How much does it cost?",
     a: "It depends on scope. Our services come in Starter, Growth and Enterprise sizes, and we cover feasibility, timelines and potential ROI on the discovery call so you can decide with real numbers. The call is free and carries no obligation.",
   },
   {
+    topic: "Tools & industries",
     q: "Can you work with the tools we already use?",
     a: "Yes. We connect the tools you already have, such as your CRM, ERP, e-commerce platform, accounting software and messaging channels, using no-code platforms like n8n, Zapier and Make, or custom code where needed.",
   },
   {
+    topic: "Tools & industries",
     q: "Which industries do you work with?",
     a: "Healthcare, real estate, e-commerce, education, finance, hospitality, SaaS, manufacturing, logistics, retail, legal, government, and beauty and wellness, among others.",
   },
   {
+    topic: "General",
     q: "Where is WeSee based?",
     a: "Our headquarters are in Japan and our operations team is in Mumbai, India.",
   },
 ];
 
-/* ─── Component ───────────────────────────────────────────────── */
+const faqTopics = ["General", "Process & pricing", "Tools & industries"] as const;
+
+/* ─── Component) ───────────────────────────────────────────────── */
 
 export default function Home() {
   const finePointer = useFinePointer();
@@ -123,6 +123,7 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isHeroLogoHovered, setIsHeroLogoHovered] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [faqTopic, setFaqTopic] = useState<string>(faqTopics[0]);
   const [hoveredServiceIdx, setHoveredServiceIdx] = useState<number | null>(null);
   const [svcPopTop, setSvcPopTop] = useState<number>(0);
   const svcListRef = useRef<HTMLDivElement>(null);
@@ -704,79 +705,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════ OUR WORK ══════════════════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper)" }}>
-        <div className="container">
-          <div className="flex flex-col gap-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-              {/* Text col */}
-              <div className="home-our-work-col">
-                <h2 className="sr" style={{
-                  fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
-                  letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
-                }}>
-                  We build AI that works<em style={{ fontWeight: 300, fontStyle: "italic", color: "rgba(17,19,23,0.45)" }}>.</em>
-                </h2>
-                <p className="sr" style={{ fontSize: 15, color: "rgba(17,19,23,0.50)", lineHeight: 1.8, marginTop: 20 }}>
-                  Our work focuses on the most critical functions in today's businesses sales automation, AI-powered customer engagement, and end-to-end workflow intelligence.
-                </p>
-                <p className="sr" style={{ fontSize: 15, color: "rgba(17,19,23,0.50)", lineHeight: 1.8, marginTop: 14 }}>
-                  We design solutions that place the business outcome at centre stage  building AI agents and automated pipelines that drive revenue, reduce cost, and scale effortlessly.
-                </p>
-                <ParticleWrapper>
-                  <Link href="/services" className="sr inline-flex items-center gap-1.5 mt-8 text-[13.5px] font-medium text-[var(--ink)] no-underline border-b border-[rgba(17,19,23,0.20)] pb-0.5 transition-[border-color] duration-300 ease-in-out hover:border-[var(--ink)]"
-                  >
-                    View all services →
-                  </Link>
-                </ParticleWrapper>
-
-                {/* Vertical stats */}
-                <div className="flex flex-col gap-0 mt-[52px]">
-                  {stats.map((s, i) => (
-                    <div key={i} className={`sr flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 py-[18px] border-t border-[rgba(17,19,23,0.08)] ${i === stats.length - 1 ? 'border-b border-[rgba(17,19,23,0.08)]' : ''}`}>
-                      <span className="text-[clamp(28px,3vw,40px)] font-[650] text-[var(--accent)] leading-none sm:min-w-[80px]" style={{ letterSpacing: "-0.05em" }}>
-                        {s.display}
-                      </span>
-                      <div>
-                        <div className="text-sm font-[520] text-[var(--ink)]" style={{ fontSize: 14, letterSpacing: "-0.02em" }}>{s.label}</div>
-                        <div className="text-xs text-[rgba(17,19,23,0.35)] mt-0.5" style={{ fontSize: 12 }}>{s.sub}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Image mosaic */}
-              <div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2.5">
-                  {workImages.map((img, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-2xl bg-[#E8E8E5]${i >= 4 ? " hidden sm:block" : ""}`}
-                      style={{
-                        height: 210,
-                        borderRadius: 16,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <img
-                        {...imgDims(img.src)} src={img.src}
-                        alt={img.label}
-                        loading="lazy"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <OurWorkStack stats={stats} />
 
       {/* ══════════════════════════ ABOUT / DARK ══════════════════════════ */}
       <section className="section-pad" style={{
@@ -1062,31 +991,55 @@ export default function Home() {
 
       {/* ══════════════════════════ FAQ (visible text, no schema) ══════════════════════════ */}
       <section className="section-pad home-faq" style={{ background: "var(--paper)" }} aria-labelledby="home-faq-title">
-        <div className="container">
-          <span style={{
-            fontSize: 10, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase",
-            color: "var(--accent)", display: "block", marginBottom: 20,
-          }}>Before you book</span>
-          <h2 id="home-faq-title" style={{
-            margin: 0, fontSize: "clamp(30px, 4.2vw, 52px)", fontWeight: 450,
-            letterSpacing: "-0.04em", lineHeight: 1.12, color: "var(--ink)", maxWidth: 760,
-          }}>
-            What do people ask before working with WeSee?
-          </h2>
-          <div style={{
-            marginTop: "clamp(32px, 5vw, 56px)",
-            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
-            columnGap: "clamp(32px, 5vw, 72px)",
-          }}>
-            {faqs.map((f) => (
-              <div key={f.q} style={{ borderTop: "1px solid rgba(17,19,23,0.10)", padding: "24px 0 28px" }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 550, letterSpacing: "-0.02em", color: "var(--ink)" }}>
-                  {f.q}
-                </h3>
-                <p style={{ margin: "10px 0 0", fontSize: 15.5, lineHeight: 1.7, color: "rgba(17,19,23,0.62)" }}>
-                  {f.a}
-                </p>
-              </div>
+        <div className="container faq-grid">
+          {/* Left: title + topic filter */}
+          <div className="faq-side">
+            <span className="faq-pill">Before you book</span>
+            <h2 id="home-faq-title" className="faq-title">
+              What do people ask before working with WeSee?
+            </h2>
+            <div className="faq-topics" role="group" aria-label="Filter questions by topic">
+              {faqTopics.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="faq-topic"
+                  aria-pressed={faqTopic === t}
+                  onClick={() => setFaqTopic(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="faq-more">
+              Still have a question? <Link href="/book">Book a free call →</Link>
+            </p>
+          </div>
+
+          {/* Right: accordion. Answers stay in the DOM (native details) so they remain crawlable. */}
+          <div className="faq-list">
+            {faqs.map((f, i) => (
+              <details
+                key={f.q}
+                className="faq-item"
+                name="home-faq"
+                onToggle={(e) => {
+                  // Only one answer open at a time (fallback for browsers without exclusive <details name>).
+                  const el = e.currentTarget;
+                  if (!el.open) return;
+                  el.parentElement?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach((d) => {
+                    if (d !== el) d.open = false;
+                  });
+                }}
+                hidden={f.topic !== faqTopic}
+                open={i === faqs.findIndex((x) => x.topic === faqTopic) || undefined}
+              >
+                <summary>
+                  <h3>{f.q}</h3>
+                  <span className="faq-icon" aria-hidden="true" />
+                </summary>
+                <p>{f.a}</p>
+              </details>
             ))}
           </div>
         </div>
