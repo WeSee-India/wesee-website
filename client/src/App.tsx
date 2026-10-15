@@ -13,6 +13,7 @@ import { useLenis } from "./hooks/useLenis";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import GlobalConnectWidget from "./components/GlobalConnectWidget";
+import RouteSeo from "./components/RouteSeo";
 
 const Services = lazy(() => import("./pages/Services"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
@@ -101,6 +102,7 @@ function App() {
           <GrainOverlay />
           <LoadingScreen onComplete={() => setLoadingDone(true)} />
           <ScrollToTop />
+          <RouteSeo />
           <Header />
           <div
             className={loadingDone ? "page-enter" : ""}

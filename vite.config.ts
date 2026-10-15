@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import type { ContactPayload } from "./server/email.js";
+import { absoluteUrl, DEFAULT_OG_IMAGE, getAllIndexableRoutes, getRouteMeta, SITE_URL } from "./client/src/data/seo";
 
 // Load .env into process.env so server-side code (Resend) can access it in dev
 const env = loadEnv("development", process.cwd(), "");
@@ -93,7 +94,53 @@ function vitePluginContactApi(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginLandingPage(), vitePluginContactApi()];
+const escapeAttr = (v: string) => v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+/**
+ * After build, emit one HTML file per route with its own title, description,
+ * canonical and share tags so crawlers and link previews (which don't run JS) see them.
+ */
+function vitePluginRouteMeta(): Plugin {
+  let outDir = "";
+  return {
+    name: "route-meta",
+    apply: "build",
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
+    closeBundle() {
+      const template = fs.readFileSync(path.join(outDir, "index.html"), "utf-8");
+      const setContent = (html: string, selector: RegExp, value: string) =>
+        html.replace(selector, (_m, pre: string, post: string) => `${pre}${value}${post}`);
+      for (const route of getAllIndexableRoutes()) {
+        const m = getRouteMeta(route);
+        const url = `${SITE_URL}${route === "/" ? "/" : route}`;
+        const image = m.image ? absoluteUrl(m.image) : DEFAULT_OG_IMAGE;
+        const t = escapeAttr(m.title);
+        const d = escapeAttr(m.description);
+        let html = template.replace(/<title>[\s\S]*?<\/title>/, `<title>${t}</title>`);
+        html = setContent(html, /(<meta\s+name="description"\s+content=")[^"]*(")/, d);
+        html = setContent(html, /(<link rel="canonical" href=")[^"]*(")/, url);
+        html = setContent(html, /(<meta property="og:title"\s+content=")[^"]*(")/, t);
+        html = setContent(html, /(<meta\s+property="og:description"\s+content=")[^"]*(")/, d);
+        html = setContent(html, /(<meta property="og:url" content=")[^"]*(")/, url);
+        html = setContent(html, /(<meta property="og:image" content=")[^"]*(")/, image);
+        html = setContent(html, /(<meta name="twitter:title"\s+content=")[^"]*(")/, t);
+        html = setContent(html, /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/, d);
+        html = setContent(html, /(<meta name="twitter:image" content=")[^"]*(")/, image);
+        if (route === "/") {
+          fs.writeFileSync(path.join(outDir, "index.html"), html);
+        } else {
+          const dir = path.join(outDir, route);
+          fs.mkdirSync(dir, { recursive: true });
+          fs.writeFileSync(path.join(dir, "index.html"), html);
+        }
+      }
+    },
+  };
+}
+
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginLandingPage(), vitePluginContactApi(), vitePluginRouteMeta()];
 
 export default defineConfig({
   plugins,
