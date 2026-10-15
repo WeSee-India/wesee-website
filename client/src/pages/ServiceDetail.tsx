@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import {
   BarChart3,
   Check,
@@ -145,13 +146,7 @@ export default function ServiceDetail() {
       {/* ── Hero (mobile: back → image → title → CTA) ─────── */}
       <section className="overflow-x-hidden pt-[calc(72px+8px)] md:pt-[calc(80px+20px)]">
         <div className="container">
-          <Link
-            href="/services?view=grid"
-            className="inline-flex items-center gap-0.5 text-[15px] font-medium text-neutral-600 no-underline transition-colors hover:text-neutral-900 md:text-[var(--muted-foreground)] md:hover:text-[var(--foreground)]"
-          >
-            <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
-            Services
-          </Link>
+          <Breadcrumbs path={`/services/${service.slug}`} />
 
           <div className="relative mt-6 md:mt-8">
             <div className="relative isolate overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">

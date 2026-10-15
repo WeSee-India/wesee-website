@@ -137,3 +137,82 @@ export function getAllIndexableRoutes(): string[] {
     ...Object.keys(blogPosts).map((s) => `/blog/${s}`),
   ];
 }
+
+export interface Crumb {
+  name: string;
+  path: string;
+}
+
+/** Breadcrumb trail for pages that show one. Used for both the visible nav and the JSON-LD. */
+export function getBreadcrumbs(rawPath: string): Crumb[] | null {
+  const path = rawPath.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+  const home: Crumb = { name: "Home", path: "/" };
+
+  const serviceMatch = path.match(/^\/services\/([^/]+)$/);
+  if (serviceMatch) {
+    const service = services.find((s) => s.slug === serviceMatch[1]);
+    if (service) return [home, { name: "Services", path: "/services" }, { name: service.name, path }];
+  }
+
+  const blogMatch = path.match(/^\/blog\/([^/]+)$/);
+  if (blogMatch && blogPosts[blogMatch[1]]) {
+    const name = blogPosts[blogMatch[1]].title.replace(/ \| WeSee$/, "");
+    return [home, { name: "Blog", path: "/blog" }, { name, path }];
+  }
+
+  return null;
+}
+
+// Mirrors the footer: Japan (HQ) and Mumbai (operations), and the same social links.
+const organization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  alternateName: "WeSee AI Automation",
+  url: `${SITE_URL}/`,
+  logo: `${SITE_URL}/wesee.jpg`,
+  description:
+    "AI automation and engineering studio building custom AI agents, automation, web platforms, and software for ambitious companies.",
+  sameAs: [
+    "https://www.linkedin.com/company/wesee-agi",
+    "https://www.instagram.com/weseeventures",
+    "https://x.com/weseeventures",
+  ],
+  address: [
+    { "@type": "PostalAddress", addressCountry: "JP" },
+    { "@type": "PostalAddress", addressLocality: "Mumbai", addressCountry: "IN" },
+  ],
+};
+
+/** JSON-LD objects for a route. Organization only on the home page; breadcrumbs only where shown. */
+export function getStructuredData(rawPath: string): object[] {
+  const path = rawPath.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+  const data: object[] = [];
+  if (path === "/") data.push(organization);
+
+  const crumbs = getBreadcrumbs(path);
+  if (crumbs) {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: crumbs.map((c, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: c.name,
+        item: `${SITE_URL}${c.path}`,
+      })),
+    });
+  }
+  return data;
+}
+
+/** Sitemap entries: every indexable route plus the standalone static pages. */
+export function getSitemapEntries(): { path: string; priority: number }[] {
+  const priority = (p: string) => (p === "/" ? 1 : p.split("/").length > 2 ? (p.startsWith("/services") ? 0.6 : 0.5) : 0.8);
+  return [
+    ...getAllIndexableRoutes().map((path) => ({ path, priority: priority(path) })),
+    { path: "/landing", priority: 0.5 },
+    { path: "/privacy", priority: 0.3 },
+    { path: "/terms", priority: 0.3 },
+  ];
+}

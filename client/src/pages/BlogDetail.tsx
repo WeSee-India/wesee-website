@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import TextReveal from "@/components/TextReveal";
 import MagneticButton from "@/components/MagneticButton";
 import gsap from "gsap";
@@ -117,9 +118,7 @@ export default function BlogDetail() {
         <div className="blog-route" style={{ paddingTop: 64 }}>
             <div className="section-padding">
                 <div className="container">
-                    <Link href="/blog" className="cta-link" style={{ fontSize: 13, color: "#888888" }}>
-                        ← All articles
-                    </Link>
+                    <Breadcrumbs path={`/blog/${slug}`} />
                     <div className="blog-detail-meta" style={{ marginTop: 24, fontSize: 11, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888" }}>
                         {article.category} · {article.date}
                     </div>
