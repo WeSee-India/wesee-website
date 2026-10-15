@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { prefersReducedMotion } from "./usePrefersReducedMotion";
 
 const COARSE_TOUCH_QUERY = "(hover: none) and (pointer: coarse)";
 
@@ -10,9 +11,11 @@ function hasTouchCapability(): boolean {
 /**
  * True when we should use the custom cursor + cursor:none UX.
  * Touch devices are excluded even if some browsers mis-report hover/pointer media queries.
+ * Users who ask for reduced motion keep their native cursor.
  */
 function computeFinePointer(): boolean {
   if (typeof window === "undefined") return false;
+  if (prefersReducedMotion()) return false;
   if (hasTouchCapability()) return false;
   return !window.matchMedia(COARSE_TOUCH_QUERY).matches;
 }
@@ -23,11 +26,11 @@ export function useFinePointer(): boolean {
   );
 
   useEffect(() => {
-    const mql = window.matchMedia(COARSE_TOUCH_QUERY);
+    const queries = [window.matchMedia(COARSE_TOUCH_QUERY), window.matchMedia("(prefers-reduced-motion: reduce)")];
     const sync = () => setFine(computeFinePointer());
     sync();
-    mql.addEventListener("change", sync);
-    return () => mql.removeEventListener("change", sync);
+    queries.forEach((q) => q.addEventListener("change", sync));
+    return () => queries.forEach((q) => q.removeEventListener("change", sync));
   }, []);
 
   return fine;

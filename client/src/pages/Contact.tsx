@@ -796,7 +796,7 @@ export default function Contact() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="group-hover:text-[#666666]" style={{ fontSize: "clamp(10px, 1.2vw, 12px)", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888", marginBottom: 10, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { x: 2, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { x: 0, duration: 0.3, ease: "power2.out" })}>{ct.label}</div>
-                      <div className="cta-link" style={{ fontSize: "clamp(15px, 1.8vw, 18px)", fontWeight: 600, color: "#1A1A1A", display: "block", marginBottom: 8, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { scale: 1.02, x: 3, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { scale: 1, x: 0, duration: 0.3, ease: "power2.out" })}>{ct.email}</div>
+                      <div className="cta-link" style={{ overflowWrap: "anywhere", fontSize: "clamp(15px, 1.8vw, 18px)", fontWeight: 600, color: "#1A1A1A", display: "block", marginBottom: 8, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { scale: 1.02, x: 3, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { scale: 1, x: 0, duration: 0.3, ease: "power2.out" })}>{ct.email}</div>
                       <div style={{ fontSize: "clamp(13px, 1.5vw, 15px)", fontWeight: 400, color: "#666666", lineHeight: 1.6 }}>{ct.person} — {ct.title}</div>
                     </div>
                   </a>
