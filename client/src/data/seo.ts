@@ -1,4 +1,5 @@
 import { services } from "./services";
+import { serviceDefinitions } from "./serviceDefinitions";
 
 export const SITE_URL = "https://www.weseegpt.com";
 export const SITE_NAME = "WeSee";
@@ -115,7 +116,7 @@ export function getRouteMeta(rawPath: string): RouteMeta {
     if (service) {
       return {
         title: `${service.name} — ${service.category} | WeSee`,
-        description: truncate(service.shortDescription),
+        description: truncate(serviceDefinitions[service.slug] ?? service.shortDescription),
         path,
       };
     }
