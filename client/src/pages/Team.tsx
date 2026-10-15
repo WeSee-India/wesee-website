@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { animate, motion, useAnimationFrame, useMotionValue } from "framer-motion";
@@ -34,10 +35,10 @@ const engineeringTeam = [
   { name: "deepak yadav", title: "full stack developer", photo: "/services/deepak.webp" },
   { name: "pranav ", title: "UX Designer", photo: "/client/pranav.webp" },
   { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.jpg" },
-  { name: "mani bajpai", title: "blockchain developer", photo: "/client/manii.png" },
+  { name: "mani bajpai", title: "blockchain developer", photo: "/client/manii.webp" },
  
-  { name: "Shravani shinde", title: "ai developer", photo: "/client/shravani.png" },
-  { name: "Anjali Singh", title: "ui/ux designer", photo: "/client/anjali.png" },
+  { name: "Shravani shinde", title: "ai developer", photo: "/client/shravani.webp" },
+  { name: "Anjali Singh", title: "ui/ux designer", photo: "/client/anjali.webp" },
   { name: "suhani tiwari", title: "full stack developer", photo: "/client/suhani.jpg" },
   
 ];
@@ -282,7 +283,7 @@ const TeamMarqueeHero = () => {
                   }}
                 >
                   <img
-                    src={person.photo}
+                    {...imgDims(person.photo)} src={person.photo}
                     alt={person.name}
                     className="h-full w-full object-cover object-[center_28%]"
                     loading="eager"
@@ -309,7 +310,7 @@ const TeamMarqueeHero = () => {
                   }}
                 >
                   <img
-                    src={person.photo}
+                    {...imgDims(person.photo)} src={person.photo}
                     alt=""
                     className="h-full w-full object-cover object-[center_28%]"
                     loading="lazy"
@@ -349,7 +350,7 @@ export default function Team() {
       objectPosition: "center 38%",
     },
     {
-      src: "/tropy.jpg",
+      src: "/tropy.webp",
       alt: "Discussion and gestures in a meeting",
       objectPosition: "center 55%",
     },
@@ -417,14 +418,14 @@ export default function Team() {
                         aria-hidden
                       >
                         <img
-                          src={img.src}
+                          {...imgDims(img.src)} src={img.src}
                           alt=""
                           className="block h-full w-full scale-105 object-cover"
                           style={{ filter: "blur(14px)", objectPosition: img.objectPosition }}
                         />
                       </div>
                       <img
-                        src={img.src}
+                        {...imgDims(img.src)} src={img.src}
                         alt={img.alt}
                         className="absolute inset-0 block h-full w-full object-cover transition-transform duration-400 ease-out group-hover:scale-95 sm:rounded-[1.25rem]"
                         style={{ transformOrigin: "center center", objectPosition: img.objectPosition }}
@@ -453,10 +454,10 @@ export default function Team() {
                   <div className="group">
                     <div className="group relative overflow-hidden cursor-pointer rounded-2xl w-full max-w-[320px] md:max-w-[420px] mx-auto" style={{ aspectRatio: "280/400", borderRadius: 16 }}>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 ease-out" aria-hidden>
-                        <img src={d.photo} alt="" className="w-full h-full object-cover block scale-105" style={{ filter: "blur(14px)" }} />
+                        <img {...imgDims(d.photo)} src={d.photo} alt="" className="w-full h-full object-cover block scale-105" style={{ filter: "blur(14px)" }} />
                       </div>
                       <img
-                        src={d.photo}
+                        {...imgDims(d.photo)} src={d.photo}
                         alt={d.name}
                         className="absolute inset-0 w-full h-full object-cover block transition-transform duration-400 ease-out group-hover:scale-90"
                         style={{ transformOrigin: "center center" }}

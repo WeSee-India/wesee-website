@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -416,7 +417,7 @@ export default function ServiceDetail() {
                   >
                     <div className="img-hover-zoom h-[180px] shrink-0 md:h-[220px]">
                       <img
-                        src={getServiceImage(s, i)}
+                        {...imgDims(getServiceImage(s, i))} src={getServiceImage(s, i)}
                         alt={s.name}
                         className="h-full w-full object-cover"
                         loading="lazy"

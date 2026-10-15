@@ -14,6 +14,7 @@
  *
  * MOBILE: pan-y + vertical-move bail-out so the page can scroll to content below the ring.
  */
+import { imgDims } from "@/data/imageSizes";
 import { useRef, useEffect, useState, useMemo, useCallback, useLayoutEffect } from "react";
 import { useLocation } from "wouter";
 import { useFinePointer } from "@/hooks/useFinePointer";
@@ -213,7 +214,7 @@ function RotorItem({
         }}
       >
         <img
-          src={item.image}
+          {...imgDims(item.image)} src={item.image}
           alt={item.title}
           draggable={false}
           style={{
@@ -910,7 +911,7 @@ export default function RotorGallery({
               }}
             >
               <img
-                src={list[displayRevealIdx].image}
+                {...imgDims(list[displayRevealIdx].image)} src={list[displayRevealIdx].image}
                 alt={list[displayRevealIdx].title}
                 draggable={false}
                 style={{ width: "100%", height: "100%", objectFit: "cover", userSelect: "none", display: "block", pointerEvents: "none" }}

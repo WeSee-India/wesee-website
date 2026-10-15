@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import TextReveal from "@/components/TextReveal";
@@ -502,7 +503,10 @@ function ConnectInstantly({
                     >
                       <div className="ci-logo-mark" aria-hidden>
                         <img
-                          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663374526873/i7vThuKaRmDbUwRVJzPJ6B/wesee_logo_4739f7bd.gif"
+                          src="/wesee-logo-anim.webp"
+                          width={96}
+                          height={69}
+                          decoding="async"
                           alt=""
                           loading="lazy"
                         />
@@ -770,7 +774,7 @@ export default function Contact() {
       </div>
 
       <div style={{ width: "100%", height: "clamp(250px, 45vh, 400px)", overflow: "hidden" }}>
-        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=2000&q=80" alt="City" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
+        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=70" width={1600} height={1067} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
       </div>
 
       <section className="section-padding">
@@ -788,7 +792,7 @@ export default function Contact() {
                   >
                     <div className="overflow-hidden rounded-xl relative" style={{ width: "clamp(64px, 8vw, 80px)", height: "clamp(64px, 8vw, 80px)", flexShrink: 0 }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-                      <img src={ct.photo} alt={ct.person} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "filter 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)" }} className="md:grayscale md:group-hover:!grayscale-0" onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }} />
+                      <img {...imgDims(ct.photo)} src={ct.photo} alt={ct.person} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "filter 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)" }} className="md:grayscale md:group-hover:!grayscale-0" onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="group-hover:text-[#666666]" style={{ fontSize: "clamp(10px, 1.2vw, 12px)", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888", marginBottom: 10, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { x: 2, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { x: 0, duration: 0.3, ease: "power2.out" })}>{ct.label}</div>
@@ -862,8 +866,8 @@ export default function Contact() {
       )}
 
       <ImageReveal
-        src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=2000&q=80"
-        alt="City"
+        src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1600&q=70"
+        alt=""
         direction="up"
         parallax
         parallaxAmount={40}

@@ -390,7 +390,10 @@ export default function GlobalConnectWidget() {
                     <div className="ci-avatar-row" style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28, width: "100%" }}>
                       <div className="ci-logo-mark" aria-hidden>
                         <img
-                          src="https://d2xsxph8kpxj0f.cloudfront.net/310519663374526873/i7vThuKaRmDbUwRVJzPJ6B/wesee_logo_4739f7bd.gif"
+                          src="/wesee-logo-anim.webp"
+                          width={96}
+                          height={69}
+                          decoding="async"
                           alt=""
                           loading="lazy"
                         />

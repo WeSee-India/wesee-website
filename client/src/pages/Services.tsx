@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
@@ -27,7 +28,7 @@ const SERVICE_IMAGES: string[] = [
   "/services/office.jpg", // 6  office
   "/services/charts.jpg", // 7  charts
   "/services/workspace.jpg", // 8  workspace
-  "/services/abstractdata.png", // 9  abstract data
+  "/services/abstractdata.webp", // 9  abstract data
   "/services/laptop.jpg", // 10 laptop
   "/services/socialmedia.jpg", // 11 social media
   "/services/marketing.jpg", // 12 marketing
@@ -44,7 +45,7 @@ const SERVICE_IMAGES: string[] = [
   "/services/webui.jpg", // 23 web ui
   "/services/designtool.jpg", // 24 design tool
   "/services/creative.jpg", // 25 creative
-  "/services/ecommerce.png", // 26 ecommerce
+  "/services/ecommerce.webp", // 26 ecommerce
   "/services/shopping.jpg", // 27 shopping
   "/services/marketplace.jpg", // 28 marketplace
   "/services/store.jpg", // 29 store
@@ -155,7 +156,7 @@ const Column = ({ images, y, isMobile = false }: ColumnProps) => {
         const inner = (
           <>
             <img
-              src={item.src}
+              {...imgDims(item.src)} src={item.src}
               alt={item.title ? `${item.title} — service` : "Service"}
               className={`pointer-events-none w-full ${isMobile ? "object-contain" : "object-cover"}`}
               style={{ height: isMobile ? "auto" : "100%", minHeight: isMobile ? undefined : undefined, maxHeight: isMobile ? "none" : "none", display: "block", width: "100%" }}
@@ -426,7 +427,7 @@ const MagazineRow = ({ svc, accent }: { svc: ServiceCard; accent: string }) => {
             transition: "clip-path 600ms cubic-bezier(0.22, 1, 0.36, 1)",
             width: "100%", height: "100%",
           }}>
-            <img src={svc.image} alt={svc.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         </div>
 
@@ -536,7 +537,7 @@ const MasonryCard3D = ({ svc, tier, accent }: { svc: ServiceCard; tier: string; 
         >
           <img
             ref={imgRef}
-            src={svc.image} alt={svc.name} loading="lazy"
+            {...imgDims(svc.image)} src={svc.image} alt={svc.name} loading="lazy"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block",
                      transition: "transform 0.18s ease" }}
           />
@@ -691,7 +692,7 @@ const ServicesFilmstrip = ({ services }: { services: ServiceCard[] }) => {
                   cursor: "pointer",
                 }}>
                   <div style={{ width: "100%", height: "70%", overflow: "hidden" }}>
-                    <img src={svc.image} alt={svc.name} loading="lazy"
+                    <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} loading="lazy"
                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block",
                                   transition: "transform 0.35s ease" }} />
                   </div>
@@ -776,7 +777,7 @@ const DiagonalCard = ({ svc, accent, index }: { svc: ServiceCard; accent: string
           <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
             <img
               ref={imgRef}
-              src={svc.image} alt={svc.name} loading="lazy"
+              {...imgDims(svc.image)} src={svc.image} alt={svc.name} loading="lazy"
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block",
                        transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)" }}
             />
@@ -1094,7 +1095,7 @@ const ServicesStackedScroll = ({ services }: { services: ServiceCard[] }) => {
             >
               {/* Full-bleed image */}
               <img
-                src={svc.image} alt={svc.name}
+                {...imgDims(svc.image)} src={svc.image} alt={svc.name}
                 loading={i < 3 ? "eager" : "lazy"}
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
@@ -1782,7 +1783,7 @@ const ServicesVortex = ({ services }: { services: ServiceCard[] }) => {
                     boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
                   }}>
                     <img
-                      src={svc.image} alt={svc.name} loading="lazy"
+                      {...imgDims(svc.image)} src={svc.image} alt={svc.name} loading="lazy"
                       style={{ width: "100%", height: "62%", objectFit: "cover", display: "block" }}
                     />
                     <div style={{
@@ -2290,7 +2291,7 @@ const ShowcaseCard = ({ svc, index }: { svc: ServiceCard; index: number }) => {
           <div style={{ overflow: "hidden", height: 220, position: "relative" }}>
             <img
               ref={imgRef}
-              src={svc.image}
+              {...imgDims(svc.image)} src={svc.image}
               alt={svc.name}
               style={{
                 width: "100%", height: "100%", objectFit: "cover",
@@ -2565,7 +2566,7 @@ const TimelineEntry = ({ svc, index }: { svc: ServiceCard; index: number }) => {
                 }}
               >
                 <div style={{ position: "relative", overflow: "hidden", height: 180 }}>
-                  <img src={svc.image} alt={svc.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.55s ease" }}
+                  <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.55s ease" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; }}
                   />
@@ -2638,7 +2639,7 @@ const TimelineEntry = ({ svc, index }: { svc: ServiceCard; index: number }) => {
                 }}
               >
                 <div style={{ position: "relative", overflow: "hidden", height: 180 }}>
-                  <img src={svc.image} alt={svc.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.55s ease" }}
+                  <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.55s ease" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; }}
                   />
@@ -2757,7 +2758,7 @@ const ServicesCardDeck = ({ services }: { services: ServiceCard[] }) => {
             opacity: 0.35, pointerEvents: "none",
             filter: "blur(1.5px)",
           }}>
-            <img src={s.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img {...imgDims(s.image)} src={s.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, background: "rgba(6,6,8,0.5)" }} />
           </div>
         );
@@ -2785,7 +2786,7 @@ const ServicesCardDeck = ({ services }: { services: ServiceCard[] }) => {
             boxShadow: `0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px ${accent}33`,
           }}>
             {/* Full image */}
-            <img src={svc.image} alt={svc.name} style={{
+            <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} style={{
               width: "100%", height: "100%", objectFit: "cover", display: "block",
               transition: "transform 6s ease",
             }} />
@@ -2956,7 +2957,7 @@ const GlitchCard = ({ svc, index }: { svc: ServiceCard; index: number }) => {
         >
           {/* Main image */}
           <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
-            <img src={svc.image} alt={svc.name}
+            <img {...imgDims(svc.image)} src={svc.image} alt={svc.name}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", filter: "saturate(0.7) brightness(0.75)" }}
             />
             {/* RGB split layers */}
@@ -3940,7 +3941,7 @@ const ServicesRipple = ({ services }: { services: ServiceCard[] }) => {
                   border:"1px solid rgba(17,19,23,0.07)", cursor:"pointer",
                 }}>
                   <div style={{ height:180, overflow:"hidden", position:"relative" }}>
-                    <img src={svc.image} alt={svc.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
+                    <img {...imgDims(svc.image)} src={svc.image} alt={svc.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
                     <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:accent }} />
                   </div>
                   <div style={{ padding:"14px 16px 16px" }}>
@@ -4001,7 +4002,7 @@ const EditorialRow = ({ svc, index }: { svc: ServiceCard; index: number }) => {
           <div style={{ overflow: "hidden", order: isLeft ? 0 : 1, position: "relative" }}>
             <img
               ref={imgRef}
-              src={svc.image} alt={svc.name}
+              {...imgDims(svc.image)} src={svc.image} alt={svc.name}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.75s cubic-bezier(0.22,1,0.36,1)" }}
             />
           </div>
@@ -4223,7 +4224,7 @@ const ProductCard = ({ svc, index }: { svc: ServiceCard; index: number }) => {
           <div style={{ height: "clamp(180px,22vw,260px)", overflow: "hidden", background: "#f2f2f7" }}>
             <img
               ref={imgRef}
-              src={svc.image} alt={svc.name}
+              {...imgDims(svc.image)} src={svc.image} alt={svc.name}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.65s cubic-bezier(0.22,1,0.36,1)" }}
             />
           </div>
@@ -4319,7 +4320,7 @@ const DashRow = ({ svc, index }: { svc: ServiceCard; index: number }) => {
 
           {/* Thumbnail */}
           <div style={{ width: 44, height: 34, borderRadius: 8, overflow: "hidden", border: "1px solid #eee", flexShrink: 0 }}>
-            <img src={svc.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <img {...imgDims(svc.image)} src={svc.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
 
           {/* Name */}
@@ -5120,7 +5121,7 @@ const ServicesAnimatedGrid = ({ services }: { services: ServiceCard[] }) => {
                       flex: "0 0 62%", overflow: "hidden", background: "#0f1115",
                       position: "relative", borderBottom: `3px solid ${accentColor}`,
                     }}>
-                      <img src={service.image} alt={service.name} loading="lazy"
+                      <img {...imgDims(service.image)} src={service.image} alt={service.name} loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                       <div style={{
                         position: "absolute", inset: 0,

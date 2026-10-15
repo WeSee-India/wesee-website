@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -20,7 +21,7 @@ const articles: Record<string, {
         title: "How AI Sales Agents Are Replacing SDR Teams in 2025",
         category: "AI Agents",
         date: "Feb 2026",
-        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=2000&q=80",
+        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600&q=70",
         excerpt: "The traditional SDR model is breaking. AI sales agents can now qualify leads, book meetings, and follow up — at a fraction of the cost.",
         content: [
             "The traditional Sales Development Representative (SDR) model is under pressure. Costs are rising, turnover is high, and outreach volume demands are growing faster than most companies can hire.",
@@ -139,7 +140,7 @@ export default function BlogDetail() {
                 <div className="gsap-reveal" style={{ marginTop: 48, width: "100%", overflow: "hidden" }}>
                     <img
                         className="blog-detail-hero-img"
-                        src={article.image}
+                        {...imgDims(article.image)} src={article.image}
                         alt={article.title}
                         style={{ width: "100%", height: 480, objectFit: "cover", display: "block" }}
                         loading="eager"

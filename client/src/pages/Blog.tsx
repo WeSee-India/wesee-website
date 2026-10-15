@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect } from "react";
 import { Link } from "wouter";
 import TextReveal from "@/components/TextReveal";
@@ -93,7 +94,7 @@ export default function Blog() {
             <Link href={`/blog/${featured.slug}`} className="block">
               <div className="blog-featured-reveal img-hover-zoom overflow-hidden rounded-2xl" style={{ height: "clamp(250px, 45vh, 400px)", borderRadius: 16 }}>
                 <img
-                  src={featured.image}
+                  {...imgDims(featured.image)} src={featured.image}
                   alt={featured.title}
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }}
                   className="group-hover:scale-105"
@@ -127,7 +128,7 @@ export default function Blog() {
                         style={{ height: 240, overflow: "hidden" }}
                       >
                         <img
-                          src={article.image}
+                          {...imgDims(article.image)} src={article.image}
                           alt={article.title}
                           style={{
                             width: "100%",
