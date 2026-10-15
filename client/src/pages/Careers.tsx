@@ -211,8 +211,8 @@ export default function Careers() {
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=2000&q=80"
-          alt="Team"
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=70" width={1600} height={1067}
+          alt=""
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           loading="lazy"
         />

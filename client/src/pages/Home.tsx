@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import HoverParticles from "@/components/HoverParticles";
@@ -42,22 +43,22 @@ const serviceCategories: ServiceCategoryRow[] = categories.map((c) => ({
 
 type ClientLogo = { name: string; logoSrc: string; h?: number; w?: number };
 const clients: ClientLogo[] = [
-  { name: "U-Factor", logoSrc: "/client/ufactor.png", h: 24, w: 150 },
-  { name: "Tavola", logoSrc: "/client/tavola.png", h: 24, w: 150 },
-  { name: "Factorylo", logoSrc: "/client/factorylo.png", h: 24, w: 150 },
-  { name: "HealthTech Co", logoSrc: "/client/healthtech.png", h: 22, w: 150 },
-  { name: "PropNex", logoSrc: "/client/propnex.png", h: 22, w: 150 },
-  { name: "EduLearn", logoSrc: "/client/edulearn.png", h: 22, w: 150 },
-  { name: "FinServe", logoSrc: "/client/finserve.png", h: 22, w: 150 },
-  { name: "CloudStack", logoSrc: "/client/cloudstack.png", h: 22, w: 150 },
-  { name: "RetailMax", logoSrc: "/client/retailmax.png", h: 52, w: 52 },
-  { name: "LegalEase", logoSrc: "/client/legalease.png", h: 20, w: 150 },
-  { name: "LogiTrack", logoSrc: "/client/logitrack.png", h: 52, w: 150 },
-  { name: "AutoDrive", logoSrc: "/client/autodrive.png", h: 22, w: 150 },
-  { name: "StartupX", logoSrc: "/client/startupx.png", h: 22, w: 150 },
-  { name: "MedConnect", logoSrc: "/client/medconnecy.png", h: 22, w: 150 },
-  { name: "GreenEnergy", logoSrc: "/client/greenenergy.png", h: 42, w: 150 },
-  { name: "FintechNow", logoSrc: "/client/fintech.png", h: 52, w: 52 },
+  { name: "U-Factor", logoSrc: "/client/ufactor.webp", h: 24, w: 150 },
+  { name: "Tavola", logoSrc: "/client/tavola.webp", h: 24, w: 150 },
+  { name: "Factorylo", logoSrc: "/client/factorylo.webp", h: 24, w: 150 },
+  { name: "HealthTech Co", logoSrc: "/client/healthtech.webp", h: 22, w: 150 },
+  { name: "PropNex", logoSrc: "/client/propnex.webp", h: 22, w: 150 },
+  { name: "EduLearn", logoSrc: "/client/edulearn.webp", h: 22, w: 150 },
+  { name: "FinServe", logoSrc: "/client/finserve.webp", h: 22, w: 150 },
+  { name: "CloudStack", logoSrc: "/client/cloudstack.webp", h: 22, w: 150 },
+  { name: "RetailMax", logoSrc: "/client/retailmax.webp", h: 52, w: 52 },
+  { name: "LegalEase", logoSrc: "/client/legalease.webp", h: 20, w: 150 },
+  { name: "LogiTrack", logoSrc: "/client/logitrack.webp", h: 52, w: 150 },
+  { name: "AutoDrive", logoSrc: "/client/autodrive.webp", h: 22, w: 150 },
+  { name: "StartupX", logoSrc: "/client/startupx.webp", h: 22, w: 150 },
+  { name: "MedConnect", logoSrc: "/client/medconnecy.webp", h: 22, w: 150 },
+  { name: "GreenEnergy", logoSrc: "/client/greenenergy.webp", h: 42, w: 150 },
+  { name: "FintechNow", logoSrc: "/client/fintech.webp", h: 52, w: 52 },
 ];
 
 const stats = [
@@ -758,7 +759,7 @@ export default function Home() {
                       }}
                     >
                       <img
-                        src={img.src}
+                        {...imgDims(img.src)} src={img.src}
                         alt={img.label}
                         loading="lazy"
                         style={{
@@ -1036,7 +1037,7 @@ export default function Home() {
                         <span className="client-tag-icon-wrap" aria-hidden="true">
                           <img
                             className="client-tag-icon"
-                            src={client.logoSrc}
+                            {...imgDims(client.logoSrc)} src={client.logoSrc}
                             alt={`${client.name} logo`}
                             loading="lazy"
                             decoding="async"

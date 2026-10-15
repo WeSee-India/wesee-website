@@ -1,3 +1,4 @@
+import { imgDims } from "@/data/imageSizes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import InteractiveParticles from "@/components/InteractiveParticles";
 
@@ -112,7 +113,7 @@ function AboutStatCard({
       className="about-stat-card gsap-reveal"
       style={{ "--i": index } as React.CSSProperties}
     >
-      <img className="about-stat-bg-img" src={bgImg} alt="" aria-hidden="true" />
+      <img className="about-stat-bg-img" {...imgDims(bgImg)} src={bgImg} alt="" aria-hidden="true" />
       <div className="about-stat-value">{display}</div>
       <div className="about-stat-label">{label}</div>
     </div>
@@ -138,7 +139,7 @@ export default function About() {
     () => [
       { val: "35+", label: "Projects Delivered", bgImg: "/aisoftware.jpg" },
       { val: "80+", label: "Automations Deployed", bgImg: "/aitalent.jpg" },
-      { val: "15K+", label: "Hours Saved Monthly", bgImg: "/digital.jpg" },
+      { val: "15K+", label: "Hours Saved Monthly", bgImg: "/digital.webp" },
       { val: "3", label: "Office Locations", bgImg: "/roi.jpg" },
     ],
     []
@@ -298,8 +299,8 @@ export default function About() {
         <div className="container" style={{ paddingBottom: 80 }}>
           <div className="img-zoom gsap-reveal" style={{ height: "clamp(220px, 40vw, 420px)", borderRadius: "24px !important" }}>
             <img
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=2000&q=80"
-              alt="WeSee Team"
+              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1600&q=70" width={1600} height={1067}
+              alt=""
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
               loading="lazy"
             />

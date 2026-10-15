@@ -240,7 +240,10 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, zIndex: 2 }}>
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663374526873/i7vThuKaRmDbUwRVJzPJ6B/wesee_logo_4739f7bd.gif"
+              src="/wesee-logo-anim.webp"
+              width={58}
+              height={42}
+              decoding="async"
               alt="WeSee logo"
               style={{ height: 42, width: "auto", objectFit: "contain", mixBlendMode: "multiply" }}
             />
