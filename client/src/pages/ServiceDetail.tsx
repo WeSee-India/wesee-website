@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, useParams } from "wouter";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { serviceDefinitions } from "@/data/serviceDefinitions";
 import {
   BarChart3,
   Check,
@@ -182,6 +183,12 @@ export default function ServiceDetail() {
               {service.name}
             </TextReveal>
 
+            {serviceDefinitions[service.slug] && (
+              <p className="mt-3 text-[16px] font-medium leading-relaxed text-neutral-900 md:mt-4 md:text-[19px] md:leading-[1.6] md:text-[var(--foreground)]">
+                {serviceDefinitions[service.slug]}
+              </p>
+            )}
+
             <p className="mt-2 text-[15px] leading-relaxed text-neutral-600 md:mt-3 md:text-[18px] md:leading-[1.7] md:text-[var(--ink-80)]">
               {service.shortDescription}
             </p>
@@ -195,7 +202,7 @@ export default function ServiceDetail() {
           <div className="w-full text-left">
             <article className="gsap-reveal">
               <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
-              What You Get
+              What do you get with {service.name}?
               </h2>
               <p className="mt-3 text-[15px] leading-[1.75] text-neutral-600 md:mt-5 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
                 {service.fullDescription}
@@ -208,7 +215,7 @@ export default function ServiceDetail() {
           <div className="w-full text-left">
             <article className="gsap-reveal">
               <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
-              How This Benefits Your Business
+              How does this benefit your business?
               </h2>
               <p className="mt-3 text-[15px] leading-[1.75] text-neutral-600 md:mt-5 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
                 {service.benefits}
@@ -261,7 +268,7 @@ export default function ServiceDetail() {
 
           <article className="gsap-reveal w-full max-w-none">
             <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
-              Our Approach
+              How does WeSee deliver this?
             </h2>
             <p className="mt-3 max-w-none text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
               At WeSee, we approach {service.name.toLowerCase()} with a rigorous discovery-first methodology. We begin by
@@ -278,7 +285,7 @@ export default function ServiceDetail() {
           <div className="w-full mt-10 pt-0 text-left md:mt-14">
             <article className="gsap-reveal">
               <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
-                Scope of work
+                What is included in the scope of work?
               </h2>
               <StaggerReveal stagger={0.05} y={8}>
                 <ul className="mt-6 flex list-none flex-col gap-5 p-0 md:mt-10 md:gap-6">

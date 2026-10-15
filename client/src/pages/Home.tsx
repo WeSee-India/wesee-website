@@ -83,6 +83,34 @@ const workImages = [
   { src: "/roi.jpg", h: 190, label: "Cloud Scale" },
 ];
 
+/** Plain-text presales answers, shown in full on the page. */
+const faqs = [
+  {
+    q: "What does WeSee build?",
+    a: "We build custom AI agents (sales, customer support, receptionist and voice), workflow automation, marketing and growth systems, websites and e-commerce stores, and the CRM, analytics and cloud setup behind them.",
+  },
+  {
+    q: "How does a project start?",
+    a: "With a free 30-minute discovery call. We walk through your current tools and bottlenecks, pick two or three automation or AI-agent opportunities, and talk through feasibility, timelines and likely return before anyone commits.",
+  },
+  {
+    q: "How much does it cost?",
+    a: "It depends on scope. Our services come in Starter, Growth and Enterprise sizes, and we cover feasibility, timelines and potential ROI on the discovery call so you can decide with real numbers. The call is free and carries no obligation.",
+  },
+  {
+    q: "Can you work with the tools we already use?",
+    a: "Yes. We connect the tools you already have, such as your CRM, ERP, e-commerce platform, accounting software and messaging channels, using no-code platforms like n8n, Zapier and Make, or custom code where needed.",
+  },
+  {
+    q: "Which industries do you work with?",
+    a: "Healthcare, real estate, e-commerce, education, finance, hospitality, SaaS, manufacturing, logistics, retail, legal, government, and beauty and wellness, among others.",
+  },
+  {
+    q: "Where is WeSee based?",
+    a: "Our headquarters are in Japan and our operations team is in Mumbai, India.",
+  },
+];
+
 /* ─── Component ───────────────────────────────────────────────── */
 
 export default function Home() {
@@ -512,7 +540,7 @@ export default function Home() {
               animationDelay: "0.27s",
             }}
           >
-            A team of AI engineers, developers, and growth strategists building intelligent systems that automate operations, increase conversions, and scale businesses.
+            WeSee is an AI automation and software studio that builds custom AI agents, workflow automation, and web platforms for growing businesses.
           </p>
 
           {/* CTA row */}
@@ -1025,6 +1053,38 @@ export default function Home() {
                     );
                   })}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════ FAQ (visible text, no schema) ══════════════════════════ */}
+      <section className="section-pad home-faq" style={{ background: "var(--paper)" }} aria-labelledby="home-faq-title">
+        <div className="container">
+          <span style={{
+            fontSize: 10, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase",
+            color: "var(--accent)", display: "block", marginBottom: 20,
+          }}>Before you book</span>
+          <h2 id="home-faq-title" style={{
+            margin: 0, fontSize: "clamp(30px, 4.2vw, 52px)", fontWeight: 450,
+            letterSpacing: "-0.04em", lineHeight: 1.12, color: "var(--ink)", maxWidth: 760,
+          }}>
+            What do people ask before working with WeSee?
+          </h2>
+          <div style={{
+            marginTop: "clamp(32px, 5vw, 56px)",
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
+            columnGap: "clamp(32px, 5vw, 72px)",
+          }}>
+            {faqs.map((f) => (
+              <div key={f.q} style={{ borderTop: "1px solid rgba(17,19,23,0.10)", padding: "24px 0 28px" }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 550, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+                  {f.q}
+                </h3>
+                <p style={{ margin: "10px 0 0", fontSize: 15.5, lineHeight: 1.7, color: "rgba(17,19,23,0.62)" }}>
+                  {f.a}
+                </p>
               </div>
             ))}
           </div>
