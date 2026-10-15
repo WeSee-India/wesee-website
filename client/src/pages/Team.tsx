@@ -14,7 +14,7 @@ const directors = [
   {
     name: "Harsh khanna",
     title: "Founder & CEO",
-    bio: "Harsh founded WeSee in 2024 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
+    bio: "Harsh founded WeSee in 2021 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
     photo: "/client/harsh.webp",
     linkedin: "https://www.linkedin.com/in/harshkhanna96/",
   },

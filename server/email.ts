@@ -15,30 +15,49 @@ export interface ContactPayload {
 const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(100),
-  email: z.string().trim().email("A valid email is required.").max(200),
-  message: z.string().trim().min(1, "Message is required.").max(5000),
+  name: z.string().trim().min(1, "Enter your name.").max(100, "Use 100 characters or fewer for your name."),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Enter your email address.")
+    .email("Enter a valid email address, like name@company.com.")
+    .max(200, "Use 200 characters or fewer for your email."),
+  message: z.string().trim().min(1, "Add a short message about what you need.").max(5000, "Keep your message under 5,000 characters."),
   company: optionalText(150),
   service: optionalText(100),
   phone: optionalText(40),
   consentNonMarketing: z.boolean().optional(),
   consentMarketing: z.boolean().optional(),
-  // Honeypot — must be empty.
-  honeypot: z.string().max(0).optional(),
+  // Spam traps. The honeypot is hidden from people; formAge is how long the form was open (ms).
+  honeypot: z.string().optional(),
+  formAge: z.number().optional(),
 });
 
+/** Real people need a moment to fill the form; anything faster than this, or any honeypot content, is a bot. */
+const MIN_FORM_AGE_MS = 1000;
+
+function isSpam(data: { honeypot?: string; formAge?: number }): boolean {
+  return Boolean(data.honeypot) || (data.formAge !== undefined && data.formAge < MIN_FORM_AGE_MS);
+}
+
 export type ContactValidation =
-  | { ok: true; payload: ContactPayload }
-  | { ok: false; error: string };
+  | { ok: true; payload: ContactPayload; spam?: false }
+  | { ok: true; spam: true }
+  | { ok: false; error: string; fields: Record<string, string> };
 
 export function validateContactPayload(body: unknown): ContactValidation {
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    return { ok: false, error: first?.message || "Name, email and message are required." };
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "form");
+      if (!fields[key]) fields[key] = issue.message;
+    }
+    return { ok: false, error: Object.values(fields)[0] || "Check the form and try again.", fields };
   }
-  // Strip the honeypot before passing the payload on.
-  const { honeypot: _honeypot, ...payload } = parsed.data;
+  if (isSpam(parsed.data)) return { ok: true, spam: true };
+  // Strip the spam-trap fields before passing the payload on.
+  const { honeypot: _honeypot, formAge: _formAge, ...payload } = parsed.data;
   return { ok: true, payload };
 }
 

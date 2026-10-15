@@ -78,7 +78,11 @@ function vitePluginContactApi(): Plugin {
             const result = validateContactPayload(parsed);
             if (!result.ok) {
               res.writeHead(400, { "Content-Type": "application/json" });
-              return res.end(JSON.stringify({ error: result.error }));
+              return res.end(JSON.stringify({ error: result.error, fields: result.fields }));
+            }
+            if (result.spam) {
+              res.writeHead(200, { "Content-Type": "application/json" });
+              return res.end(JSON.stringify({ success: true }));
             }
             await sendContactEmail(result.payload);
             res.writeHead(200, { "Content-Type": "application/json" });
