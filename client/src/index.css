@@ -5860,10 +5860,17 @@ body {
 }
 
 /* ── Case studies: light palette (paper, white, gold; no black UI blocks) ── */
-.csx-crumbs,
-.csx-band {
+.csx-crumbs {
   background: #fff;
   box-shadow: 0 0 0 1px var(--ink-6), 0 18px 40px -30px rgba(17, 19, 23, 0.35);
+}
+
+/* Filter tabs sit directly on the page, no container */
+.csx-band {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .csx-crumbs { color: var(--ink-30); }
