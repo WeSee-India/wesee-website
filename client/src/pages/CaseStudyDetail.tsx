@@ -72,6 +72,10 @@ export default function CaseStudyDetail() {
   if (!cs) return <NotFound />;
 
   const meta = facts(cs);
+  // "Twenty Cents: one site for …" → the name large, the rest as a smaller line (still one H1).
+  const split = cs.headline.indexOf(": ");
+  const name = split > 0 && split <= 40 ? cs.headline.slice(0, split) : null;
+  const rest = name ? cs.headline.slice(split + 2) : cs.headline;
   const at = all.indexOf(cs);
   // The next ones in index order, wrapping around: 2–3 cards.
   const more = [...all.slice(at + 1), ...all.slice(0, at)].slice(0, 3);
@@ -86,25 +90,37 @@ export default function CaseStudyDetail() {
 
   return (
     <article className="csd">
-      {/* Hero */}
+      {/* Hero: copy left, image right */}
       <header className="container csd-hero">
-        <Link href="/case-studies" className="csd-back">
-          <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" /> All case studies
-        </Link>
-        <p className="csd-eyebrow">
-          <span>{cs.category}</span> Case study
-        </p>
-        <h1>{cs.headline}</h1>
-        <p className="csd-lede">{cs.lede}</p>
-        {cs.tags.length > 0 && (
-          <ul className="csr-tags csd-tags" aria-label="Tags">
-            {cs.tags.map((t) => <li key={t}>{t}</li>)}
-          </ul>
-        )}
+        <div className="csd-hero-copy">
+          <Link href="/case-studies" className="csd-back">
+            <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" /> All case studies
+          </Link>
+          <p className="csd-eyebrow">
+            <span>{cs.category}</span> Case study
+          </p>
+          <h1>
+            {name ? (
+              <>
+                <span className="csd-h1-name">{name}</span>
+                <span className="sr-only">: </span>
+                <span className="csd-h1-rest">{rest}</span>
+              </>
+            ) : (
+              <span className="csd-h1-rest csd-h1-rest--solo">{cs.headline}</span>
+            )}
+          </h1>
+          <p className="csd-lede">{cs.lede}</p>
+          {cs.tags.length > 0 && (
+            <ul className="csr-tags" aria-label="Tags">
+              {cs.tags.map((t) => <li key={t}>{t}</li>)}
+            </ul>
+          )}
+        </div>
+        <Media cs={cs} className="csd-cover" />
       </header>
 
       <div className="container">
-        <Media cs={cs} className="csd-cover" />
         {cs.image?.caption && <p className="csd-caption">{cs.image.caption}</p>}
 
         {(meta.length > 0 || cs.tech.length > 0) && (
