@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useFinePointer } from "@/hooks/useFinePointer";
 
 interface CursorState {
   x: number;
@@ -12,6 +13,7 @@ interface CursorState {
 }
 
 export default function CustomCursor() {
+  const finePointer = useFinePointer();
   const dotRef = useRef<HTMLDivElement>(null);
   const state = useRef<CursorState>({
     x: -200, y: -200, ringX: -200, ringY: -200,
@@ -20,10 +22,9 @@ export default function CustomCursor() {
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) return;
+    if (!finePointer) return;
 
     const pointer = { x: -200, y: -200 };
-    const prev = { x: -200, y: -200 };
 
     const onMove = (e: MouseEvent) => {
       pointer.x = e.clientX;
@@ -62,11 +63,12 @@ export default function CustomCursor() {
       window.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [finePointer]);
+
+  if (!finePointer) return null;
 
   return (
     <>
-      {/* Dot - bigger size */}
       <div ref={dotRef} style={{
         position: "fixed",
         width: 10, height: 10,

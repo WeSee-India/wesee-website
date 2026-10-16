@@ -5,13 +5,16 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
-import CustomCursor from "./components/CustomCursor";
 import { useLenis } from "./hooks/useLenis";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import GlobalConnectWidget from "./components/GlobalConnectWidget";
+import RouteSeo from "./components/RouteSeo";
+import { ctaKindForHref, ctaLocation, track } from "./lib/analytics";
 
 const Services = lazy(() => import("./pages/Services"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
@@ -22,6 +25,9 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 const Careers = lazy(() => import("./pages/Careers"));
 const BookCall = lazy(() => import("./pages/BookCall"));
+const CaseStudies = lazy(() => import("./pages/CaseStudies"));
+const CaseStudyDetail = lazy(() => import("./pages/CaseStudyDetail"));
+const Projects = lazy(() => import("./pages/Projects"));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -31,10 +37,26 @@ function ScrollToTop() {
   return null;
 }
 
+/** One delegated listener reports clicks on conversion links (book, contact, WhatsApp, phone, email). */
+function CtaTracking() {
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.("a[href]");
+      if (!link) return;
+      const kind = ctaKindForHref(link.getAttribute("href") ?? "");
+      if (!kind) return;
+      track("cta_click", { cta_type: kind, cta_location: ctaLocation(link), page_path: window.location.pathname });
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+  return null;
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <span style={{ fontSize: 11, fontWeight: 300, letterSpacing: "0.15em", textTransform: "uppercase", color: "#888888" }}>
+      <span style={{ fontSize: 11, fontWeight: 400, letterSpacing: "0.15em", textTransform: "uppercase", color: "#6b6b6b" }}>
         Loading...
       </span>
     </div>
@@ -48,13 +70,16 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/services" component={Services} />
         <Route path="/services/:slug" component={ServiceDetail} />
+        <Route path="/case-studies" component={CaseStudies} />
+        <Route path="/case-studies/:slug" component={CaseStudyDetail} />
+        <Route path="/projects" component={Projects} />
         <Route path="/about" component={About} />
         <Route path="/team" component={Team} />
         <Route path="/contact" component={Contact} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogDetail} />
         <Route path="/careers" component={Careers} />
-        <Route path="/book-call" component={BookCall} />
+        <Route path="/book" component={BookCall} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -98,17 +123,21 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <GrainOverlay />
-          <CustomCursor />
           <LoadingScreen onComplete={() => setLoadingDone(true)} />
+          <a href="#main-content" className="skip-link">Skip to main content</a>
           <ScrollToTop />
+          <RouteSeo />
+          <CtaTracking />
           <Header />
           <div
+            id="page-content"
             className={loadingDone ? "page-enter" : ""}
             style={{ opacity: loadingDone ? 1 : 0, position: "relative" }}
           >
-            <main>
+            <main id="main-content" tabIndex={-1}>
               <Router />
             </main>
+            <GlobalConnectWidget />
             <Footer />
           </div>
         </TooltipProvider>

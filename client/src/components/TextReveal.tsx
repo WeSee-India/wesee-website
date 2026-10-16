@@ -52,7 +52,7 @@ export default function TextReveal({
         (unit) =>
           `<span style="display:inline-block;overflow:hidden;vertical-align:bottom;padding-top:0.2em;padding-bottom:0.2em;margin-top:-0.2em;margin-bottom:-0.2em"><span class="text-reveal-unit" style="display:inline-block;transform:translateY(110%);opacity:0;will-change:transform">${unit}</span></span>`
       )
-      .join(splitBy === "words" ? "&nbsp;" : "");
+      .join(splitBy === "words" ? " " : "");
 
     const unitEls = el.querySelectorAll(".text-reveal-unit");
 

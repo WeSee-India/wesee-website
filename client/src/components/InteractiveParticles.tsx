@@ -4,6 +4,12 @@ interface InteractiveParticlesProps {
   className?: string;
   style?: React.CSSProperties;
   isHovered?: boolean;
+  /** When set with logoMaxHeightFraction, uses this max width share and desktop grid (About mobile). */
+  logoWidthFraction?: number;
+  /** When set with logoWidthFraction, uses this max height share for aspect-contained logo. */
+  logoMaxHeightFraction?: number;
+  /** Shift logo down by this fraction of canvas height (e.g. align with headline below badge). */
+  logoCenterYOffsetFraction?: number;
 }
 
 interface Particle {
@@ -41,7 +47,14 @@ const ASPECT=2.2572;
 // Ease function — smooth deceleration
 function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
 
-export default function InteractiveParticles({ className = "", style = {}, isHovered: externalIsHovered = false }: InteractiveParticlesProps) {
+export default function InteractiveParticles({
+  className = "",
+  style = {},
+  isHovered: externalIsHovered = false,
+  logoWidthFraction,
+  logoMaxHeightFraction,
+  logoCenterYOffsetFraction,
+}: InteractiveParticlesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -72,19 +85,49 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
     };
 
     const init = () => {
+      const customLogo =
+        logoWidthFraction != null &&
+        logoMaxHeightFraction != null &&
+        logoWidthFraction > 0 &&
+        logoMaxHeightFraction > 0;
       const isMobile = window.innerWidth < 768;
-      const GRID_SPACING = isMobile ? 14 : 22;
+      const GRID_SPACING = customLogo ? 22 : isMobile ? 14 : 22;
       const cols = Math.ceil(w / GRID_SPACING);
       const rows = Math.ceil(h / GRID_SPACING);
       const totalGrid = cols * rows;
 
-      // Logo dimensions — use more screen space on mobile
-      const logoFraction = isMobile ? 0.85 : 0.65;
-      let lw = h * 0.55 * ASPECT;
-      let lh = h * 0.55;
-      if (lw > w * logoFraction) { lw = w * logoFraction; lh = lw / ASPECT; }
-      const ox = (w - lw) / 2;
-      const oy = (h - lh) / 2;
+      let lw: number;
+      let lh: number;
+      let ox: number;
+      let oy: number;
+      if (customLogo) {
+        const maxW = w * logoWidthFraction;
+        const maxH = h * logoMaxHeightFraction;
+        lw = maxW;
+        lh = lw / ASPECT;
+        if (lh > maxH) {
+          lh = maxH;
+          lw = lh * ASPECT;
+        }
+        ox = (w - lw) / 2;
+        oy = (h - lh) / 2;
+      } else {
+        const logoFraction = isMobile ? 0.85 : 0.65;
+        lw = h * 0.55 * ASPECT;
+        lh = h * 0.55;
+        if (lw > w * logoFraction) {
+          lw = w * logoFraction;
+          lh = lw / ASPECT;
+        }
+        ox = (w - lw) / 2;
+        oy = (h - lh) / 2;
+      }
+
+      if (logoCenterYOffsetFraction != null && logoCenterYOffsetFraction !== 0) {
+        oy += h * logoCenterYOffsetFraction;
+        const edge = 8;
+        oy = Math.max(edge, Math.min(oy, h - lh - edge));
+      }
 
       // Build logo target positions in pixel space
       const logoTargets = L.map(pt => ({
@@ -123,7 +166,36 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
       }
 
       // Assign closest grid particles to logo points using greedy nearest-neighbor
-      const usedParticles = new Set<number>();
+      const used = new Uint8Array(particles.length);
+      // Particles sit on a regular grid, so the nearest unused one is found by scanning cells outward
+      // from the target (ring by ring) instead of comparing against every particle.
+      const nearestUnused = (tx: number, ty: number): number => {
+        const cx = Math.min(cols - 1, Math.max(0, Math.round((tx - GRID_SPACING / 2) / GRID_SPACING)));
+        const cy = Math.min(rows - 1, Math.max(0, Math.round((ty - GRID_SPACING / 2) / GRID_SPACING)));
+        const maxRing = Math.max(cols, rows);
+        let bestDist = Infinity;
+        let bestIdx = -1;
+        let foundAtRing = -1;
+        for (let ring = 0; ring <= maxRing; ring++) {
+          // A hit in ring r can still be beaten by a diagonal neighbour in ring r+1, so scan one more ring.
+          if (foundAtRing >= 0 && ring > foundAtRing + 1) break;
+          for (let row = cy - ring; row <= cy + ring; row++) {
+            if (row < 0 || row >= rows) continue;
+            const onEdgeRow = row === cy - ring || row === cy + ring;
+            const step = onEdgeRow ? 1 : ring * 2 || 1;
+            for (let col = cx - ring; col <= cx + ring; col += step) {
+              if (col < 0 || col >= cols) continue;
+              const idx = row * cols + col;
+              if (used[idx]) continue;
+              const dx = particles[idx].homeX - tx;
+              const dy = particles[idx].homeY - ty;
+              const d = dx * dx + dy * dy;
+              if (d < bestDist) { bestDist = d; bestIdx = idx; if (foundAtRing < 0) foundAtRing = ring; }
+            }
+          }
+        }
+        return bestIdx;
+      };
       // Sort logo targets from center outward for nicer stagger
       const logoCenterX = ox + lw / 2;
       const logoCenterY = oy + lh / 2;
@@ -138,19 +210,10 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
       for (let si = 0; si < sortedLogoIndices.length; si++) {
         const li = sortedLogoIndices[si];
         const target = logoTargets[li];
-        let bestDist = Infinity;
-        let bestIdx = -1;
-
-        for (let pi = 0; pi < particles.length; pi++) {
-          if (usedParticles.has(pi)) continue;
-          const dx = particles[pi].homeX - target.x;
-          const dy = particles[pi].homeY - target.y;
-          const d = dx * dx + dy * dy;
-          if (d < bestDist) { bestDist = d; bestIdx = pi; }
-        }
+        const bestIdx = nearestUnused(target.x, target.y);
 
         if (bestIdx >= 0) {
-          usedParticles.add(bestIdx);
+          used[bestIdx] = 1;
           const p = particles[bestIdx];
           p.hasTarget = true;
           p.targetX = target.x;
@@ -176,7 +239,12 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
     resize();
     window.addEventListener("resize", resize);
 
-    const DOT_RADIUS = window.innerWidth < 768 ? 0.9 : 1.5;
+    const customLogo =
+      logoWidthFraction != null &&
+      logoMaxHeightFraction != null &&
+      logoWidthFraction > 0 &&
+      logoMaxHeightFraction > 0;
+    const DOT_RADIUS = customLogo || window.innerWidth >= 768 ? 1.5 : 0.9;
     // Colors
     const GRAY_R = 180, GRAY_G = 175, GRAY_B = 168;
     const GOLD_R = 208, GOLD_G = 195, GOLD_B = 159;
@@ -185,10 +253,22 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
     // with a random cycleOffset so they don't sync up.
     // holdTime is long (8-18s) so the logo stays ~85-90% formed at any moment.
 
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let lastPaint = 0;
     const animate = () => {
+      const now = performance.now() / 1000;
+      // The idle twinkle is slow, so 30 fps looks identical and halves the canvas work.
+      // Hover transitions (and the one-off first paint) always run at full rate.
+      if (!externalIsHovered && !prevHoveredRef.current && lastPaint && now - lastPaint < 1 / 30 - 0.002) {
+        if (!prefersReducedMotion && onScreen) animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastPaint = now;
       ctx.clearRect(0, 0, w, h);
       const particles = particlesRef.current;
-      const now = performance.now() / 1000;
 
       // Track hover state transitions
       if (externalIsHovered && !prevHoveredRef.current) {
@@ -299,15 +379,25 @@ export default function InteractiveParticles({ className = "", style = {}, isHov
       }
 
       ctx.globalAlpha = 1;
-      animRef.current = requestAnimationFrame(animate);
+      // Reduced-motion: render a single static frame instead of an endless loop.
+      // Otherwise stop looping while the canvas is scrolled off screen.
+      if (!prefersReducedMotion && onScreen) animRef.current = requestAnimationFrame(animate);
     };
 
+    let onScreen = true;
     animate();
+    const observer = new IntersectionObserver(([entry]) => {
+      const wasOnScreen = onScreen;
+      onScreen = entry.isIntersecting;
+      if (onScreen && !wasOnScreen && !prefersReducedMotion) animRef.current = requestAnimationFrame(animate);
+    });
+    observer.observe(container);
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", resize);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [externalIsHovered]);
+  }, [externalIsHovered, logoWidthFraction, logoMaxHeightFraction, logoCenterYOffsetFraction]);
 
   return (
     <div

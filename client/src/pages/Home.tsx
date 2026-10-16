@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { imgDims } from "@/data/imageSizes";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
-import ParticleHero from "@/components/ParticleHero";
-import StaggerReveal from "@/components/StaggerReveal";
 import HoverParticles from "@/components/HoverParticles";
 import ParticleWrapper from "@/components/ParticleWrapper";
-import ImageReveal from "@/components/ImageReveal";
+import InteractiveParticles from "@/components/InteractiveParticles";
+import OurWorkStack from "@/components/OurWorkStack";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { categories, services as allServices } from "@/data/services";
+import { useFinePointer } from "@/hooks/useFinePointer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,22 +26,40 @@ const HERO_WORDS = [
 
 /* ─── Data ────────────────────────────────────────────────────── */
 
-const services = [
-  { num: "01", name: "AI Agents & Conversational AI", desc: "AI-powered agents that talk, think, and act on behalf of businesses.", href: "/services?category=1" },
-  { num: "02", name: "Workflow & Business Process Automation", desc: "Connect your existing tools and eliminate manual work at scale.", href: "/services?category=2" },
-  { num: "03", name: "Performance Marketing & Paid Advertising", desc: "ROI-driven advertising across Meta, Google, YouTube, and LinkedIn.", href: "/services?category=3" },
-  { num: "04", name: "SEO, Content & Organic Growth", desc: "Long-term organic visibility through technical SEO and authority building.", href: "/services?category=4" },
-  { num: "05", name: "Messaging, Email & Communication", desc: "Automated multi-channel communication via WhatsApp, email, and SMS.", href: "/services?category=5" },
-  { num: "06", name: "Web Design, Branding & Creative", desc: "High-converting websites and brand identities designed for performance.", href: "/services?category=6" },
-  { num: "07", name: "E-Commerce & Marketplace Growth", desc: "Full-stack e-commerce from store setup to marketplace management.", href: "/services?category=7" },
-  { num: "08", name: "Sales, CRM & Revenue Operations", desc: "Systems that capture, nurture, convert, and retain customers.", href: "/services?category=8" },
-  { num: "09", name: "Business Operations & Infrastructure", desc: "Cloud infrastructure, analytics, HR automation, and operational excellence.", href: "/services?category=9" },
-];
+type ServiceCategoryRow = {
+  num: string;
+  categoryId: number;
+  name: string;
+  desc: string;
+  href: string;
+};
 
-const clients = [
-  "U-Factor", "Tavola", "Factorylo", "HealthTech Co", "PropNext", "EduLearn",
-  "FinServe", "CloudStack", "RetailMax", "LegalEase", "LogiTrack", "AutoDrive",
-  "StartupX", "MedConnect", "GreenEnergy", "FintechNow",
+const serviceCategories: ServiceCategoryRow[] = categories.map((c) => ({
+  num: String(c.id).padStart(2, "0"),
+  categoryId: c.id,
+  name: c.name,
+  desc: c.summary,
+  href: `/services?category=${c.id}`,
+}));
+
+type ClientLogo = { name: string; logoSrc: string; h?: number; w?: number };
+const clients: ClientLogo[] = [
+  { name: "U-Factor", logoSrc: "/client/ufactor.webp", h: 24, w: 150 },
+  { name: "Tavola", logoSrc: "/client/tavola.webp", h: 24, w: 150 },
+  { name: "Factorylo", logoSrc: "/client/factorylo.webp", h: 24, w: 150 },
+  { name: "HealthTech Co", logoSrc: "/client/healthtech.webp", h: 22, w: 150 },
+  { name: "PropNex", logoSrc: "/client/propnex.webp", h: 22, w: 150 },
+  { name: "EduLearn", logoSrc: "/client/edulearn.webp", h: 22, w: 150 },
+  { name: "FinServe", logoSrc: "/client/finserve.webp", h: 22, w: 150 },
+  { name: "CloudStack", logoSrc: "/client/cloudstack.webp", h: 22, w: 150 },
+  { name: "RetailMax", logoSrc: "/client/retailmax.webp", h: 52, w: 52 },
+  { name: "LegalEase", logoSrc: "/client/legalease.webp", h: 20, w: 150 },
+  { name: "LogiTrack", logoSrc: "/client/logitrack.webp", h: 52, w: 150 },
+  { name: "AutoDrive", logoSrc: "/client/autodrive.webp", h: 22, w: 150 },
+  { name: "StartupX", logoSrc: "/client/startupx.webp", h: 22, w: 150 },
+  { name: "MedConnect", logoSrc: "/client/medconnecy.webp", h: 22, w: 150 },
+  { name: "GreenEnergy", logoSrc: "/client/greenenergy.webp", h: 42, w: 150 },
+  { name: "FintechNow", logoSrc: "/client/fintech.webp", h: 52, w: 52 },
 ];
 
 const stats = [
@@ -56,24 +76,187 @@ const features = [
   { icon: "⬡", title: "Infrastructure", desc: "Reliable cloud, data, and system architecture that supports your business operations and keeps everything running smoothly." },
 ];
 
-const workImages = [
-  { src: "https://plus.unsplash.com/premium_photo-1676637656166-cb7b3a43b81a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8YWklMjB0ZWNobm9sb2d5fGVufDB8fDB8fHww", h: 220, label: "AI Infrastructure" },
-  { src: "https://plus.unsplash.com/premium_photo-1721936170663-dde917b6e7d7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fG1vZGVybiUyMHdvcmtzcGFjZXxlbnwwfHwwfHx8MA%3D%3D", h: 160, label: "Workspace" },
-  { src: "https://images.unsplash.com/photo-1655393001768-d946c97d6fd1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZnV0dXJpc3RpYyUyMHRlY2hub2xvZ3l8ZW58MHx8MHx8fDA%3D", h: 160, label: "Operations" },
-  { src: "https://plus.unsplash.com/premium_photo-1677094310947-c8ffdc3d3355?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGJ1c2luZXNzJTIwYXV0b21hdGlvbnxlbnwwfHwwfHx8MA%3D%3D", h: 220, label: "Tech Systems" },
-  { src: "https://plus.unsplash.com/premium_photo-1682309712356-bf909c90c02d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGVyZm9ybWFuY2UlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D", h: 190, label: "Team at Work" },
-  { src: "https://media.istockphoto.com/id/1335891887/photo/server-room.webp?a=1&b=1&s=612x612&w=0&k=20&c=wYyLnSxs17lh8sEsyvAO2xBl7AKr6LO33oZMHTmmDT4=", h: 190, label: "Cloud Scale" },
+/** Plain-text presales answers, shown in full on the page. */
+const faqs = [
+  {
+    topic: "General",
+    q: "What does WeSee build?",
+    a: "We build custom AI agents (sales, customer support, receptionist and voice), workflow automation, marketing and growth systems, websites and e-commerce stores, and the CRM, analytics and cloud setup behind them.",
+  },
+  {
+    topic: "Process & pricing",
+    q: "How does a project start?",
+    a: "With a free 30-minute discovery call. We walk through your current tools and bottlenecks, pick two or three automation or AI-agent opportunities, and talk through feasibility, timelines and likely return before anyone commits.",
+  },
+  {
+    topic: "Process & pricing",
+    q: "How much does it cost?",
+    a: "It depends on scope. Our services come in Starter, Growth and Enterprise sizes, and we cover feasibility, timelines and potential ROI on the discovery call so you can decide with real numbers. The call is free and carries no obligation.",
+  },
+  {
+    topic: "Tools & industries",
+    q: "Can you work with the tools we already use?",
+    a: "Yes. We connect the tools you already have, such as your CRM, ERP, e-commerce platform, accounting software and messaging channels, using no-code platforms like n8n, Zapier and Make, or custom code where needed.",
+  },
+  {
+    topic: "Tools & industries",
+    q: "Which industries do you work with?",
+    a: "Healthcare, real estate, e-commerce, education, finance, hospitality, SaaS, manufacturing, logistics, retail, legal, government, and beauty and wellness, among others.",
+  },
+  {
+    topic: "General",
+    q: "Where is WeSee based?",
+    a: "Our headquarters are in Japan and our operations team is in Mumbai, India.",
+  },
 ];
 
-/* ─── Component ───────────────────────────────────────────────── */
+const faqTopics = ["General", "Process & pricing", "Tools & industries"] as const;
+
+/* ─── Component) ───────────────────────────────────────────────── */
 
 export default function Home() {
+  const finePointer = useFinePointer();
   const statsRef = useRef<HTMLDivElement>(null);
   const [counted, setCounted] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
   const [typedText, setTypedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isHeroLogoHovered, setIsHeroLogoHovered] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [faqTopic, setFaqTopic] = useState<string>(faqTopics[0]);
+  const [hoveredServiceIdx, setHoveredServiceIdx] = useState<number | null>(null);
+  const [svcPopTop, setSvcPopTop] = useState<number>(0);
+  const svcListRef = useRef<HTMLDivElement>(null);
+  const svcPopRef = useRef<HTMLDivElement>(null);
+  const [revealedClients, setRevealedClients] = useState<boolean[]>(
+    () => Array.from({ length: clients.length }, () => false)
+  );
+  const clientsSectionRef = useRef<HTMLElement | null>(null);
+  const [clientsSectionInView, setClientsSectionInView] = useState(false);
+  const clientsRevealStartedRef = useRef(false);
+  const clientGridConfig = useMemo(() => {
+    const cols = isTouchDevice ? 8 : 12;
+    const rows = isTouchDevice ? 3 : 4;
+    return { cols, rows, total: cols * rows };
+  }, [isTouchDevice]);
 
+  const clientLogoCellByIndex = useMemo(() => {
+    // Map grid cell -> logo index (or null). Fixed random distribution with a
+    // "no touching" constraint so logos don't sit beside each other.
+    const { cols, rows, total } = clientGridConfig;
+
+    const getNeighbors = (cellIdx: number) => {
+      const r = Math.floor(cellIdx / cols);
+      const c = cellIdx % cols;
+      const neighbors: number[] = [];
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const rr = r + dr;
+          const cc = c + dc;
+          if (rr < 0 || rr >= rows || cc < 0 || cc >= cols) continue;
+          neighbors.push(rr * cols + cc);
+        }
+      }
+      return neighbors;
+    };
+
+    const shuffle = <T,>(arr: T[]) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    const allCells = Array.from({ length: total }, (_, i) => i);
+    const logoIndices = Array.from({ length: clients.length }, (_, i) => i);
+
+    // Try multiple times to satisfy constraints; fall back if it somehow fails.
+    const MAX_ATTEMPTS = 250;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const cellToLogo: Array<number | null> = Array.from({ length: total }, () => null);
+      const used = new Set<number>();
+
+      const cells = shuffle(allCells.slice());
+      const logos = shuffle(logoIndices.slice());
+
+      let ok = true;
+      for (const logoIdx of logos) {
+        let placed = false;
+        for (const cellIdx of cells) {
+          if (cellToLogo[cellIdx] !== null) continue;
+          if (used.has(cellIdx)) continue;
+          if (getNeighbors(cellIdx).some((n) => used.has(n))) continue;
+          cellToLogo[cellIdx] = logoIdx;
+          used.add(cellIdx);
+          placed = true;
+          break;
+        }
+        if (!placed) {
+          ok = false;
+          break;
+        }
+      }
+
+      if (ok) return cellToLogo;
+    }
+
+    // Fallback: still random, just without the strict adjacency rule.
+    const fallbackCells = shuffle(allCells.slice());
+    const fallbackMap: Array<number | null> = Array.from({ length: total }, () => null);
+    for (let i = 0; i < clients.length; i++) fallbackMap[fallbackCells[i]] = i;
+    return fallbackMap;
+  }, [clientGridConfig, clientGridConfig.total]);
+
+  const serviceNamesByCategoryId = useMemo(() => {
+    const map = new Map<number, string[]>();
+    for (const s of allServices) {
+      const list = map.get(s.categoryId) ?? [];
+      list.push(s.name);
+      map.set(s.categoryId, list);
+    }
+    return map;
+  }, []);
+
+  const setSvcHover = (idx: number | null, rowEl?: HTMLElement | null) => {
+    if (idx === null || !rowEl) {
+      setHoveredServiceIdx(null);
+      return;
+    }
+    const containerEl = svcListRef.current;
+    if (!containerEl) {
+      setHoveredServiceIdx(idx);
+      return;
+    }
+    const rowRect = rowEl.getBoundingClientRect();
+    const containerRect = containerEl.getBoundingClientRect();
+    setSvcPopTop(rowRect.top - containerRect.top - 4);
+    setHoveredServiceIdx(idx);
+  };
+
+  useLayoutEffect(() => {
+    if (hoveredServiceIdx === null) return;
+    const containerEl = svcListRef.current;
+    const popEl = svcPopRef.current;
+    if (!containerEl || !popEl) return;
+
+    const containerRect = containerEl.getBoundingClientRect();
+    const containerHeight = containerRect.height;
+    const popRect = popEl.getBoundingClientRect();
+    const popHeight = popRect.height;
+
+    // Clamp so popover stays fully visible inside container.
+    // Keep a small padding from container edges for clean look.
+    const pad = 10;
+    const minTop = pad;
+    const maxTop = Math.max(pad, containerHeight - popHeight - pad);
+    const nextTop = Math.min(maxTop, Math.max(minTop, svcPopTop));
+
+    if (Math.abs(nextTop - svcPopTop) > 0.5) {
+      setSvcPopTop(nextTop);
+    }
+  }, [hoveredServiceIdx, svcPopTop]);
   /* Typewriter effect for hero headline word */
   useEffect(() => {
     const fullWord = HERO_WORDS[wordIndex];
@@ -102,7 +285,41 @@ export default function Home() {
     return () => window.clearTimeout(timeout);
   }, [typedText, isDeleting, wordIndex]);
 
+  const clientRevealOrder = useMemo(() => {
+    // Reveal order based on shuffled *grid cell positions* that contain logos.
+    // This yields sequences like: cell 1 → cell 8 → cell 17 (organic, non-linear).
+    const cellIndicesWithLogos: number[] = [];
+    for (let cellIdx = 0; cellIdx < clientLogoCellByIndex.length; cellIdx++) {
+      if (clientLogoCellByIndex[cellIdx] !== null) cellIndicesWithLogos.push(cellIdx);
+    }
+
+    // Shuffle cell indices (Fisher–Yates)
+    for (let i = cellIndicesWithLogos.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cellIndicesWithLogos[i], cellIndicesWithLogos[j]] = [
+        cellIndicesWithLogos[j],
+        cellIndicesWithLogos[i],
+      ];
+    }
+
+    // Convert cell indices to logo indices (non-null by construction)
+    return cellIndicesWithLogos.map((cellIdx) => clientLogoCellByIndex[cellIdx] as number);
+  }, [clientLogoCellByIndex]);
+
   /* GSAP scroll reveals */
+  useEffect(() => {
+    const touchCapable =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
+        "ontouchstart" in window);
+    setIsTouchDevice(touchCapable);
+    if (touchCapable) {
+      // Keep logo formation active on phones/tablets so behavior matches desktop
+      // visual state without requiring hover.
+      setIsHeroLogoHovered(true);
+    }
+  }, []);
+
   useEffect(() => {
     const localTriggers: ScrollTrigger[] = [];
     const t = setTimeout(() => {
@@ -130,11 +347,10 @@ export default function Home() {
   }, []);
 
 
-
   return (
-    <>
+    <div className="home-page">
       {/* ══════════════════════════ HERO ══════════════════════════ */}
-      <section style={{
+      <section className="home-hero" style={{
         minHeight: "100svh",
         display: "flex",
         flexDirection: "column",
@@ -145,8 +361,29 @@ export default function Home() {
         paddingBottom: 60,
         background: "var(--paper)",
       }}>
-        {/* Particle canvas — fills section exactly via inset:0, no overflow needed */}
-        <ParticleHero style={{ position: "absolute", inset: 0, zIndex: 0 }} />
+        {/* WeSee logo particle formation — same behavior as About hero; mobile: shift layer up so logo reads above headline */}
+        <div
+          className="home-hero-particle-logo-layer"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <InteractiveParticles
+            style={{ position: "absolute", inset: 0, zIndex: 0 }}
+            isHovered={isHeroLogoHovered}
+          />
+        </div>
+        <style>{`
+          @media (max-width: 767px) {
+            .home-page .home-hero-particle-logo-layer {
+              transform: translateY(clamp(-140px, -14vh, -56px));
+            }
+          }
+        `}</style>
 
         {/* Decorative blobs — contained in their own overflow:hidden wrapper so they
             don't bleed out of the section, but the wrapper does NOT clip the text */}
@@ -163,37 +400,50 @@ export default function Home() {
         </div>
 
         {/* — Main content — */}
-        <div className="container" style={{
-          position: "relative", zIndex: 1,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          textAlign: "center",
-        }}>
+        <div
+          className="container"
+          onMouseEnter={() => {
+            if (!isTouchDevice) setIsHeroLogoHovered(true);
+          }}
+          onMouseLeave={() => {
+            if (!isTouchDevice) setIsHeroLogoHovered(false);
+          }}
+          onTouchStart={() => {
+            if (!isTouchDevice) setIsHeroLogoHovered(true);
+          }}
+          style={{
+            position: "relative", zIndex: 1,
+            display: "flex", flexDirection: "column", alignItems: "center",
+            textAlign: "center",
+          }}>
           {/* Pill badge */}
-          <div
-            className="fade-up"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "6px 16px 6px 10px",
-              background: "rgba(255,255,255,0.80)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid rgba(17,19,23,0.09)",
-              borderRadius: 999,
-              fontSize: 12.5, fontWeight: 500,
-              color: "rgba(17,19,23,0.55)",
-              letterSpacing: "0.01em",
-              marginBottom: 30,
-              animationDelay: "0.1s",
-            }}
-          >
-            <span style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: 22, height: 22, borderRadius: 999,
-              background: "rgba(201,168,76,0.15)",
-              fontSize: 10, color: "var(--accent)",
-            }}>✦</span>
-            AI Agents That Work For You 24/7
-          </div>
+          {!isTouchDevice && (
+            <div
+              className="fade-up"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "6px 16px 6px 10px",
+                background: "rgba(255,255,255,0.80)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                border: "1px solid rgba(17,19,23,0.09)",
+                borderRadius: 999,
+                fontSize: 12.5, fontWeight: 500,
+                color: "rgba(17,19,23,0.55)",
+                letterSpacing: "0.01em",
+                marginBottom: 30,
+                animationDelay: "0.1s",
+              }}
+            >
+              <span style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 22, height: 22, borderRadius: 999,
+                background: "rgba(201,168,76,0.15)",
+                fontSize: 10, color: "var(--accent)",
+              }}>✦</span>
+              AI Agents That Work For You 24/7
+            </div>
+          )}
 
           {/* Hero headline — responsive single line */}
           <h1
@@ -211,7 +461,10 @@ export default function Home() {
           >
             {/* "WeSee your [word] systems." — on mobile: word on second line, slot always reserved */}
             <span className="hero-text-line">
-              WeSee your{" "}
+
+              WeSee
+              {" "}
+              your{" "}
               <br className="hero-br-mobile" aria-hidden="true" />
               {/* Word slot: min-width reserves space so layout never jumps when word is empty */}
               <span className="hero-word-slot">
@@ -221,7 +474,7 @@ export default function Home() {
                   {typedText || "\u00A0"}
                 </span>
                 <span className="hero-caret" aria-hidden="true" />
-              </span>{" "}systems.
+              </span>{" "}
             </span>
             <style>{`
               @keyframes wordFlipIn {
@@ -289,12 +542,12 @@ export default function Home() {
               animationDelay: "0.27s",
             }}
           >
-            A team of AI engineers, developers, and growth strategists building intelligent systems that automate operations, increase conversions, and scale businesses.
+            WeSee is an AI automation and software studio that builds custom AI agents, workflow automation, and web platforms for growing businesses.
           </p>
 
           {/* CTA row */}
           <div
-            className="fade-up"
+            className="fade-up home-hero-cta"
             style={{
               display: "flex", gap: 10, marginTop: 36,
               flexWrap: "wrap", justifyContent: "center",
@@ -303,44 +556,21 @@ export default function Home() {
           >
             <ParticleWrapper>
               <Link
-                href="/book-call"
+                href="/services"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 26px",
-                  background: "var(--ink)",
-                  color: "#fff",
+                  width: 220,
+                  justifyContent: "center",
+                  background: "rgba(255,255,255,0.80)",
+                  backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                  color: "var(--ink)",
                   fontSize: 13.5, fontWeight: 500,
-                  borderRadius: 999, border: "none",
+                  borderRadius: 999, border: "1px solid rgba(17,19,23,0.11)",
                   textDecoration: "none",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                  cursor: "none",
+                  transition: "background 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
+                  cursor: finePointer ? "none" : "pointer",
                 }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(17,19,23,0.25)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                }}
-              >
-                Book a Discovery Call
-                <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
-              </Link>
-            </ParticleWrapper>
-            <ParticleWrapper>
-              <Link href="/services" style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "12px 22px",
-                background: "rgba(255,255,255,0.80)",
-                backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-                color: "var(--ink)",
-                fontSize: 13.5, fontWeight: 450,
-                borderRadius: 999, border: "1px solid rgba(17,19,23,0.11)",
-                textDecoration: "none",
-                transition: "background 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
-                cursor: "none",
-              }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.95)";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
@@ -357,7 +587,7 @@ export default function Home() {
 
           {/* Mini stat row */}
           <div
-            className="fade-up"
+            className="fade-up home-hero-mini-stats"
             style={{
               display: "flex", gap: 8, marginTop: 56,
               flexWrap: "wrap", justifyContent: "center",
@@ -367,9 +597,9 @@ export default function Home() {
             {[
               { val: "35+", label: "Projects" },
               { val: "100+", label: "Automations" },
-              { val: "15K+", label: "Hours Saved / Month" },
+              { val: "15K+", label: "Hours Saved " },
             ].map((s) => (
-              <div key={s.label} style={{
+              <div key={s.label} className="home-hero-mini-stat" style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 padding: "clamp(10px, 2vw, 14px) clamp(14px, 3vw, 24px)",
                 background: "rgba(255,255,255,0.75)",
@@ -393,8 +623,8 @@ export default function Home() {
         </div>
 
         {/* Scroll hint */}
-        <div style={{
-          position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
+        <div className="home-hero-scroll-hint" style={{
+          position: "absolute", left: "50%", transform: "translateX(-50%)",
           display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
           zIndex: 1, opacity: 0.4,
         }}>
@@ -408,11 +638,10 @@ export default function Home() {
         <div className="container">
           {/* Header */}
           <div className="sr" style={{ textAlign: "center", marginBottom: 52 }}>
-            <div className="section-label" style={{ justifyContent: "center" }}>What we do</div>
             <h2 style={{
               fontSize: "clamp(30px, 3.8vw, 50px)", fontWeight: 450,
               letterSpacing: "-0.03em", color: "var(--ink)",
-              marginTop: 12, lineHeight: 1.1, maxWidth: "30ch", margin: "12px auto 0",
+              lineHeight: 1.1, maxWidth: "30ch", margin: "0 auto",
             }}>
               End-to-end automation for modern businesses.
             </h2>
@@ -476,70 +705,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════ OUR WORK ══════════════════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper)" }}>
-        <div className="container">
-          <div className="flex flex-col gap-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-              {/* Text col */}
-              <div>
-                <div className="section-label sr">Our Work</div>
-                <h2 className="sr" style={{
-                  fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
-                  letterSpacing: "-0.03em", marginTop: 12, lineHeight: 1.1,
-                }}>
-                  We build AI that works<em style={{ fontWeight: 300, fontStyle: "italic", color: "rgba(17,19,23,0.45)" }}>.</em>
-                </h2>
-                <p className="sr" style={{ fontSize: 15, color: "rgba(17,19,23,0.50)", lineHeight: 1.8, marginTop: 20 }}>
-                  Our work focuses on the most critical functions in today's businesses sales automation, AI-powered customer engagement, and end-to-end workflow intelligence.
-                </p>
-                <p className="sr" style={{ fontSize: 15, color: "rgba(17,19,23,0.50)", lineHeight: 1.8, marginTop: 14 }}>
-                  We design solutions that place the business outcome at centre stage  building AI agents and automated pipelines that drive revenue, reduce cost, and scale effortlessly.
-                </p>
-                <ParticleWrapper>
-                  <Link href="/services" className="sr inline-flex items-center gap-1.5 mt-8 text-[13.5px] font-medium text-[var(--ink)] no-underline border-b border-[rgba(17,19,23,0.20)] pb-0.5 transition-[border-color] duration-300 ease-in-out hover:border-[var(--ink)]"
-                  >
-                    View all services →
-                  </Link>
-                </ParticleWrapper>
-
-                {/* Vertical stats */}
-                <div className="flex flex-col gap-0 mt-[52px]">
-                  {stats.map((s, i) => (
-                    <div key={i} className={`sr flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 py-[18px] border-t border-[rgba(17,19,23,0.08)] ${i === stats.length - 1 ? 'border-b border-[rgba(17,19,23,0.08)]' : ''}`}>
-                      <span className="text-[clamp(28px,3vw,40px)] font-[650] text-[var(--accent)] leading-none sm:min-w-[80px]" style={{ letterSpacing: "-0.05em" }}>
-                        {s.display}
-                      </span>
-                      <div>
-                        <div className="text-sm font-[520] text-[var(--ink)]" style={{ fontSize: 14, letterSpacing: "-0.02em" }}>{s.label}</div>
-                        <div className="text-xs text-[rgba(17,19,23,0.35)] mt-0.5" style={{ fontSize: 12 }}>{s.sub}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Image mosaic */}
-              <div>
-                <StaggerReveal stagger={0.07} y={20}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {workImages.map((img, i) => (
-                      <ImageReveal
-                        key={i}
-                        src={img.src}
-                        alt={img.label}
-                        direction="left"
-                        loopOnScroll
-                        style={{ height: img.h, borderRadius: 16 }}
-                        className="rounded-2xl bg-[#E8E8E5]"
-                      />
-                    ))}
-                  </div>
-                </StaggerReveal>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <OurWorkStack stats={stats} />
 
       {/* ══════════════════════════ ABOUT / DARK ══════════════════════════ */}
       <section className="section-pad" style={{
@@ -562,9 +728,9 @@ export default function Home() {
           }} />
         </div>
 
-        <div className="container" style={{ position: "relative", zIndex: 1 }}>
+        <div className="container home-about-wrap" style={{ position: "relative", zIndex: 1 }}>
           {/* Big center quote */}
-          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", marginBottom: 80 }}>
+          <div className="home-about-intro" style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", marginBottom: 80 }}>
             <span className="sr" style={{
               fontSize: 11, fontWeight: 500, letterSpacing: "0.2em",
               textTransform: "uppercase", color: "rgba(255,255,255,0.28)",
@@ -600,7 +766,7 @@ export default function Home() {
           </div>
 
           {/* 4-step process grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          <div className="home-about-steps" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             {[
               { num: "01", title: "Discover & Audit", body: "Map workflows, identify bottlenecks, find the highest leverage automation opportunities." },
               { num: "02", title: "Design & Build", body: "Our AI engineers craft precise, scalable systems custom-built, not out-of-the-box." },
@@ -635,15 +801,17 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════ SERVICES ══════════════════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper)" }}>
+      <section className="section-pad home-services" style={{ background: "var(--paper)" }}>
         <div className="container">
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 48 }}>
-            <div>
-              <div className="section-label sr">Our Services</div>
-              <h2 className="sr" style={{
-                fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
-                letterSpacing: "-0.03em", marginTop: 10, lineHeight: 1.1,
-              }}>
+          <div className="home-services-head" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 48 }}>
+            <div className="home-services-head-main">
+              <h2
+                className="sr"
+                style={{
+                  fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 450,
+                  letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
+                }}
+              >
                 Built for Growth. Powered by AI. Driven by Automation.
               </h2>
             </div>
@@ -662,103 +830,223 @@ export default function Home() {
             </ParticleWrapper>
           </div>
 
-          {services.map((svc, i) => (
-            <ParticleWrapper key={i}>
-              <Link href={svc.href} className="sr" style={{
-                display: "flex", alignItems: "flex-start",
-                gap: 20, padding: "20px 0",
-                borderTop: "1px solid rgba(17,19,23,0.08)",
-                borderBottom: i === services.length - 1 ? "1px solid rgba(17,19,23,0.08)" : "none",
-                cursor: "pointer",
-                position: "relative",
-                transition: "padding-left 0.4s cubic-bezier(0.16,1,0.3,1)",
-                textDecoration: "none",
-              }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.paddingLeft = "12px";
-                  const arrow = el.querySelector(".svc-arrow") as HTMLElement;
-                  if (arrow) { arrow.style.transform = "translateX(4px)"; arrow.style.color = "var(--ink)"; }
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.paddingLeft = "0px";
-                  const arrow = el.querySelector(".svc-arrow") as HTMLElement;
-                  if (arrow) { arrow.style.transform = "translateX(0)"; arrow.style.color = "rgba(17,19,23,0.20)"; }
-                }}
-              >
-                <span style={{ fontSize: 10, fontWeight: 650, color: "var(--accent)", letterSpacing: "0.12em", paddingTop: 3.5, flexShrink: 0, width: 22 }}>
-                  {svc.num}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15.5, fontWeight: 520, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                    {svc.name}
+          <div
+            ref={svcListRef}
+            className="svc-list"
+            style={{ position: "relative", overflow: "visible" }}
+          >
+            {serviceCategories.map((svc, i) => (
+              <ParticleWrapper key={i}>
+                <Link
+                  href={svc.href}
+                  className="sr svc-row"
+                  style={{
+                    display: "flex", alignItems: "flex-start",
+                    gap: 20, padding: "20px 0",
+                    borderTop: "1px solid rgba(17,19,23,0.08)",
+                    borderBottom: i === serviceCategories.length - 1 ? "1px solid rgba(17,19,23,0.08)" : "none",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "padding-left 0.4s cubic-bezier(0.16,1,0.3,1)",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    setSvcHover(i, e.currentTarget);
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.paddingLeft = "12px";
+                    const arrow = el.querySelector(".svc-arrow") as HTMLElement;
+                    if (arrow) { arrow.style.transform = "translateX(4px)"; arrow.style.color = "var(--ink)"; }
+                  }}
+                  onMouseLeave={(e) => {
+                    setSvcHover(null);
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.paddingLeft = "0px";
+                    const arrow = el.querySelector(".svc-arrow") as HTMLElement;
+                    if (arrow) { arrow.style.transform = "translateX(0)"; arrow.style.color = "rgba(17,19,23,0.20)"; }
+                  }}
+                  onFocus={(e) => setSvcHover(i, e.currentTarget)}
+                  onBlur={() => setSvcHover(null)}
+                >
+                  <span style={{ fontSize: 10, fontWeight: 650, color: "var(--accent)", letterSpacing: "0.12em", paddingTop: 3.5, flexShrink: 0, width: 22 }}>
+                    {svc.num}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15.5, fontWeight: 520, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                      {svc.name}
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(17,19,23,0.40)", marginTop: 3, lineHeight: 1.55 }}>
+                      {svc.desc}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 13, color: "rgba(17,19,23,0.40)", marginTop: 3, lineHeight: 1.55 }}>
-                    {svc.desc}
+                  <span className="svc-arrow" style={{
+                    fontSize: 15, color: "rgba(17,19,23,0.20)",
+                    flexShrink: 0, paddingTop: 2,
+                    transition: "transform 0.35s cubic-bezier(0.16,1,0.3,1), color 0.25s ease",
+                    display: "block",
+                  }}>→</span>
+                </Link>
+              </ParticleWrapper>
+            ))}
+
+            {hoveredServiceIdx !== null && (
+              (() => {
+                const svc = serviceCategories[hoveredServiceIdx];
+                const names = serviceNamesByCategoryId.get(svc.categoryId) ?? [];
+                const shown = names.slice(0, 7);
+                const remaining = Math.max(0, names.length - shown.length);
+                return (
+                  <div
+                    ref={svcPopRef}
+                    className="svc-pop is-open"
+                    role="tooltip"
+                    style={{ top: svcPopTop, right: 0 }}
+                  >
+                    <div className="svc-pop-title">Included services</div>
+                    <ul className="svc-pop-list">
+                      {shown.map((n) => (
+                        <li key={n}>{n}</li>
+                      ))}
+                      {remaining > 0 && (
+                        <li className="svc-pop-more">+{remaining} more</li>
+                      )}
+                    </ul>
                   </div>
-                </div>
-                <span className="svc-arrow" style={{
-                  fontSize: 15, color: "rgba(17,19,23,0.20)",
-                  flexShrink: 0, paddingTop: 2,
-                  transition: "transform 0.35s cubic-bezier(0.16,1,0.3,1), color 0.25s ease",
-                  display: "block",
-                }}>→</span>
-              </Link>
-            </ParticleWrapper>
-          ))}
+                );
+              })()
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ══════════════════════════ CLIENTS MARQUEE ══════════════════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper-dark)", overflow: "hidden" }}>
+      {/* ══════════════════════════ CLIENTS FLOATING GRID ══════════════════════════ */}
+      <section
+        ref={(node) => {
+          clientsSectionRef.current = node;
+        }}
+        className="section-pad home-clients"
+        style={{ background: "var(--paper-dark)", overflow: "hidden" }}
+      >
         <div className="container" style={{ marginBottom: 52 }}>
           <div className="sr" style={{ textAlign: "center" }}>
-            <div className="section-label" style={{ justifyContent: "center" }}>Our Clients</div>
             <h2 style={{
               fontSize: "clamp(28px, 3.5vw, 46px)", fontWeight: 450,
-              letterSpacing: "-0.03em", marginTop: 12, lineHeight: 1.1,
+              letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
             }}>
               We partner with ambitious businesses.
             </h2>
           </div>
         </div>
 
-        {[clients, [...clients].reverse()].map((list, row) => (
-          <div key={row} style={{ overflow: "hidden", marginBottom: row === 0 ? 10 : 0 }}>
-            <div
-              style={{ display: "flex", gap: 8, width: "max-content" }}
-              className={row === 0 ? "animate-marquee-left" : "animate-marquee-right"}
-            >
-              {[...list, ...list, ...list].map((name, i) => (
-                <div key={i} style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "9px 20px",
-                  background: row === 0 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.42)",
-                  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(17,19,23,0.09)",
-                  borderRadius: 999,
-                  fontSize: 13, fontWeight: 450, color: "rgba(17,19,23,0.70)",
-                  whiteSpace: "nowrap",
-                  transition: "background 0.3s ease, transform 0.3s ease",
-                }}>
-                  <span style={{
-                    width: i % 5 === 0 ? 7 : 5,
-                    height: i % 5 === 0 ? 7 : 5,
-                    borderRadius: "50%",
-                    background: i % 5 === 0 ? "var(--accent)" : "rgba(17,19,23,0.18)",
-                    display: "inline-block", flexShrink: 0,
-                  }} />
-                  {name}
+        <div className="clients-marquee-outer">
+          <div className="clients-marquee-rows" aria-label="Client logos marquee">
+            {[clients, [...clients].reverse()].map((list, row) => (
+              <div
+                // overflow hidden masks leaving/entering pills
+                key={row}
+                className="clients-marquee-row"
+                style={{ overflow: "hidden" }}
+              >
+                <div
+                  style={{ display: "flex", gap: 8, width: "max-content", alignItems: "center" }}
+                  className={row === 0 ? "animate-marquee-left" : "animate-marquee-right"}
+                >
+                  {[...list, ...list].map((client, i) => {
+                    return (
+                      <span
+                        key={`${row}-${client.name}-${i}`}
+                        className="client-tag"
+                        style={{
+                          background: row === 0 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.42)",
+                          backdropFilter: "blur(12px)",
+                          WebkitBackdropFilter: "blur(12px)",
+                          border: "1px solid rgba(17,19,23,0.09)",
+                          padding: "9px 20px",
+                        }}
+                      >
+                        <span className="client-tag-icon-wrap" aria-hidden="true">
+                          <img
+                            className="client-tag-icon"
+                            {...imgDims(client.logoSrc)} src={client.logoSrc}
+                            alt={`${client.name} logo`}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              const img = e.currentTarget as HTMLImageElement;
+                              img.style.display = "none";
+                              const wrap = img.parentElement as HTMLElement | null;
+                              if (wrap) wrap.style.display = "none";
+                            }}
+                          />
+                        </span>
+                        {client.name}
+                      </span>
+                    );
+                  })}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════ FAQ (visible text, no schema) ══════════════════════════ */}
+      <section className="section-pad home-faq" style={{ background: "var(--paper)" }} aria-labelledby="home-faq-title">
+        <div className="container faq-grid">
+          {/* Left: title + topic filter */}
+          <div className="faq-side">
+            <span className="faq-pill">Before you book</span>
+            <h2 id="home-faq-title" className="faq-title">
+              What do people ask before working with WeSee?
+            </h2>
+            <div className="faq-topics" role="group" aria-label="Filter questions by topic">
+              {faqTopics.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="faq-topic"
+                  aria-pressed={faqTopic === t}
+                  onClick={() => setFaqTopic(t)}
+                >
+                  {t}
+                </button>
               ))}
             </div>
+            <p className="faq-more">
+              Still have a question? <Link href="/book">Book a free call →</Link>
+            </p>
           </div>
-        ))}
+
+          {/* Right: accordion. Answers stay in the DOM (native details) so they remain crawlable. */}
+          <div className="faq-list">
+            {faqs.map((f, i) => (
+              <details
+                key={f.q}
+                className="faq-item"
+                name="home-faq"
+                onToggle={(e) => {
+                  // Only one answer open at a time (fallback for browsers without exclusive <details name>).
+                  const el = e.currentTarget;
+                  if (!el.open) return;
+                  el.parentElement?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach((d) => {
+                    if (d !== el) d.open = false;
+                  });
+                }}
+                hidden={f.topic !== faqTopic}
+                open={i === faqs.findIndex((x) => x.topic === faqTopic) || undefined}
+              >
+                <summary>
+                  <h3>{f.q}</h3>
+                  <span className="faq-icon" aria-hidden="true" />
+                </summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ══════════════════════════ DARK CTA ══════════════════════════ */}
-      <section className="section-pad" style={{
+      <section className="section-pad home-dark-cta" style={{
         background: "var(--ink)", textAlign: "center",
         position: "relative", overflow: "clip",
       }}>
@@ -789,51 +1077,28 @@ export default function Home() {
             lineHeight: 1.15, color: "#FFFFFF",
             margin: "0 auto", maxWidth: "18ch",
           }}>
-            Ready to automate your{" "}
+            Build a business {" "}
             <em style={{
               fontStyle: "italic", fontWeight: 300, letterSpacing: "-0.05em",
               background: "linear-gradient(110deg, #9C7A1E 0%, #C9A84C 45%, #E8C870 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              paddingRight: "0.15em",
-            }}>business?</em>
+              display: "inline-block",
+              paddingRight: "0.32em",
+              paddingLeft: "0.04em",
+            }}>that runs itself.</em>
           </h2>
 
           <p className="sr" style={{
             fontSize: 16, color: "rgba(255,255,255,0.35)",
             marginTop: 22, maxWidth: 500, marginInline: "auto", lineHeight: 1.80,
           }}>
-            Combining deep AI expertise with business acumen, we transform your bottlenecks into high-performing automated workflows. Book a free discovery call — no commitment required.
-          </p>
+            AI-powered workflows designed to remove bottlenecks and unlock scale for your business.          </p>
 
           <div className="sr" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
             <ParticleWrapper>
-              <Link
-                href="/book-call"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "14px 28px",
-                  background: "#FFFFFF", color: "var(--ink)",
-                  fontSize: 14, fontWeight: 500,
-                  borderRadius: 999, border: "none",
-                  textDecoration: "none", cursor: "none",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.4)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                }}
-              >
-                Book a Discovery Call <span style={{ fontSize: 11, opacity: 0.6 }}>↗</span>
-              </Link>
-            </ParticleWrapper>
-            <ParticleWrapper>
               <a
-                href="mailto:support@weseegpt.com"
+                href="mailto:careers@weseegpt.com"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 24px",
@@ -841,7 +1106,7 @@ export default function Home() {
                   border: "1px solid rgba(255,255,255,0.14)",
                   color: "rgba(255,255,255,0.60)",
                   fontSize: 14, fontWeight: 450,
-                  borderRadius: 999, textDecoration: "none", cursor: "none",
+                  borderRadius: 999, textDecoration: "none", cursor: finePointer ? "none" : "pointer",
                   transition: "background 0.3s ease, color 0.3s ease",
                 }}
                 onMouseEnter={e => {
@@ -853,7 +1118,7 @@ export default function Home() {
                   (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.60)";
                 }}
               >
-                support@weseegpt.com
+                careers@weseegpt.com
               </a>
             </ParticleWrapper>
           </div>
@@ -861,11 +1126,11 @@ export default function Home() {
       </section>
 
       {/* Chat Widget Container */}
-      <div 
-        data-chat-widget 
-        data-widget-id="69c3c8de13ad14083e68d64e" 
-        data-location-id="OIRFdfJ7D2iWr89PB0hz"  
+      <div
+        data-chat-widget
+        data-widget-id="69c3c8de13ad14083e68d64e"
+        data-location-id="OIRFdfJ7D2iWr89PB0hz"
       />
-    </>
+    </div>
   );
 }

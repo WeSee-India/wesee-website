@@ -5,6 +5,8 @@ import ParticleWrapper from "./ParticleWrapper";
 
 const navItems = [
   { label: "Services", href: "/services", hasDropdown: true },
+  { label: "Case Studies", href: "/case-studies", hasDropdown: false },
+  { label: "Projects", href: "/projects", hasDropdown: false },
   { label: "About", href: "/about", hasDropdown: false },
   { label: "Team", href: "/team", hasDropdown: false },
   { label: "Blog", href: "/blog", hasDropdown: false },
@@ -12,120 +14,133 @@ const navItems = [
   { label: "Contact", href: "/contact", hasDropdown: false },
 ];
 
+/** Matches `client/src/data/services.ts` slugs; `categoryId` when there is no dedicated ServiceDetail page. */
+type NavSubService =
+  | { label: string; slug: string }
+  | { label: string; categoryId: number };
+
+function subServiceHref(sub: NavSubService): string {
+  return "slug" in sub ? `/services/${sub.slug}` : `/services?category=${sub.categoryId}`;
+}
+
 // 10 service categories with expandable sub-services
-const serviceCategories = [
+const serviceCategories: Array<{
+  name: string;
+  description: string;
+  subServices: NavSubService[];
+}> = [
   {
     name: "Autonomous AI Agents",
     description: "AI-powered agents that talk, think, and act on behalf of businesses — handling sales, support, appointments, and calls 24/7.",
     subServices: [
-      "AI Sales Agent",
-      "AI Customer Support Bot",
-      "AI Receptionist & Scheduler",
-      "Internal Knowledge AI (HR / IT / Ops)",
-      "Voice AI & Smart IVR",
-      "Custom AI Agent Development",
+      { label: "AI Sales Agent", slug: "ai-sales-agent" },
+      { label: "AI Customer Support Bot", slug: "ai-customer-support-bot" },
+      { label: "AI Receptionist & Scheduler", slug: "ai-receptionist" },
+      { label: "Internal Knowledge AI (HR / IT / Ops)", slug: "internal-ai-assistant" },
+      { label: "Voice AI & Smart IVR", slug: "voice-ai-ivr" },
+      { label: "Custom AI Agent Development", slug: "custom-ai-agent-development" },
     ],
   },
   {
     name: "Workflow Automation & Systems Integration",
     description: "Connect your existing tools and eliminate manual work using n8n, Zapier, Make, and custom code.",
     subServices: [
-      "No-Code Workflow Automation",
-      "Document & Invoice Automation",
-      "Smart Lead Routing & Assignment",
-      "ERP & Multi-System Integration",
-      "Alerts, Escalations & Notification Engines",
+      { label: "No-Code Workflow Automation", slug: "no-code-workflow" },
+      { label: "Document & Invoice Automation", slug: "document-invoice-automation" },
+      { label: "Smart Lead Routing & Assignment", slug: "lead-routing" },
+      { label: "ERP & Multi-System Integration", slug: "erp-integration" },
+      { label: "Alerts, Escalations & Notification Engines", slug: "notification-systems" },
     ],
   },
   {
     name: "Performance Marketing & Paid Media",
     description: "ROI-driven advertising across Meta, Google, YouTube, LinkedIn — every rupee tracked and optimized.",
     subServices: [
-      "Meta Ads — Facebook & Instagram",
-      "Google Ads — Search, Display & Shopping",
-      "YouTube Video Advertising",
-      "LinkedIn B2B Campaigns",
-      "Retargeting & Programmatic",
-      "Influencer-Paid Hybrid Campaigns",
+      { label: "Meta Ads — Facebook & Instagram", slug: "meta-ads" },
+      { label: "Google Ads — Search, Display & Shopping", slug: "google-ads" },
+      { label: "YouTube Video Advertising", slug: "youtube-ads" },
+      { label: "LinkedIn B2B Campaigns", slug: "linkedin-ads" },
+      { label: "Retargeting & Programmatic", slug: "retargeting" },
+      { label: "Influencer-Paid Hybrid Campaigns", slug: "influencer-affiliate" },
     ],
   },
   {
     name: "Search Dominance & Organic Discovery",
     description: "Long-term organic visibility through technical SEO, content strategy, and authority building.",
     subServices: [
-      "Technical & On-Page SEO",
-      "Local SEO & Google Business",
-      "Content Strategy & Authority Building",
-      "AI-Powered Content at Scale",
-      "Answer Engine Optimisation (AEO)",
+      { label: "Technical & On-Page SEO", slug: "technical-seo" },
+      { label: "Local SEO & Google Business", slug: "local-seo" },
+      { label: "Content Strategy & Authority Building", slug: "content-seo" },
+      { label: "AI-Powered Content at Scale", slug: "ai-powered-content" },
+      { label: "Answer Engine Optimisation (AEO)", slug: "answer-engine-optimisation" },
     ],
   },
   {
     name: "Conversational Marketing & Messaging",
     description: "Automated multi-channel communication via WhatsApp, email, SMS, and push notifications.",
     subServices: [
-      "WhatsApp Business API & Automation",
-      "Email Marketing & Drip Campaigns",
-      "SMS & RCS Rich Messaging",
-      "Omnichannel Unified Inbox",
-      "Push Notifications & In-App Messaging",
+      { label: "WhatsApp Business API & Automation", slug: "whatsapp-business" },
+      { label: "Email Marketing & Drip Campaigns", slug: "email-marketing" },
+      { label: "SMS & RCS Rich Messaging", slug: "sms-rcs" },
+      { label: "Omnichannel Unified Inbox", slug: "omnichannel-inbox" },
+      { label: "Push Notifications & In-App Messaging", slug: "push-notifications" },
     ],
   },
   {
     name: "Digital Experience & Creative Studio",
     description: "High-converting websites, brand identities, and video content designed for performance.",
     subServices: [
-      "High-Performance Website Design & Dev",
-      "Landing Pages & Conversion Optimisation",
-      "Brand Identity & Visual Systems",
-      "Video Production & Motion Graphics",
-      "UI/UX Design & Prototyping",
-      "Social Media Creative & Content Design",
+      { label: "High-Performance Website Design & Dev", slug: "website-design" },
+      { label: "Landing Pages & Conversion Optimisation", slug: "landing-pages" },
+      { label: "Brand Identity & Visual Systems", slug: "brand-identity" },
+      { label: "Video Production & Motion Graphics", slug: "video-production" },
+      { label: "UI/UX Design & Prototyping", slug: "ui-ux-design" },
+      { label: "Social Media Creative & Content Design", slug: "social-media-creative" },
     ],
   },
   {
     name: "E-Commerce & D2C Growth Engine",
     description: "Full-stack e-commerce solutions from store setup to marketplace management and optimization.",
     subServices: [
-      "D2C Brand Launch & Growth",
-      "E-Commerce Storefront Design",
-      "Marketplace Onboarding & Management",
-      "Product Listing & Catalog Optimisation",
-      "Subscription & Recurring Revenue Systems",
+      { label: "D2C Brand Launch & Growth", slug: "d2c-brand-launch" },
+      { label: "E-Commerce Storefront Design", slug: "ecommerce-storefront-design" },
+      { label: "Marketplace Onboarding & Management", slug: "marketplace-management" },
+      { label: "Product Listing & Catalog Optimisation", slug: "product-feed" },
+      { label: "Subscription & Recurring Revenue Systems", slug: "subscription-recurring-revenue" },
     ],
   },
   {
     name: "Revenue Operations & Sales Automation",
     description: "Systems that capture, nurture, convert, and retain customers — engineered for revenue.",
     subServices: [
-      "CRM Setup & Pipeline Optimisation",
-      "Sales Funnel & Conversion Automation",
-      "Lead Generation — Inbound & Outbound",
-      "Influencer & Affiliate Program Management",
-      "Loyalty, Referral & Retention Programs",
+      { label: "CRM Setup & Pipeline Optimisation", slug: "crm-setup" },
+      { label: "Sales Funnel & Conversion Automation", slug: "sales-funnel" },
+      { label: "Lead Generation — Inbound & Outbound", slug: "lead-generation" },
+      { label: "Influencer & Affiliate Program Management", slug: "influencer-affiliate" },
+      { label: "Loyalty, Referral & Retention Programs", slug: "loyalty-referral" },
     ],
   },
   {
     name: "Data Intelligence & Analytics",
     description: "Custom dashboards and BI solutions that turn raw data into actionable insights for smarter decision-making.",
     subServices: [
-      "Custom BI Dashboards & Reporting",
-      "Marketing Attribution & ROI Tracking",
-      "Customer Analytics & Churn Prediction",
-      "A/B Testing & Experimentation Frameworks",
-      "AI-Powered Forecasting & Trend Analysis",
+      { label: "Custom BI Dashboards & Reporting", slug: "analytics-bi" },
+      { label: "Marketing Attribution & ROI Tracking", slug: "analytics-bi" },
+      { label: "Customer Analytics & Churn Prediction", slug: "analytics-bi" },
+      { label: "A/B Testing & Experimentation Frameworks", slug: "analytics-bi" },
+      { label: "AI-Powered Forecasting & Trend Analysis", slug: "analytics-bi" },
     ],
   },
   {
     name: "Cloud, Security & Business Operations",
     description: "Cloud infrastructure, analytics dashboards, HR automation, and operational excellence.",
     subServices: [
-      "Cloud Architecture & DevOps",
-      "Cybersecurity & Compliance",
-      "HR & Recruitment Automation",
-      "Reputation & Review Management",
-      "Business Strategy & Growth Consulting",
-      "Government Subsidy & Scheme Marketing",
+      { label: "Cloud Architecture & DevOps", slug: "cloud-devops" },
+      { label: "Cybersecurity & Compliance", slug: "data-security" },
+      { label: "HR & Recruitment Automation", slug: "hr-automation" },
+      { label: "Reputation & Review Management", categoryId: 9 },
+      { label: "Business Strategy & Growth Consulting", categoryId: 9 },
+      { label: "Government Subsidy & Scheme Marketing", categoryId: 9 },
     ],
   },
 ];
@@ -142,6 +157,8 @@ export default function Header() {
   const [expandedCategoryIndex, setExpandedCategoryIndex] = useState<number | null>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
   const [location] = useLocation();
 
   const openServicesDropdown = () => {
@@ -174,6 +191,33 @@ export default function Header() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Escape closes whichever menu is open; focus returns to the hamburger so keyboard users keep their place.
+  useEffect(() => {
+    if (!open && !servicesDropdownOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (open) {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
+      if (servicesDropdownOpen) {
+        setServicesDropdownOpen(false);
+        setExpandedCategoryIndex(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, servicesDropdownOpen]);
+
+  // Move focus into the mobile menu when it opens.
+  useEffect(() => {
+    if (open) mobileNavRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+    // The overlay covers the page, so keep the page out of the tab order and the accessibility tree meanwhile.
+    const page = document.getElementById("page-content");
+    page?.toggleAttribute("inert", open);
+    return () => page?.removeAttribute("inert");
+  }, [open]);
 
   // Close on navigation
   useEffect(() => {
@@ -227,7 +271,10 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0, zIndex: 2 }}>
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663374526873/i7vThuKaRmDbUwRVJzPJ6B/wesee_logo_4739f7bd.gif"
+              src="/wesee-logo-anim.webp"
+              width={58}
+              height={42}
+              decoding="async"
               alt="WeSee logo"
               style={{ height: 42, width: "auto", objectFit: "contain", mixBlendMode: "multiply" }}
             />
@@ -273,6 +320,9 @@ export default function Header() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      className="hdr-nav-link"
+                      aria-haspopup={isServices ? "menu" : undefined}
+                      aria-expanded={isServices ? servicesDropdownOpen : undefined}
                       style={{
                         padding: "6px 13px",
                         borderRadius: 999,
@@ -292,6 +342,12 @@ export default function Header() {
                       onMouseLeave={e => {
                         if (!isActive) (e.currentTarget as HTMLElement).style.color = "rgba(17,19,23,0.48)";
                         if (isServices) closeServicesDropdown();
+                      }}
+                      onFocus={() => {
+                        if (isServices) openServicesDropdown();
+                      }}
+                      onKeyDown={e => {
+                        if (isServices && e.key === "Escape") closeServicesDropdown();
                       }}
                     >
                       {item.label}
@@ -395,20 +451,24 @@ export default function Header() {
                       {serviceCategories.map((category, idx) => {
                         const isExpanded = expandedCategoryIndex === idx;
                         return (
-                          <p 
+                          <p
                             key={idx}
-                            style={{ 
-                              fontSize: 13, 
-                              fontWeight: 600, 
-                              color: isExpanded ? "var(--ink)" : "rgba(17,19,23,0.7)", 
-                              letterSpacing: "0.02em", 
-                              margin: 0, 
+                            tabIndex={0}
+                            role="button"
+                            aria-expanded={isExpanded}
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: isExpanded ? "var(--ink)" : "rgba(17,19,23,0.7)",
+                              letterSpacing: "0.02em",
+                              margin: 0,
                               textTransform: "uppercase",
                               whiteSpace: "nowrap",
                               cursor: "pointer",
                               transition: "color 0.2s ease",
                             }}
                             onMouseEnter={() => setExpandedCategoryIndex(idx)}
+                            onFocus={() => setExpandedCategoryIndex(idx)}
                           >
                             {category.name}
                           </p>
@@ -439,10 +499,10 @@ export default function Header() {
                           paddingTop: 16,
                           paddingRight: 20,
                         }}>
-                          {serviceCategories[expandedCategoryIndex].subServices.map((sub) => (
+                          {serviceCategories[expandedCategoryIndex].subServices.map((sub, subIdx) => (
                             <Link
-                              key={sub}
-                              href={`/services#${serviceCategories[expandedCategoryIndex].name.toLowerCase().replace(/\s+/g, "-")}`}
+                              key={`${sub.label}-${subIdx}`}
+                              href={subServiceHref(sub)}
                               style={{ 
                                 fontSize: 13, 
                                 color: "rgba(17,19,23,0.62)", 
@@ -463,7 +523,7 @@ export default function Header() {
                                 setExpandedCategoryIndex(null);
                               }}
                             >
-                              <span style={{ flex: 1 }}>{sub}</span>
+                              <span style={{ flex: 1 }}>{sub.label}</span>
                               <TrendingUp size={14} style={{ flexShrink: 0, marginLeft: 8 }} />
                             </Link>
                           ))}
@@ -478,42 +538,15 @@ export default function Header() {
 
           {/* ── Right: CTA + hamburger ── */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, zIndex: 2 }}>
-            {/* Book a Call — desktop only */}
-            {isDesktop && (
-              <ParticleWrapper>
-                <Link
-                  href="/book-call"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "8px 18px",
-                    background: "var(--ink)",
-                    color: "#fff",
-                    fontSize: 13, fontWeight: 500, letterSpacing: "0.005em",
-                    borderRadius: 999,
-                    border: "1.5px solid var(--ink)",
-                    textDecoration: "none",
-                    transition: "background 0.25s ease, transform 0.25s ease",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = "#2a2d33";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = "var(--ink)";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  }}
-                >
-                  Book a Call <span style={{ fontSize: 11, opacity: 0.75 }}>↗</span>
-                </Link>
-              </ParticleWrapper>
-            )}
-
             {/* Hamburger / close — mobile only; fixed size so navbar doesn't shift */}
             {!isDesktop && (
               <button
+                ref={menuButtonRef}
+                type="button"
                 onClick={() => setOpen(!open)}
                 aria-label={open ? "Close menu" : "Open menu"}
+                aria-expanded={open}
+                aria-controls="mobile-nav"
                 style={{
                   width: 36, height: 36, minWidth: 36, minHeight: 36,
                   display: "flex", flexDirection: "column",
@@ -554,7 +587,9 @@ export default function Header() {
       {/* ── Mobile full-screen overlay: covers entire viewport, hides page content ── */}
       {!isDesktop && (
         <div
-          aria-hidden={!open}
+          id="mobile-nav"
+          ref={mobileNavRef}
+          inert={!open}
           style={{
             position: "fixed",
             top: 0,
@@ -593,38 +628,51 @@ export default function Header() {
               if (isServices) {
                 return (
                   <div key={item.href} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <button
-                      type="button"
-                      onClick={() => setMobileServicesOpen((v) => !v)}
-                      aria-expanded={mobileServicesOpen}
+                    <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
                         width: "100%",
                         padding: "14px 16px",
-                        background: "transparent",
-                        border: "none",
                         borderRadius: 12,
-                        fontSize: 17,
-                        fontWeight: isActive ? 600 : 500,
-                        color: isActive ? "var(--ink)" : "rgba(17,19,23,0.85)",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        fontFamily: "inherit",
                       }}
                     >
-                      {item.label}
-                      <span
+                      <Link
+                        href="/services"
                         style={{
-                          display: "inline-block",
-                          transition: "transform 0.25s ease",
-                          transform: mobileServicesOpen ? "rotate(180deg)" : "none",
+                          fontSize: 17,
+                          fontWeight: isActive ? 600 : 500,
+                          color: isActive ? "var(--ink)" : "rgba(17,19,23,0.85)",
+                          textAlign: "left",
+                          textDecoration: "none",
+                          display: "block",
+                          flex: 1,
                         }}
+                        onClick={() => setOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                      <Link
+                        href="/services?openFilter=1"
+                        aria-label="Open services filter"
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          textDecoration: "none",
+                          color: "rgba(17,19,23,0.85)",
+                          fontSize: 14,
+                          lineHeight: 1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        onClick={() => setOpen(false)}
                       >
                         ▼
-                      </span>
-                    </button>
+                      </Link>
+                    </div>
                     {mobileServicesOpen && (
                       <div
                         style={{
@@ -679,10 +727,10 @@ export default function Header() {
                                   paddingBottom: 8,
                                 }}
                               >
-                                {category.subServices.map((sub) => (
+                                {category.subServices.map((sub, subIdx) => (
                                   <Link
-                                    key={sub}
-                                    href={`/services#${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+                                    key={`${sub.label}-${subIdx}`}
+                                    href={subServiceHref(sub)}
                                     style={{
                                       fontSize: 13,
                                       color: "rgba(17,19,23,0.7)",
@@ -695,7 +743,7 @@ export default function Header() {
                                     }}
                                     onClick={() => setOpen(false)}
                                   >
-                                    {sub}
+                                    {sub.label}
                                     <TrendingUp size={14} style={{ flexShrink: 0 }} />
                                   </Link>
                                 ))}
@@ -754,7 +802,7 @@ export default function Header() {
             }}
           >
             <Link
-              href="/book-call"
+              href="/contact"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -772,7 +820,7 @@ export default function Header() {
               }}
               onClick={() => setOpen(false)}
             >
-              Book a Call <span style={{ fontSize: 12, opacity: 0.85 }}>↗</span>
+              Contact <span style={{ fontSize: 12, opacity: 0.85 }}>↗</span>
             </Link>
           </div>
         </div>

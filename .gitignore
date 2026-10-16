@@ -108,3 +108,12 @@ temp/
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
 .vercel
+
+# Platform apps
+backend/uploads/
+backend/dist/
+admin/dist/
+client/dist/
+client/src/generated/
+.vite/
+.test-uploads/
