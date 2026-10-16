@@ -17,5 +17,5 @@ export default defineConfig({
     proxy: { "/api": { target: API, changeOrigin: true }, "/uploads": { target: API, changeOrigin: true } },
   },
   preview: { port: 3001 },
-  build: { outDir: "dist", sourcemap: true },
+  build: { outDir: "dist", sourcemap: false },
 });
