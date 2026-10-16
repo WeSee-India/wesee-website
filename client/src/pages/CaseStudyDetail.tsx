@@ -201,10 +201,10 @@ export default function CaseStudyDetail() {
             <h2 id="cs-more-title">{template?.heading ?? "More case studies"}</h2>
             <Link href="/case-studies" className="cs-more-all">All case studies →</Link>
           </div>
-          <ul className="cs-grid">
-            {more.map((c) => (
+          <ul className="csx-grid">
+            {more.map((c, i) => (
               <li key={c.slug}>
-                <CaseStudyCard cs={c} headingLevel={3} />
+                <CaseStudyCard cs={c} index={i} headingLevel={3} />
               </li>
             ))}
           </ul>
