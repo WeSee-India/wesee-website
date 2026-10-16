@@ -1,0 +1,16 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "pnpm --filter @wesee/backend build",
+    "watchPatterns": ["backend/**", "pnpm-lock.yaml", "package.json", "pnpm-workspace.yaml"]
+  },
+  "deploy": {
+    "preDeployCommand": ["pnpm --filter @wesee/backend db:deploy"],
+    "startCommand": "pnpm --filter @wesee/backend start",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 120,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
+  }
+}

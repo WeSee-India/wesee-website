@@ -24,7 +24,7 @@ const schema = z.object({
   /** lax works when admin and API share a site (admin.example.com + api.example.com, or one origin). Use none for cross-site. */
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
   COOKIE_DOMAIN: z.string().optional(),
-  /** Set when running behind a proxy (Render, Vercel) so client IPs and secure cookies work. */
+  /** Set when running behind a proxy (Railway, Vercel) so client IPs and secure cookies work. */
   TRUST_PROXY: z.coerce.number().int().default(1),
 
   UPLOAD_DIR: z.string().default(path.resolve(process.cwd(), "uploads")),

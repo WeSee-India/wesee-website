@@ -8,7 +8,7 @@ import { badRequest } from "./errors.js";
 
 /**
  * Media storage on local disk (UPLOAD_DIR). In production this directory must
- * be on a persistent volume (a Render disk), or uploads are lost on redeploy.
+ * be on a persistent volume (a Railway volume), or uploads are lost on redeploy.
  *
  * Files are validated by their actual bytes, not the name or the browser's
  * claimed type. SVG is not accepted because it can carry scripts.
