@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
+    "dev": "node scripts/fetch-content.mjs --offline && vite --host",
+    "build": "node scripts/fetch-content.mjs && vite build",
     "preview": "vite preview --host",
-    "check": "tsc --noEmit",
+    "check": "node scripts/fetch-content.mjs --offline && tsc --noEmit",
+    "content:pull": "node scripts/fetch-content.mjs",
     "image-sizes": "node scripts/generate-image-sizes.mjs"
   },
   "dependencies": {
