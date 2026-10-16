@@ -1,15 +1,15 @@
 import { useEffect, type ReactNode } from "react";
-import { Check, Clock, Layers, ListChecks, Plug, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Link, useRoute } from "wouter";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import CaseStudyCard from "@/components/CaseStudyCard";
 import { caseStudyIcon } from "@/components/caseStudyIcons";
-import { useCollection, useSection, type CaseStudy, type Point } from "@/content";
+import { useCollection, useSection, type CaseStudy } from "@/content";
 import NotFound from "@/pages/NotFound";
 
 type TemplateContent = { heading?: string; footerLine?: string; footerEmail?: string };
 
-/** Meta strip / sidebar facts, in the handoff's order. Empty ones are left out. */
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Facts strip / sidebar, in the handoff's order. Empty ones are left out. */
 function facts(cs: CaseStudy) {
   return [
     ["Client", cs.client],
@@ -19,17 +19,6 @@ function facts(cs: CaseStudy) {
     ["Timeline", cs.timeframe],
     ["Team", cs.team],
   ].filter((f): f is [string, string] => Boolean(f[1]));
-}
-
-/** Overview stats: counts of what is on the page, plus timeline and team once confirmed. Never invented numbers. */
-function stats(cs: CaseStudy) {
-  const out: { icon: typeof Clock; value: string; label: string }[] = [];
-  if (cs.features.length) out.push({ icon: Layers, value: String(cs.features.length), label: "Key features" });
-  if (cs.tech.length) out.push({ icon: Plug, value: String(cs.tech.length), label: "Tech & integrations" });
-  if (cs.timeframe) out.push({ icon: Clock, value: cs.timeframe, label: "Timeline" });
-  else if (cs.delivery.length) out.push({ icon: ListChecks, value: String(cs.delivery.length), label: "Delivery steps" });
-  if (cs.team) out.push({ icon: Users, value: cs.team, label: "Team" });
-  return out.slice(0, 4);
 }
 
 /** Per-page UTM tags on external booking links. */
@@ -50,55 +39,22 @@ function CtaLink({ href, className, children }: { href: string; className: strin
   );
 }
 
-function PointList({ points, ordered }: { points: Point[]; ordered?: boolean }) {
-  const List = ordered ? "ol" : "ul";
+/** A numbered story section: "02 · The challenge". */
+function Chapter({ n, id, title, children }: { n: number; id: string; title: string; children: ReactNode }) {
   return (
-    <List className={ordered ? "cs-points cs-points--numbered" : "cs-points"}>
-      {points.map((p, i) => (
-        <li key={i}>
-          {p.lead && <strong>{p.lead} </strong>}
-          {p.text}
-        </li>
-      ))}
-    </List>
+    <section className="csd-chapter" aria-labelledby={id}>
+      <p className="csd-chapter-num">{pad(n)}</p>
+      <h2 id={id}>{title}</h2>
+      {children}
+    </section>
   );
 }
 
-/** "The challenge" → "The <em>challenge</em>": the key word in gold, as in the reference design. */
-function Title({ id, children }: { id: string; children: string }) {
-  const [first, ...rest] = children.split(" ");
-  return (
-    <h2 id={id} className="cs2-title">
-      {rest.length ? <>{first} <em>{rest.join(" ")}</em></> : <em>{first}</em>}
-    </h2>
-  );
-}
-
-/** Small hand-drawn marks from the reference, in brand gold. Decorative only. */
-function Doodle({ kind, className }: { kind: "arrow" | "squiggle" | "star" | "square" | "loop"; className: string }) {
-  const paths = {
-    arrow: <><path d="M2 12h8M16 12h8M32 12h40" /><path d="M66 6l7 6-7 6" /></>,
-    squiggle: <path d="M2 14c6-10 12-10 18 0s12 10 18 0 12-10 18 0" />,
-    star: <path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" />,
-    square: <rect x="3" y="3" width="10" height="10" />,
-    loop: <path d="M2 40c30 0 40-34 22-34S10 34 40 30s34-26 34-26" />,
-  } as const;
-  const box = { arrow: "0 0 76 24", squiggle: "0 0 58 24", star: "0 0 24 24", square: "0 0 16 16", loop: "0 0 78 44" }[kind];
-  return (
-    <svg className={`cs2-doodle ${className}`} viewBox={box} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {paths[kind]}
-    </svg>
-  );
-}
-
-/** Branded stand-in for screenshots until the client approves publishing them. */
-function Art({ cs, className = "" }: { cs: CaseStudy; className?: string }) {
+function Media({ cs, className }: { cs: CaseStudy; className: string }) {
   const Icon = caseStudyIcon(cs.category);
-  if (cs.image) return <img className={`cs2-art cs2-art--img ${className}`} src={cs.image.src} alt={cs.image.alt} />;
   return (
-    <div className={`cs2-art ${className}`} aria-hidden="true">
-      <Icon className="cs2-art-icon" strokeWidth={1.1} />
-      <span className="cs2-art-label">{cs.title}</span>
+    <div className={className}>
+      {cs.image ? <img src={cs.image.src} alt={cs.image.alt} /> : <span className="csd-fallback"><Icon strokeWidth={1.2} /></span>}
     </div>
   );
 }
@@ -115,240 +71,192 @@ export default function CaseStudyDetail() {
 
   if (!cs) return <NotFound />;
 
-  const Icon = caseStudyIcon(cs.category);
   const meta = facts(cs);
-  const numbers = stats(cs);
-  const more = all.filter((c) => c.slug !== cs.slug).slice(0, 3);
+  const at = all.indexOf(cs);
+  // The next ones in index order, wrapping around: 2–3 cards.
+  const more = [...all.slice(at + 1), ...all.slice(0, at)].slice(0, 3);
   const ctaHref = cs.cta ? withUtm(cs.cta.buttonUrl, cs.slug) : "/book";
   const ctaLabel = cs.cta?.buttonLabel ?? "Book a 30-minute call";
   const intro = cs.solution.filter((p) => !p.lead);
   const built = cs.solution.filter((p) => p.lead);
 
-  return (
-    <article className="cs2">
-      {/* ── Hero: title on the left, a tilted stack of panels on the right ── */}
-      <header className="cs2-hero">
-        <Doodle kind="arrow" className="cs2-d-arrow" />
-        <Doodle kind="square" className="cs2-d-sq1" />
-        <Doodle kind="squiggle" className="cs2-d-squig" />
-        <Doodle kind="star" className="cs2-d-star" />
-        <div className="container cs2-hero-grid">
-          <div className="cs2-hero-copy">
-            <Breadcrumbs path={`/case-studies/${cs.slug}`} />
-            <p className="cs2-kicker">
-              <span>{cs.category}</span>
-              Case study
-            </p>
-            <h1 className="cs2-headline">{cs.headline}</h1>
-            <p className="cs2-lede">{cs.lede}</p>
-            <ul className="cs2-tags" aria-label="Tags">
-              {cs.tags.map((t) => <li key={t}>{t}</li>)}
-            </ul>
-          </div>
+  // Chapters are numbered in the order they appear; empty ones are skipped.
+  let n = 0;
+  const next = () => ++n;
 
-          <div className="cs2-stack" aria-hidden="true">
-            {cs.tech.length > 0 && (
-              <div className="cs2-panel cs2-panel--back">
-                <span className="cs2-panel-label">Tech & integrations</span>
-                <ul>{cs.tech.slice(0, 6).map((t) => <li key={t}>{t}</li>)}</ul>
-              </div>
-            )}
-            {cs.features.length > 0 && (
-              <div className="cs2-panel cs2-panel--mid">
-                <span className="cs2-panel-label">Key features</span>
-                <ul className="cs2-panel-checks">
-                  {cs.features.slice(0, 3).map((f, i) => (
-                    <li key={i}><Check size={14} strokeWidth={2.4} />{f.lead ?? f.text}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="cs2-panel cs2-panel--front">
-              <Art cs={cs} />
-            </div>
-          </div>
-        </div>
+  return (
+    <article className="csd">
+      {/* Hero */}
+      <header className="container csd-hero">
+        <Link href="/case-studies" className="csd-back">
+          <ArrowLeft size={16} strokeWidth={2} aria-hidden="true" /> All case studies
+        </Link>
+        <p className="csd-eyebrow">
+          <span>{cs.category}</span> Case study
+        </p>
+        <h1>{cs.headline}</h1>
+        <p className="csd-lede">{cs.lede}</p>
+        {cs.tags.length > 0 && (
+          <ul className="csr-tags csd-tags" aria-label="Tags">
+            {cs.tags.map((t) => <li key={t}>{t}</li>)}
+          </ul>
+        )}
       </header>
 
-      {/* Meta strip + tech chips */}
-      <div className="container cs2-metawrap">
-        {meta.length > 0 && (
-          <dl className="cs-meta">
-            {meta.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
-          </dl>
-        )}
-        {cs.tech.length > 0 && (
-          <ul className="pj-stack cs-tech" aria-label="Tech and integrations">
-            {cs.tech.map((t) => <li key={t}>{t}</li>)}
-          </ul>
+      <div className="container">
+        <Media cs={cs} className="csd-cover" />
+        {cs.image?.caption && <p className="csd-caption">{cs.image.caption}</p>}
+
+        {(meta.length > 0 || cs.tech.length > 0) && (
+          <div className="csd-facts">
+            {meta.length > 0 && (
+              <dl>
+                {meta.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+              </dl>
+            )}
+            {cs.tech.length > 0 && (
+              <ul className="csd-tech" aria-label="Tech and integrations">
+                {cs.tech.map((t) => <li key={t}>{t}</li>)}
+              </ul>
+            )}
+          </div>
         )}
       </div>
 
-      {/* ── Client overview: visual left, copy + stats right ── */}
-      {cs.overview.length > 0 && (
-        <section className="container cs2-split cs2-overview" aria-labelledby="cs2-overview">
-          <div className="cs2-visual">
-            <Doodle kind="loop" className="cs2-d-loop" />
-            <div className="cs2-fan" aria-hidden="true">
-              <div className="cs2-fan-card cs2-fan-card--1"><Icon strokeWidth={1.2} /></div>
-              <div className="cs2-fan-card cs2-fan-card--2">
-                <span className="cs2-panel-label">The challenge</span>
-                <ul>{cs.challenge.slice(0, 3).map((c, i) => <li key={i}>{c.lead ?? c.text}</li>)}</ul>
-              </div>
-              <div className="cs2-fan-card cs2-fan-card--3"><Art cs={cs} /></div>
-            </div>
-          </div>
-          <div className="cs2-copy">
-            <Title id="cs2-overview">Client overview</Title>
-            {cs.overview.map((p, i) => <p key={i}>{p}</p>)}
-            {numbers.length > 0 && (
-              <ul className="cs2-stats">
-                {numbers.map((s) => (
-                  <li key={s.label}>
-                    <span className="cs2-stat-icon" aria-hidden="true"><s.icon size={18} strokeWidth={1.8} /></span>
-                    <span><strong>{s.value}</strong>{s.label}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      )}
+      {/* Story + sticky facts sidebar */}
+      <div className="container csd-body">
+        <div className="csd-story">
+          {cs.overview.length > 0 && (
+            <Chapter n={next()} id="csd-overview" title="Client overview">
+              {cs.overview.map((p, i) => <p key={i} className="csd-lead-text">{p}</p>)}
+            </Chapter>
+          )}
 
-      <svg className="cs2-thread" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M250 0 C 250 80, 900 40, 950 120" />
-      </svg>
-
-      {/* ── The challenge: list left, visual right ── */}
-      {cs.challenge.length > 0 && (
-        <section className="container cs2-split cs2-split--rev" aria-labelledby="cs2-challenge">
-          <div className="cs2-copy">
-            <Title id="cs2-challenge">The challenge</Title>
-            <span className="cs2-rule" aria-hidden="true" />
-            <ul className="cs2-dots cs2-dots--problem">
-              {cs.challenge.map((p, i) => (
-                <li key={i}>
-                  {p.lead ? <><strong>{p.lead}</strong> <span>{p.text}</span></> : p.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="cs2-visual">
-            <Doodle kind="star" className="cs2-d-star2" />
-            <div className="cs2-bubble" aria-hidden="true">
-              <Icon className="cs2-bubble-icon" strokeWidth={1.2} />
-              <span className="cs2-bubble-count">{String(cs.challenge.length).padStart(2, "0")}</span>
-              <span className="cs2-bubble-label">problems to solve</span>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <svg className="cs2-thread cs2-thread--flip" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M950 0 C 950 80, 300 40, 250 120" />
-      </svg>
-
-      {/* ── What we built: visual left, list right ── */}
-      {cs.solution.length > 0 && (
-        <section className="container cs2-split" aria-labelledby="cs2-built">
-          <div className="cs2-visual">
-            <div className="cs2-rings">
-              <Art cs={cs} className="cs2-rings-art" />
-            </div>
-          </div>
-          <div className="cs2-copy">
-            <Title id="cs2-built">What we built</Title>
-            <span className="cs2-rule" aria-hidden="true" />
-            {intro.map((p, i) => <p key={i} className="cs2-built-intro">{p.text}</p>)}
-            {built.length > 0 && (
-              <ul className="cs2-dots cs2-dots--solution">
-                {built.map((p, i) => (
+          {cs.challenge.length > 0 && (
+            <Chapter n={next()} id="csd-challenge" title="The challenge">
+              <ul className="csd-cards">
+                {cs.challenge.map((p, i) => (
                   <li key={i}>
-                    <strong>{p.lead}</strong> <span>{p.text}</span>
+                    {p.lead && <h3>{p.lead}</h3>}
+                    <p>{p.text}</p>
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
-        </section>
-      )}
+            </Chapter>
+          )}
 
-      {/* ── Details: features, delivery, results, testimonial, with the sticky facts sidebar ── */}
-      <div className="container cs-layout cs2-details">
-        <div className="cs-body">
+          {cs.solution.length > 0 && (
+            <Chapter n={next()} id="csd-built" title="What we built">
+              {intro.map((p, i) => <p key={i} className="csd-lead-text">{p.text}</p>)}
+              {built.length > 0 && (
+                <ol className="csd-built">
+                  {built.map((p, i) => (
+                    <li key={i}>
+                      <span className="csd-built-num" aria-hidden="true">{pad(i + 1)}</span>
+                      <div>
+                        <h3>{p.lead}</h3>
+                        <p>{p.text}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </Chapter>
+          )}
+
           {cs.features.length > 0 && (
-            <section>
-              <h2>Key features</h2>
-              <PointList points={cs.features} ordered />
-            </section>
+            <Chapter n={next()} id="csd-features" title="Key features">
+              <ul className="csd-checks">
+                {cs.features.map((p, i) => (
+                  <li key={i}>
+                    <span className="csd-check" aria-hidden="true"><Check size={14} strokeWidth={2.6} /></span>
+                    <span>{p.lead && <strong>{p.lead} </strong>}{p.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </Chapter>
           )}
 
           {cs.delivery.length > 0 && (
-            <section>
-              <h2>How we delivered it</h2>
-              <PointList points={cs.delivery} ordered />
-            </section>
+            <Chapter n={next()} id="csd-delivery" title="How we delivered it">
+              <ol className="csd-steps">
+                {cs.delivery.map((p, i) => (
+                  <li key={i}>
+                    <span className="csd-step-dot" aria-hidden="true">{i + 1}</span>
+                    <p>{p.lead && <strong>{p.lead} </strong>}{p.text}</p>
+                  </li>
+                ))}
+              </ol>
+            </Chapter>
           )}
 
-          {/* Only confirmed numbers are ever published; the block hides while there are none. */}
+          {/* Only confirmed numbers are ever published; the chapter hides while there are none. */}
           {cs.results.length > 0 && (
-            <section>
-              <h2>Results</h2>
-              <ul className="cs-results">
+            <Chapter n={next()} id="csd-results" title="Results">
+              <ul className="csd-results">
                 {cs.results.map((r) => (
                   <li key={r.metric}>
                     <strong>{r.value}</strong>
-                    <span className="cs-results-metric">{r.metric}</span>
+                    <span>{r.metric}</span>
                     {(r.period || r.method || r.note) && (
-                      <span className="cs-results-source">
-                        {[r.period, r.method && `Measured via ${r.method}`, r.note].filter(Boolean).join(" · ")}
-                      </span>
+                      <small>{[r.period, r.method && `Measured via ${r.method}`, r.note].filter(Boolean).join(" · ")}</small>
                     )}
                   </li>
                 ))}
               </ul>
-            </section>
+            </Chapter>
           )}
 
           {cs.quote && (
-            <figure className="cs-quote">
+            <figure className="csd-quote">
               <blockquote>“{cs.quote.text}”</blockquote>
               <figcaption>{[cs.quote.name, cs.quote.role, cs.quote.company].filter(Boolean).join(", ")}</figcaption>
             </figure>
           )}
         </div>
 
-        <aside className="cs-aside" aria-label="Project facts">
+        <aside className="csd-aside" aria-label="Project facts">
+          <p className="csd-aside-title">{cs.title}</p>
           {meta.length > 0 && (
             <dl>
-              {meta.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+              {meta.slice(0, 4).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
             </dl>
           )}
-          <CtaLink href={ctaHref} className="cs-btn cs-btn--dark">{ctaLabel}</CtaLink>
+          <CtaLink href={ctaHref} className="csx-btn csd-aside-btn">{ctaLabel}</CtaLink>
         </aside>
       </div>
 
       {/* CTA band */}
       {cs.cta && (
-        <section className="cs-cta" aria-labelledby="cs-cta-title">
-          <div className="container">
-            <h2 id="cs-cta-title">{cs.cta.heading}</h2>
+        <section className="container" aria-labelledby="csd-cta-title">
+          <div className="csd-cta">
+            <h2 id="csd-cta-title">{cs.cta.heading}</h2>
             {cs.cta.body && <p>{cs.cta.body}</p>}
-            <CtaLink href={ctaHref} className="cs-btn cs-btn--light">{ctaLabel}</CtaLink>
+            <CtaLink href={ctaHref} className="csx-btn">{ctaLabel}</CtaLink>
           </div>
         </section>
       )}
 
       {more.length > 0 && (
-        <section className="container cs-more" aria-labelledby="cs-more-title">
-          <div className="cs-more-head">
-            <h2 id="cs-more-title">{template?.heading ?? "More case studies"}</h2>
-            <Link href="/case-studies" className="cs-more-all">All case studies →</Link>
+        <section className="container csd-more" aria-labelledby="csd-more-title">
+          <div className="csd-more-head">
+            <h2 id="csd-more-title">{template?.heading ?? "More case studies"}</h2>
+            <Link href="/case-studies" className="csr-link">
+              All case studies <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
+            </Link>
           </div>
-          <ul className="csx-grid">
-            {more.map((c, i) => (
+          <ul className="csd-more-grid">
+            {more.map((c) => (
               <li key={c.slug}>
-                <CaseStudyCard cs={c} index={i} headingLevel={3} />
+                <Link href={`/case-studies/${c.slug}`} className="csd-mini">
+                  <Media cs={c} className="csd-mini-media" />
+                  <span className="csd-mini-cat">{c.category}</span>
+                  <h3>
+                    {c.title}
+                    <ArrowRight size={18} strokeWidth={2} aria-hidden="true" />
+                  </h3>
+                  <p>{c.summary}</p>
+                </Link>
               </li>
             ))}
           </ul>
