@@ -57,8 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     setCsrfToken("");
-    qc.clear();
+    // Not qc.clear(): that detaches the mounted ["me"] observer, so the null below never re-renders.
     qc.setQueryData(["me"], null);
+    qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
   }, [qc]);
 
   const value = useMemo<AuthValue>(
