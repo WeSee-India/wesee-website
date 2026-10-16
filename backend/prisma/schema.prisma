@@ -1,0 +1,414 @@
+// WeSee platform database.
+//
+// Content models (Project, CaseStudy, BlogPost, …) share the same system columns:
+// id, slug, status, publishedAt, sortOrder, draft, timestamps and author ids.
+// Their remaining columns mirror the field definitions in src/content/collections.ts.
+//
+// Draft workflow: an unpublished item is edited in place. Once an item is
+// PUBLISHED, saving writes the pending edits to `draft` (JSON) and the public
+// site keeps serving the columns until the edits are published.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PageKind {
+  SYSTEM
+  CUSTOM
+}
+
+// ── Access ────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(EDITOR)
+  isActive     Boolean   @default(true)
+  failedLogins Int       @default(0)
+  lockedUntil  DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions  Session[]
+  auditLogs AuditLog[]
+  media     MediaAsset[]
+}
+
+model Session {
+  /// SHA-256 of the session token; the raw token only lives in the cookie.
+  id         String   @id
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrfToken  String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  ip         String?
+  userAgent  String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ── Pages ─────────────────────────────────────────────────────────────
+
+model Page {
+  id             String        @id @default(cuid())
+  /// Stable key for system pages (home, about, …); slug for custom pages.
+  key            String        @unique
+  /// Public path, e.g. "/" or "/about" or "/partners".
+  path           String        @unique
+  title          String
+  kind           PageKind      @default(CUSTOM)
+  status         ContentStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+  noindex        Boolean       @default(false)
+  sortOrder      Int           @default(0)
+  /// Pending edits: { title, seoTitle, …, sections: [...] }. Null when nothing is pending.
+  draft          Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdById    String?
+  updatedById    String?
+
+  sections PageSection[]
+}
+
+model PageSection {
+  id        String  @id @default(cuid())
+  pageId    String
+  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  /// Stable key within the page, e.g. "hero".
+  key       String
+  /// Section type from src/content/pages.ts; decides the fields and the client component.
+  type      String
+  label     String?
+  visible   Boolean @default(true)
+  sortOrder Int     @default(0)
+  content   Json
+
+  @@unique([pageId, key])
+  @@index([pageId, sortOrder])
+}
+
+// ── Collections ───────────────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  title         String
+  client        String
+  category      String
+  group         String
+  service       String
+  stage         String
+  year          String?
+  summary       String
+  scope         String[]
+  tags          String[]
+  image         Json?
+  caseStudySlug String?
+  url           String?
+
+  @@index([status, sortOrder])
+}
+
+model CaseStudy {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  client         String
+  sector         String
+  service        String
+  serviceSlug    String?
+  timeframe      String?
+  summary        String
+  challenge      String[]
+  solution       String[]
+  implementation String[]
+  results        Json     @default("[]")
+  quote          Json?
+  image          Json?
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+
+  @@index([status, sortOrder])
+}
+
+model Author {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  name   String
+  role   String?
+  avatar String?
+  bio    String?
+
+  posts BlogPost[]
+}
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(DRAFT)
+  /// A future date schedules the article: it goes live automatically at that time.
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  title          String
+  excerpt        String
+  category       String
+  tags           String[]
+  coverImage     String
+  coverAlt       String?
+  featured       Boolean  @default(false)
+  question       String?
+  quote          String?
+  body           String
+  authorId       String?
+  author         Author?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  seoTitle       String?
+  seoDescription String?
+  ogImage        String?
+
+  @@index([status, publishedAt])
+}
+
+model Faq {
+  id          String        @id @default(cuid())
+  slug        String        @unique @default(cuid())
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  question   String
+  answer     String
+  topic      String
+  placements String[]
+
+  @@index([status, sortOrder])
+}
+
+model Job {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  title            String
+  team             String
+  employmentType   String
+  location         String
+  applyUrl         String?
+  skills           String[]
+  intro            String
+  responsibilities String[]
+  requirements     String[]
+  bonus            String[]
+  closing          String?
+
+  @@index([status, sortOrder])
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  name                  String
+  number                Int      @unique
+  categoryNumber        Int
+  shortDescription      String
+  definition            String?
+  fullDescription       String
+  benefits              String?
+  automationPoints      String[]
+  deliverables          String[]
+  industries            String[]
+  serviceType           String?
+  stage                 String
+  engagementSize        String
+  image                 String?
+  faqs                  Json     @default("[]")
+  growthComparisonChart Json?
+  relatedServiceSlugs   String[]
+  seoTitle              String?
+  seoDescription        String?
+  ogImage               String?
+
+  @@index([status, sortOrder])
+}
+
+model ServiceCategory {
+  id          String        @id @default(cuid())
+  slug        String        @unique @default(cuid())
+  status      ContentStatus @default(PUBLISHED)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  name    String
+  number  Int    @unique
+  icon    String
+  summary String
+}
+
+model TeamMember {
+  id          String        @id @default(cuid())
+  slug        String        @unique @default(cuid())
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  sortOrder   Int           @default(0)
+  draft       Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  updatedById String?
+
+  name     String
+  title    String
+  group    String
+  photo    String?
+  bio      String?
+  linkedin String?
+  twitter  String?
+
+  @@index([status, sortOrder])
+}
+
+// ── Media, settings, history ──────────────────────────────────────────
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  /// Name of the stored file in the upload directory.
+  storageKey   String   @unique
+  /// Public path, e.g. /uploads/ckx…-hero.webp. Stable across replacements.
+  url          String   @unique
+  originalName String
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  alt          String?
+  /// Incremented when the file is replaced; used for cache busting.
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}
+
+/// Global configuration documents (site, navigation, footer, contact, …), validated by src/content/settings.ts.
+model Setting {
+  key         String   @id
+  value       Json
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+}
+
+/// Snapshot taken on each publish (and settings change) so earlier versions can be restored.
+model Revision {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  action     String
+  data       Json
+  createdAt  DateTime @default(now())
+  userId     String?
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String?
+  entityId   String?
+  summary    String
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+}

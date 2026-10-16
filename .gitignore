@@ -116,3 +116,4 @@ admin/dist/
 client/dist/
 client/src/generated/
 .vite/
+.test-uploads/
