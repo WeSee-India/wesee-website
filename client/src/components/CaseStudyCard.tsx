@@ -1,13 +1,7 @@
-import { ArrowUpRight, Bot, Cloud, Globe, TrendingUp, type LucideIcon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
 import type { CaseStudy } from "@/content";
-
-const ICONS: Record<string, LucideIcon> = {
-  "AI & Automation": Bot,
-  "Platforms & Cloud": Cloud,
-  Fintech: TrendingUp,
-  "Web & Brand": Globe,
-};
+import { caseStudyIcon } from "./caseStudyIcons";
 
 /**
  * Index card: image, category icon, title, first tag, arrow, then the summary in a box.
@@ -15,7 +9,7 @@ const ICONS: Record<string, LucideIcon> = {
  */
 export default function CaseStudyCard({ cs, index = 0, headingLevel = 2 }: { cs: CaseStudy; index?: number; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
-  const Icon = ICONS[cs.category] ?? Globe;
+  const Icon = caseStudyIcon(cs.category);
   const alt = index % 2 === 1;
 
   return (
