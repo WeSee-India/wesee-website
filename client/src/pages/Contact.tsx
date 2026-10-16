@@ -1,11 +1,9 @@
 import { imgDims } from "@/data/imageSizes";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "wouter";
 import TextReveal from "@/components/TextReveal";
-import ImageReveal from "@/components/ImageReveal";
-import MagneticButton from "@/components/MagneticButton";
-import ParticleWrapper from "@/components/ParticleWrapper";
-import TiltCard from "@/components/TiltCard";
+import { track } from "@/lib/analytics";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -17,8 +15,8 @@ const contactTypes = [
 ];
 
 const offices = [
-  { city: "Tokyo", country: "Japan", role: "Headquarters", address: "1 Chome-1-17 Nakameguro, Meguro City, Tokyo 153-0061, Japan", phone: "+81 0704 2332 201", map: "https://www.google.com/maps/place/Japan,+%E3%80%92153-0061+Tokyo,+Meguro+City,+Nakameguro,+1-ch%C5%8Dme%E2%88%921%E2%88%9217+%E3%83%9E%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%B3%E6%81%B5%E6%AF%94%E9%A0%88%E8%8B%91+102/@35.6439478,139.7037363,18.85z/data=!4m6!3m5!1s0x60188b47af800cd9:0x20304b16a49a858a!8m2!3d35.6442008!4d139.7034181!16s%2Fg%2F11vzdfqxf4?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
-  { city: "Mumbai", country: "India", role: "Operations", address: "Hubtown Viva, 12th Floor, Saraswati Baug, Shankarwadi, Jogeshwari East, Mumbai, Maharashtra 400060", phone: "+91 8604 1091 07", map: "https://www.google.com/maps/place/Hubtown+Viva/@19.1313645,72.8531528,17z/data=!3m2!4b1!5s0x3be7b7d5b663c4ad:0x2f60ba818419208b!4m6!3m5!1s0x3be7b7cecfe0f0fd:0x82655eeb16d16558!8m2!3d19.1313594!4d72.8557277!16s%2Fg%2F11gjhnxbbv?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
+  { city: "Tokyo", country: "Japan", role: "Headquarters", timeZone: "Asia/Tokyo", address: "1 Chome-1-17 Nakameguro, Meguro City, Tokyo 153-0061, Japan", phone: "+81 0704 2332 201", map: "https://www.google.com/maps/place/Japan,+%E3%80%92153-0061+Tokyo,+Meguro+City,+Nakameguro,+1-ch%C5%8Dme%E2%88%921%E2%88%9217+%E3%83%9E%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%B3%E6%81%B5%E6%AF%94%E9%A0%88%E8%8B%91+102/@35.6439478,139.7037363,18.85z/data=!4m6!3m5!1s0x60188b47af800cd9:0x20304b16a49a858a!8m2!3d35.6442008!4d139.7034181!16s%2Fg%2F11vzdfqxf4?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
+  { city: "Mumbai", country: "India", role: "Operations", timeZone: "Asia/Kolkata", address: "Hubtown Viva, 12th Floor, Saraswati Baug, Shankarwadi, Jogeshwari East, Mumbai, Maharashtra 400060", phone: "+91 8604 1091 07", map: "https://www.google.com/maps/place/Hubtown+Viva/@19.1313645,72.8531528,17z/data=!3m2!4b1!5s0x3be7b7d5b663c4ad:0x2f60ba818419208b!4m6!3m5!1s0x3be7b7cecfe0f0fd:0x82655eeb16d16558!8m2!3d19.1313594!4d72.8557277!16s%2Fg%2F11gjhnxbbv?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
 ];
 
 // ─── Connect Instantly — Full-bleed editorial, no containers ─────────────────
@@ -687,11 +685,279 @@ function ConnectInstantly({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+function useLocalTime(timeZone: string) {
+  const fmt = () =>
+    new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).format(new Date());
+  const [time, setTime] = useState(fmt);
+  useEffect(() => {
+    const id = window.setInterval(() => setTime(fmt()), 30_000);
+    return () => window.clearInterval(id);
+  }, [timeZone]);
+  return time;
+}
+
+function OfficeCard({ office }: { office: (typeof offices)[number] }) {
+  const time = useLocalTime(office.timeZone);
+  return (
+    <article className="ct-office">
+      <div className="ct-office-top">
+        <span>{office.role}</span>
+        <span>{time} local</span>
+      </div>
+      <h3 className="ct-office-city">{office.city}</h3>
+      <a href={office.map} target="_blank" rel="noopener noreferrer" className="ct-office-address">
+        {office.address}
+      </a>
+      <div className="ct-office-links">
+        <a href={`tel:${office.phone.replace(/\s/g, "")}`}>{office.phone}</a>
+        <a href={office.map} target="_blank" rel="noopener noreferrer">
+          Maps <span aria-hidden>↗</span>
+        </a>
+      </div>
+    </article>
+  );
+}
+
+/** Short chip labels for the service categories, in catalogue order. */
+const topics = [
+  "AI agents",
+  "Automation",
+  "Paid ads",
+  "SEO & content",
+  "Messaging",
+  "Web & brand",
+  "E-commerce",
+  "Sales & CRM",
+  "Operations",
+  "Something else",
+];
+
+type FieldKey = "name" | "email" | "message";
+type FieldErrors = Partial<Record<FieldKey, string>>;
+const FIELD_ORDER: FieldKey[] = ["name", "email", "message"];
+
+function validate(v: { name: string; email: string; message: string }): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!v.name.trim()) errors.name = "Enter your name.";
+  if (!v.email.trim()) errors.email = "Enter your email address.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) errors.email = "Enter a valid email address, like name@company.com.";
+  if (!v.message.trim()) errors.message = "Add a few words about what you need.";
+  return errors;
+}
+
+function ContactForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [topic, setTopic] = useState("");
+  const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [state, setState] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [formError, setFormError] = useState("");
+  const openedAt = useRef(Date.now());
+  const started = useRef(false);
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  // Fires once per visit, on the first interaction with any field. Reports no field values.
+  const onStart = () => {
+    if (started.current) return;
+    started.current = true;
+    track("form_start", { form_name: "contact" });
+  };
+
+  const clearError = (k: FieldKey) => setErrors((prev) => (prev[k] ? { ...prev, [k]: undefined } : prev));
+
+  // Move focus to the result banner so screen-reader and keyboard users land on it.
+  useEffect(() => {
+    if (state === "success" || (state === "error" && formError)) statusRef.current?.focus();
+  }, [state, formError]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (state === "sending") return;
+    const found = validate({ name, email, message });
+    if (Object.keys(found).length > 0) {
+      track("form_submit_error", { form_name: "contact", error_type: "validation", error_count: Object.keys(found).length });
+      setErrors(found);
+      setFormError("");
+      setState("error");
+      const first = FIELD_ORDER.find((k) => found[k]);
+      if (first) document.getElementById(`ct-${first}`)?.focus();
+      return;
+    }
+
+    setState("sending");
+    setErrors({});
+    setFormError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          company: company.trim(),
+          service: topic || "contact",
+          message: message.trim(),
+          honeypot,
+          formAge: Date.now() - openedAt.current,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; fields?: Record<string, string> };
+      if (!res.ok) {
+        const server: FieldErrors = {};
+        for (const [k, msg] of Object.entries(data.fields ?? {})) {
+          if (FIELD_ORDER.includes(k as FieldKey)) server[k as FieldKey] = msg;
+        }
+        if (Object.keys(server).length > 0) {
+          track("form_submit_error", { form_name: "contact", error_type: "validation", error_count: Object.keys(server).length });
+          setErrors(server);
+          setState("error");
+          return;
+        }
+        throw new Error(data.error || "Something went wrong on our side.");
+      }
+      track("form_submit_success", { form_name: "contact", topic: topic || "none" });
+      setState("success");
+      setName("");
+      setEmail("");
+      setCompany("");
+      setTopic("");
+      setMessage("");
+      started.current = false;
+      openedAt.current = Date.now();
+    } catch (err: unknown) {
+      track("form_submit_error", { form_name: "contact", error_type: err instanceof TypeError ? "network" : "server" });
+      // Entered data is kept so nothing needs retyping.
+      setState("error");
+      setFormError(
+        err instanceof TypeError
+          ? "We couldn't reach the server. Check your connection and try again, or email us directly."
+          : `${err instanceof Error ? err.message : "Something went wrong."} Try again, or email us directly.`,
+      );
+    }
+  };
+
+  const sending = state === "sending";
+
+  return (
+    <form className="ct-form" onSubmit={handleSubmit} onFocus={onStart} noValidate>
+      <div className="ct-form-head">
+        <h2 className="ct-form-title"><span>Send us a message</span></h2>
+        <p>Tell us a little about your project and we'll get back to you.</p>
+      </div>
+
+      {state === "success" ? (
+        <div ref={statusRef} tabIndex={-1} role="status" className="ct-status ct-status--ok">
+          Thanks, your message is on its way. We'll reply to you by email soon.
+        </div>
+      ) : null}
+      {state === "error" && formError ? (
+        <div ref={statusRef} tabIndex={-1} role="alert" className="ct-status ct-status--err">
+          {formError}
+        </div>
+      ) : null}
+
+      <fieldset className="ct-topics" disabled={sending}>
+        <legend>What can we help with? <span>(optional)</span></legend>
+        <div>
+          {topics.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className="ct-chip"
+              aria-pressed={topic === t}
+              onClick={() => setTopic(topic === t ? "" : t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="ct-fields">
+        <div className={`ct-field${errors.name ? " is-invalid" : ""}`}>
+          <label htmlFor="ct-name">Name</label>
+          <input
+            id="ct-name"
+            value={name}
+            autoComplete="name"
+            disabled={sending}
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? "ct-name-err" : undefined}
+            onChange={(e) => { setName(e.target.value); clearError("name"); }}
+          />
+          {errors.name ? <p id="ct-name-err" className="ct-err">{errors.name}</p> : null}
+        </div>
+        <div className={`ct-field${errors.email ? " is-invalid" : ""}`}>
+          <label htmlFor="ct-email">Email</label>
+          <input
+            id="ct-email"
+            type="email"
+            inputMode="email"
+            value={email}
+            autoComplete="email"
+            disabled={sending}
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? "ct-email-err" : undefined}
+            onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
+          />
+          {errors.email ? <p id="ct-email-err" className="ct-err">{errors.email}</p> : null}
+        </div>
+        <div className="ct-field ct-field--wide">
+          <label htmlFor="ct-company">Company <span>(optional)</span></label>
+          <input
+            id="ct-company"
+            value={company}
+            autoComplete="organization"
+            disabled={sending}
+            onChange={(e) => setCompany(e.target.value)}
+          />
+        </div>
+        <div className={`ct-field ct-field--wide${errors.message ? " is-invalid" : ""}`}>
+          <label htmlFor="ct-message">Message</label>
+          <textarea
+            id="ct-message"
+            rows={5}
+            value={message}
+            disabled={sending}
+            aria-invalid={Boolean(errors.message)}
+            aria-describedby={errors.message ? "ct-message-err" : undefined}
+            onChange={(e) => { setMessage(e.target.value); clearError("message"); }}
+          />
+          {errors.message ? <p id="ct-message-err" className="ct-err">{errors.message}</p> : null}
+        </div>
+      </div>
+
+      {/* Spam trap: hidden from people, filled by bots */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden
+        className="ct-hp"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+      />
+
+      <div className="ct-form-foot">
+        <p>
+          We use these details only to reply to you. See our <a href="/privacy">Privacy Policy</a>.
+        </p>
+        <button type="submit" className="ct-btn" disabled={sending}>
+          {sending ? "Sending…" : "Send message"}
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path d="M3 12h17M13 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function Contact() {
-  const [openOffice, setOpenOffice] = useState<number | null>(null);
-  const contactCardsRef = useRef<HTMLDivElement>(null);
-  const officeSectionRef = useRef<HTMLDivElement>(null);
-  const officeContentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const whatsappPhone = (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim();
   const whatsappMessage = (import.meta.env.VITE_WHATSAPP_MESSAGE as string | undefined)?.trim();
   const callHref = whatsappPhone ? `tel:+${whatsappPhone.replace(/[^\d]/g, "")}` : undefined;
@@ -702,178 +968,76 @@ export default function Contact() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const localTriggers: ScrollTrigger[] = [];
-    const timer = setTimeout(() => {
-      const reveals = document.querySelectorAll(".gsap-reveal");
-      reveals.forEach((el) => {
-        const anim = gsap.fromTo(el,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none" } }
-        );
-        if (anim.scrollTrigger) localTriggers.push(anim.scrollTrigger);
-      });
-
-      if (contactCardsRef.current) {
-        const cards = contactCardsRef.current.querySelectorAll(".contact-card");
-        cards.forEach((card, i) => {
-          const cardImg = card.querySelector("img");
-          const cardContent = card.querySelector(".flex-1");
-          const anim = gsap.fromTo(card,
-            { opacity: 0, y: 30 },
-            { opacity: 1, y: 0, duration: 0.7, delay: i * 0.1, ease: "power3.out", scrollTrigger: { trigger: card, start: "top 90%", toggleActions: "play none none none" } }
-          );
-          if (anim.scrollTrigger) localTriggers.push(anim.scrollTrigger);
-          if (cardImg) gsap.fromTo(cardImg, { scale: 1.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, delay: i * 0.12 + 0.2, ease: "power2.out" });
-          if (cardContent) gsap.fromTo(cardContent, { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay: i * 0.12 + 0.3, ease: "power3.out" });
-        });
-      }
-
-      if (officeSectionRef.current) {
-        const officeItems = officeSectionRef.current.querySelectorAll(".office-item");
-        officeItems.forEach((item, i) => {
-          const anim = gsap.fromTo(item,
-            { opacity: 0, y: 20 },
-            { opacity: 1, y: 0, duration: 0.7, delay: i * 0.12, ease: "power3.out", scrollTrigger: { trigger: item, start: "top 90%", toggleActions: "play none none none" } }
-          );
-          if (anim.scrollTrigger) localTriggers.push(anim.scrollTrigger);
-        });
-      }
-    }, 50);
-    return () => { clearTimeout(timer); localTriggers.forEach(t => t.kill()); };
   }, []);
 
-  useEffect(() => {
-    officeContentRefs.current.forEach((el, i) => {
-      if (!el) return;
-      if (openOffice === i) {
-        gsap.fromTo(el, { maxHeight: 0, opacity: 0, y: -20 }, { maxHeight: 360, opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-        const children = el.querySelectorAll("div, a");
-        children.forEach((child, idx) => {
-          gsap.fromTo(child, { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.5, delay: idx * 0.1, ease: "power2.out" });
-        });
-      } else {
-        gsap.to(el, { maxHeight: 0, opacity: 0, y: -20, duration: 0.4, ease: "power2.in" });
-      }
-    });
-  }, [openOffice]);
-
   return (
-    <div className="contact-page" style={{ paddingTop: "clamp(48px, 6vw, 64px)" }}>
-      <div className="section-padding">
-        <div className="container">
-          <TextReveal
-            as="h1"
-            className="contact-hero-title"
-            style={{ fontSize: "clamp(48px, 6vw, 72px)", fontWeight: 700, color: "#1A1A1A", lineHeight: 1.15 }}
-            stagger={0.06}
-            onScroll={false}
-          >
-            Get in touch.
-          </TextReveal>
+    <div className="ct">
+      <div className="container ct-wrap">
+        <div className="ct-meta">
+          <span>WeSee — Contact</span>
+          <span>Mumbai · Tokyo</span>
         </div>
-      </div>
 
-      <div style={{ width: "100%", height: "clamp(250px, 45vh, 400px)", overflow: "hidden" }}>
-        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=70" width={1600} height={1067} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" />
-      </div>
+        <div className="ct-split">
+          {/* Left: headline, direct contacts, offices */}
+          <div className="ct-info">
+            <TextReveal as="h1" className="ct-title" stagger={0.06} onScroll={false}>
+              Let's build something together.
+            </TextReveal>
+            <p className="ct-lede">
+              Prefer email or a call? Reach the right person directly. We usually reply within a few hours on business days.
+            </p>
 
-      <section className="section-padding">
-        <div className="container">
-          <div ref={contactCardsRef} className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
-            {contactTypes.map((ct) => (
-              <ParticleWrapper key={ct.label}>
-                <TiltCard maxTilt={5} scale={1.01}>
-                  <a
-                    href={`mailto:${ct.email}`}
-                    className="contact-card group flex gap-4 md:gap-6 p-5 md:p-7 rounded-2xl transition-all duration-500 ease-out hover:bg-[#FAFAFA] hover:shadow-xl hover:scale-[1.02]"
-                    style={{ cursor: "pointer", textDecoration: "none", background: "#FFFFFF", border: "1px solid #F0F0F0", transformStyle: "preserve-3d" }}
-                    onMouseEnter={(e) => gsap.to(e.currentTarget, { y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.1)", duration: 0.4, ease: "power2.out" })}
-                    onMouseLeave={(e) => gsap.to(e.currentTarget, { y: 0, boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.4, ease: "power2.out" })}
-                  >
-                    <div className="overflow-hidden rounded-xl relative" style={{ width: "clamp(64px, 8vw, 80px)", height: "clamp(64px, 8vw, 80px)", flexShrink: 0 }}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-                      <img {...imgDims(ct.photo)} src={ct.photo} alt={ct.person} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "filter 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)" }} className="md:grayscale md:group-hover:!grayscale-0" onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="group-hover:text-[#666666]" style={{ fontSize: "clamp(10px, 1.2vw, 12px)", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "#888888", marginBottom: 10, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { x: 2, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { x: 0, duration: 0.3, ease: "power2.out" })}>{ct.label}</div>
-                      <div className="cta-link" style={{ overflowWrap: "anywhere", fontSize: "clamp(15px, 1.8vw, 18px)", fontWeight: 600, color: "#1A1A1A", display: "block", marginBottom: 8, transition: "color 0.3s ease" }} onMouseEnter={(e) => gsap.to(e.currentTarget, { scale: 1.02, x: 3, duration: 0.3, ease: "power2.out" })} onMouseLeave={(e) => gsap.to(e.currentTarget, { scale: 1, x: 0, duration: 0.3, ease: "power2.out" })}>{ct.email}</div>
-                      <div style={{ fontSize: "clamp(13px, 1.5vw, 15px)", fontWeight: 400, color: "#666666", lineHeight: 1.6 }}>{ct.person} — {ct.title}</div>
-                    </div>
+            <ul className="ct-rows">
+              {contactTypes.map((ct) => (
+                <li key={ct.email}>
+                  <a href={`mailto:${ct.email}`} className="ct-row">
+                    <img {...imgDims(ct.photo)} src={ct.photo} alt="" loading="lazy" decoding="async" />
+                    <span className="ct-row-body">
+                      <span className="ct-row-kind">{ct.label}</span>
+                      <span className="ct-row-email">{ct.email}</span>
+                    </span>
+                    <svg className="ct-row-arrow" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M7 17 17 7M8 7h9v9" />
+                    </svg>
                   </a>
-                </TiltCard>
-              </ParticleWrapper>
-            ))}
-          </div>
-        </div>
-      </section>
+                </li>
+              ))}
+              <li>
+                <Link href="/book" className="ct-row">
+                  <span className="ct-row-icon" aria-hidden>
+                    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                  </span>
+                  <span className="ct-row-body">
+                    <span className="ct-row-kind">Prefer to talk?</span>
+                    <span className="ct-row-email">Book a discovery call</span>
+                  </span>
+                  <svg className="ct-row-arrow" viewBox="0 0 24 24" aria-hidden>
+                    <path d="M7 17 17 7M8 7h9v9" />
+                  </svg>
+                </Link>
+              </li>
+            </ul>
 
-      <section className="" style={{ borderTop: "1px solid #EEEEEE" }}>
-        <div className="container">
-          <TextReveal as="h2" className="section-heading" stagger={0.05} style={{ paddingTop: "clamp(20px, 3vw, 28px)" }}>
-            Our offices.
-          </TextReveal>
-          <div ref={officeSectionRef} style={{ marginTop: "clamp(32px, 4vw, 48px)" }}>
-            {offices.map((office, i) => (
-              <div key={office.city} className="office-item" style={{ borderTop: i === 0 ? "none" : "1px solid #EEEEEE" }}>
-                <ParticleWrapper>
-                  <button
-                    onClick={() => setOpenOffice(openOffice === i ? null : i)}
-                    className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between group relative overflow-hidden"
-                    style={{ padding: "clamp(20px, 3vw, 28px) clamp(16px, 2vw, 24px)", cursor: "pointer", background: "none", border: "none", textAlign: "left", transition: "background-color 0.3s ease", borderRadius: "12px" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.02)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                  >
-                    <div className="flex-1 flex items-center justify-between sm:block">
-                      <div>
-                        <span style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 600, color: "#1A1A1A", transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)", display: "inline-block" }} className="group-hover:translate-x-1">{office.city}</span>
-                        <span style={{ fontSize: "clamp(13px, 1.5vw, 15px)", fontWeight: 400, color: "#888888", marginLeft: 12 }}>{office.country}</span>
-                      </div>
-                      <span className="sm:hidden" style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1), color 0.3s ease", transform: openOffice === i ? "rotate(45deg)" : "none" }}>{openOffice === i ? "×" : "+"}</span>
-                    </div>
-                    <span className="hidden sm:inline" style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 300, color: "#888888", transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1), color 0.3s ease", transform: openOffice === i ? "rotate(45deg)" : "none", marginTop: "8px", alignSelf: "flex-start" }}>{openOffice === i ? "×" : "+"}</span>
-                  </button>
-                </ParticleWrapper>
-                <div ref={(el) => { officeContentRefs.current[i] = el; }} style={{ maxHeight: openOffice === i ? 360 : 0, overflow: "hidden", opacity: openOffice === i ? 1 : 0 }}>
-                  <div style={{ paddingBottom: "clamp(20px, 3vw, 28px)", paddingLeft: "clamp(16px, 2vw, 24px)" }}>
-                    <div style={{ fontSize: "clamp(11px, 1.3vw, 13px)", fontWeight: 500, color: "#888888", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>{office.role}</div>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
-                      <a href={office.map ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(office.address.trim())}`} target="_blank" rel="noopener noreferrer" aria-label={`Open ${office.city} in maps`} style={{ textDecoration: "none", flexShrink: 0, marginTop: 2, lineHeight: 0, transition: "transform 0.2s ease, opacity 0.2s ease" }} onClick={(e) => e.stopPropagation()} onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.opacity = "0.75"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.opacity = "1"; }}>
-                        <img src="/locationsvg.svg" alt="" width={22} height={22} className="pointer-events-none block" style={{ width: 22, height: 22 }} aria-hidden />
-                      </a>
-                      <a href={office.map ?? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(office.address.trim())}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: "clamp(14px, 1.6vw, 16px)", fontWeight: 400, color: "#3A3A3A", lineHeight: 1.6, flex: 1, minWidth: 0, textDecoration: "none", transition: "color 0.2s ease" }} onMouseEnter={(e) => { e.currentTarget.style.color = "#1A1A1A"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#3A3A3A"; }}>
-                        {office.address.trim()}
-                      </a>
-                    </div>
-                    <a href={`tel:${office.phone.replace(/\s/g, "")}`} style={{ fontSize: "clamp(14px, 1.6vw, 16px)", fontWeight: 400, color: "#1A1A1A", textDecoration: "none", transition: "color 0.3s ease", display: "inline-flex", alignItems: "center", gap: 8 }} onMouseEnter={(e) => { e.currentTarget.style.color = "#666666"; gsap.to(e.currentTarget, { x: 3, duration: 0.3, ease: "power2.out" }); }} onMouseLeave={(e) => { e.currentTarget.style.color = "#1A1A1A"; gsap.to(e.currentTarget, { x: 0, duration: 0.3, ease: "power2.out" }); }}>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" aria-hidden>
-                        <path d="M14 2C14 2 16.2 2.2 19 5C21.8 7.8 22 10 22 10" stroke="#252627" strokeWidth="1.5" strokeLinecap="round" />
-                        <path d="M14.207 5.53564C14.207 5.81849 15.197 5.81849 16.6819 7.30341C18.1668 8.78834 18.4497 9.77829 18.4497 9.77829" stroke="#252627" strokeWidth="1.5" strokeLinecap="round" />
-                        <path d="M4.00655 7.93309C3.93421 9.84122 4.41713 13.0817 7.6677 16.3323C8.45191 17.1165 9.23553 17.7396 10 18.2327M5.53781 4.93723C6.93076 3.54428 9.15317 3.73144 10.0376 5.31617L10.6866 6.4791C11.2723 7.52858 11.0372 8.90532 10.1147 9.8278C10.1147 9.8278 10.1147 9.8278 10.1147 9.8278C10.1146 9.82792 8.99588 10.9468 11.0245 12.9755C13.0525 15.0035 14.1714 13.8861 14.1722 13.8853C14.1722 13.8853 14.1722 13.8853 14.1722 13.8853C15.0947 12.9628 16.4714 12.7277 17.5209 13.3134L18.6838 13.9624C20.2686 14.8468 20.4557 17.0692 19.0628 18.4622C18.2258 19.2992 17.2004 19.9505 16.0669 19.9934C15.2529 20.0243 14.1963 19.9541 13 19.6111" stroke="#252627" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                      <span>{office.phone}</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <h2 className="ct-label"><span>Our offices</span></h2>
+            <div className="ct-offices">
+              {offices.map((office) => (
+                <OfficeCard key={office.city} office={office} />
+              ))}
+            </div>
+          </div>
+
+          {/* Right: sticky form */}
+          <div className="ct-form-col">
+            <ContactForm />
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── Connect Instantly ── */}
       {(whatsappUrl || callHref) && (
         <ConnectInstantly whatsappUrl={whatsappUrl} callHref={callHref} />
       )}
-
-      <ImageReveal
-        src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1600&q=70"
-        alt=""
-        direction="up"
-        parallax
-        parallaxAmount={40}
-        zoom={false}
-        style={{ width: "100%", height: "clamp(280px, 35vh, 420px)" }}
-      />
     </div>
   );
-} 
+}
