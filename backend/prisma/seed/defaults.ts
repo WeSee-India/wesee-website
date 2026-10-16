@@ -21,8 +21,8 @@ export const pageSeo: Record<string, { seoTitle: string; seoDescription: string 
     seoDescription: "Explore 50+ WeSee services: AI agents and voice bots, workflow automation, performance marketing, SEO, web and e-commerce development, CRM, analytics and more.",
   },
   "case-studies": {
-    seoTitle: "Case Studies — AI Agents, Automation & Software Results | WeSee",
-    seoDescription: "How WeSee has used AI agents, workflow automation and custom software to take work off client teams: the problem, what we built, and measured results.",
+    seoTitle: "Case Studies | WeSee: AI Agents, Automation & Custom Software",
+    seoDescription: "See what WeSee has built: AI finance tools, cloud platforms, trading products and brand sites for clients in Japan and beyond.",
   },
   projects: {
     seoTitle: "Projects — AI Agents, Automations & Apps We Have Built | WeSee",
@@ -226,14 +226,19 @@ export const sectionDefaults: Record<string, Record<string, Record<string, unkno
   "case-studies": {
     header: {
       eyebrow: "Case studies",
-      heading: "Real projects, measured results.",
-      body: "How we have used AI agents, workflow automation and custom software to take work off our clients' teams: the problem, what we built, and what changed.",
+      heading: "Work we've built",
+      body: "Every project starts with friction. It might be a finance team matching bank lines by hand, a platform nobody can explain to the board, or a brand that needs to win trust in a second language. We find where the work gets stuck, then we build the system that fixes it. Here are five of them.",
+      subline: "Engineering in Mumbai. Operations across Japan and India. We build for founders who want working software, not slide decks.",
     },
     empty: {
       title: "Our first case studies are on the way.",
       body: "We are writing them up with our clients' approval, with real numbers and how they were measured. Until then, we are happy to walk you through relevant work on a call.",
     },
-    next: { heading: "Want something similar?" },
+    next: {
+      heading: "More case studies",
+      footerLine: "WeSee the Friction. We Engineer the Flow.",
+      footerEmail: "support@weseegpt.com",
+    },
   },
   services: {
     ring: { heading: "We are *WeSee.*" },

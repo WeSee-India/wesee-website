@@ -2451,6 +2451,180 @@ body {
 
 .cs-next .coming-soon-actions { margin-top: 8px; }
 
+/* Case studies: handoff template (index sub-line, card extras, meta strip, sidebar, CTA band) */
+.collection-head > p.collection-subline {
+  margin-top: 14px;
+  font-size: 14.5px;
+  color: rgba(17, 19, 23, 0.45);
+}
+
+.cs-card-placeholder {
+  padding: 0 24px;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 450;
+  letter-spacing: -0.03em;
+  text-align: center;
+  color: rgba(17, 19, 23, 0.35);
+}
+
+.cs-card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(17, 19, 23, 0.08);
+}
+
+.cs-card-facts dt,
+.cs-meta dt,
+.cs-aside dt {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(17, 19, 23, 0.45);
+}
+
+.cs-card-facts dd {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.cs-headline { max-width: 22ch; }
+
+.cs-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px 32px;
+  margin: 0;
+  padding: 24px 0;
+  border-top: 1px solid rgba(17, 19, 23, 0.08);
+  border-bottom: 1px solid rgba(17, 19, 23, 0.08);
+}
+
+.cs-meta dd,
+.cs-aside dd {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.cs-tech { margin-top: 20px; }
+
+.cs-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 64px;
+  margin-top: clamp(48px, 6vw, 80px);
+}
+
+.cs-aside { display: none; }
+
+@media (min-width: 1024px) {
+  .cs-layout { grid-template-columns: minmax(0, 1fr) 280px; }
+
+  .cs-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: sticky;
+    top: 110px;
+    align-self: start;
+    padding: 24px;
+    border: 1px solid rgba(17, 19, 23, 0.07);
+    border-radius: 20px;
+    background: #fff;
+  }
+
+  .cs-aside dl { display: grid; gap: 16px; margin: 0; }
+  .cs-aside .cs-btn { justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .cs-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.cs-points { padding-left: 20px; list-style: disc; }
+.cs-points li + li { margin-top: 10px; }
+.cs-points li::marker { color: var(--accent-ink); }
+.cs-points strong { font-weight: 600; color: var(--ink); }
+.cs-points--numbered { padding-left: 24px; list-style: decimal; }
+.cs-points--numbered li::marker { color: var(--accent-ink); font-weight: 600; }
+
+.cs-built-intro { font-size: 18px !important; color: var(--ink) !important; }
+
+.cs-built { margin-top: 26px; padding-left: 20px; border-left: 2px solid rgba(201, 168, 76, 0.55); }
+
+.cs-built h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.cs-cta {
+  margin-top: clamp(64px, 8vw, 112px);
+  padding: clamp(56px, 7vw, 96px) 0;
+  background: var(--ink);
+  color: #fff;
+}
+
+.cs-cta h2 {
+  margin: 0;
+  color: #fff;
+  max-width: 24ch;
+  font-size: clamp(28px, 3.4vw, 48px);
+  font-weight: 450;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.cs-cta p {
+  margin: 18px 0 0;
+  max-width: 56ch;
+  font-size: 17px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.cs-cta .cs-btn { margin-top: 32px; }
+.cs-btn--light { background: #fff; border-color: #fff; color: var(--ink); }
+.cs-btn--light:hover { background: var(--accent); border-color: var(--accent); }
+
+.cs-more { margin-top: clamp(64px, 8vw, 112px); }
+
+.cs-more-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.cs-more-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.cs-more-all { font-size: 14px; font-weight: 500; border-bottom: 1px solid rgba(17, 19, 23, 0.25); }
+
+.cs-signoff {
+  margin-top: clamp(48px, 6vw, 72px);
+  padding-top: 24px;
+  border-top: 1px solid rgba(17, 19, 23, 0.08);
+  font-size: 13.5px;
+  color: rgba(17, 19, 23, 0.55);
+}
+
+.cs-signoff a { color: var(--ink); border-bottom: 1px solid rgba(17, 19, 23, 0.25); }
+
 /* ── Projects: editorial deck of landscape sheets ── */
 .deck-page {
   background: #E9E4DF;

@@ -35,6 +35,38 @@ export type TeamMember = Meta & {
   twitter: string | null;
 };
 
+/** A paragraph or list item with an optional bold lead-in. */
+export type Point = { lead: string | null; text: string };
+
+export type CaseStudy = Meta & {
+  title: string;
+  category: string;
+  tags: string[];
+  summary: string;
+  image: { src: string; alt: string; caption?: string | null } | null;
+  headline: string;
+  lede: string;
+  client: string;
+  sector: string;
+  region: string | null;
+  service: string;
+  timeframe: string | null;
+  team: string | null;
+  tech: string[];
+  overview: string[];
+  challenge: Point[];
+  solution: Point[];
+  features: Point[];
+  delivery: Point[];
+  results: { value: string; metric: string; period: string | null; method: string | null; note: string | null }[];
+  quote: { text: string; name: string; role: string | null; company: string | null } | null;
+  cta: { heading: string; body: string | null; buttonLabel: string; buttonUrl: string } | null;
+  serviceSlug: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogImage: string | null;
+};
+
 export type Author = Meta & { name: string; role: string | null; avatar: string | null; bio: string | null };
 
 export type Collections = {
@@ -43,8 +75,8 @@ export type Collections = {
   teamMembers: TeamMember[];
   authors: Author[];
   // Typed as they are wired into pages.
+  caseStudies: CaseStudy[];
   projects: (Meta & Record<string, unknown>)[];
-  caseStudies: (Meta & Record<string, unknown>)[];
   blogPosts: (Meta & Record<string, unknown>)[];
   serviceCategories: (Meta & Record<string, unknown>)[];
 };

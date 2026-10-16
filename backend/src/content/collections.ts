@@ -37,8 +37,17 @@ export interface CollectionDef {
   adminOnly?: boolean;
 }
 
+/** Filter tabs on /case-studies, in display order. */
+export const CASE_STUDY_TABS = ["AI & Automation", "Platforms & Cloud", "Fintech", "Web & Brand"] as const;
+
+/** A paragraph or list item with an optional bold lead-in. */
+const pointFields: FieldDef[] = [
+  text("lead", "Lead-in", { maxLength: 200, help: "Optional bold opening, e.g. “Messy payments.”" }),
+  longText("text", "Text", { required: true, maxLength: 2000 }),
+];
+
 const seoFields: FieldDef[] = [
-  text("seoTitle", "SEO title", { maxLength: 70, help: "Shown in search results and browser tabs. Defaults to the title." }),
+  text("seoTitle", "SEO title", { maxLength: 90, help: "Shown in search results and browser tabs. Defaults to the title." }),
   longText("seoDescription", "SEO description", { maxLength: 200, help: "Shown under the title in search results. Defaults to the summary." }),
   image("ogImage", "Social sharing image", { help: "1200×630 works best. Defaults to the cover image or the site default." }),
 ];
@@ -88,42 +97,64 @@ export const collections: CollectionDef[] = [
     model: "caseStudy",
     label: "Case studies",
     singular: "Case study",
-    description: "Full write-ups at /case-studies/<slug>. Only approved, substantiated stories.",
-    titleField: "client",
-    subtitleField: "sector",
+    description:
+      "Full write-ups at /case-studies/<slug>, all on one template. Only approved, substantiated stories: anything in [SQUARE BRACKETS] is a placeholder, and a case study can't be published while it has one.",
+    titleField: "title",
+    subtitleField: "category",
     publishable: true,
-    slugFrom: "client",
+    slugFrom: "title",
     ordering: "manual",
-    listColumns: ["service"],
+    listColumns: ["category", "client"],
     publicPath: (i) => `/case-studies/${i.slug}`,
     fields: [
-      text("client", "Client", { required: true, maxLength: 120, help: "Client name (with permission) or an anonymised descriptor." }),
-      text("sector", "Sector", { required: true, maxLength: 120, width: "half" }),
-      select("service", "Service", CORE_SERVICES, { required: true, width: "half" }),
-      text("serviceSlug", "Related service slug", { maxLength: 120, help: "Used for the related-service link and to preselect the booking form.", width: "half" }),
-      text("timeframe", "Timeframe", { maxLength: 80, width: "half" }),
-      longText("summary", "Summary", { required: true, maxLength: 400, help: "One sentence for cards and the page description." }),
-      strings("challenge", "Challenge", { itemLabel: "Paragraph", maxLength: 2000 }),
-      strings("solution", "Solution", { itemLabel: "Paragraph", maxLength: 2000 }),
-      strings("implementation", "Implementation", { itemLabel: "Paragraph", maxLength: 2000 }),
+      // Index card
+      text("title", "Card title", { required: true, maxLength: 80, help: "Also the page's short name, e.g. “Reconciliation AI”." }),
+      select("category", "Filter tab", CASE_STUDY_TABS, { required: true, width: "half" }),
+      strings("tags", "Card tags", { itemLabel: "Tag", maxLength: 40, maxItems: 3 }),
+      longText("summary", "Card summary", { required: true, maxLength: 300, help: "One or two sentences on the index card." }),
+      imageWithAlt("image", "Image", { help: "16:10 works best on the card. Also the page's hero image." }),
+      // Hero
+      text("headline", "H1", { required: true, maxLength: 160 }),
+      longText("lede", "One-line summary", { required: true, maxLength: 400 }),
+      // Meta strip
+      text("client", "Client", { required: true, maxLength: 160, help: "Name only with permission, otherwise an anonymous descriptor.", width: "half" }),
+      text("sector", "Industry", { required: true, maxLength: 120, width: "half" }),
+      text("region", "Region", { maxLength: 160, width: "half" }),
+      text("service", "Service", { required: true, maxLength: 160, width: "half" }),
+      text("timeframe", "Timeline", { maxLength: 120, width: "half" }),
+      text("team", "Team", { maxLength: 120, width: "half" }),
+      strings("tech", "Tech & integrations", { itemLabel: "Chip", maxLength: 120, help: "Shown as small tags under the hero." }),
+      // Body
+      strings("overview", "Client overview", { itemLabel: "Paragraph", maxLength: 2000 }),
+      list("challenge", "The challenge", pointFields, { itemLabel: "Point", titleField: "lead" }),
+      list("solution", "What we built", pointFields, { itemLabel: "Paragraph", titleField: "lead", help: "Each lead-in shows as a sub-heading. Leave it empty for an intro paragraph." }),
+      list("features", "Key features", pointFields, { itemLabel: "Feature", titleField: "lead" }),
+      list("delivery", "How we delivered it", pointFields, { itemLabel: "Step", titleField: "lead" }),
       list(
         "results",
         "Results",
         [
-          text("metric", "Metric", { required: true, maxLength: 120, width: "half" }),
-          text("value", "Value", { required: true, maxLength: 80, help: "e.g. “4 hours → 2 minutes”.", width: "half" }),
+          text("value", "Number", { required: true, maxLength: 80, help: "e.g. “82%” or “6 days → 2 days”.", width: "half" }),
+          text("metric", "Label", { required: true, maxLength: 160, width: "half" }),
           text("period", "Period", { maxLength: 120, width: "half" }),
           text("method", "How it was measured", { maxLength: 200, width: "half" }),
           select("note", "Note", ["Estimate", "Client-reported"]),
         ],
-        { itemLabel: "Result", titleField: "metric" },
+        { itemLabel: "Result", titleField: "metric", help: "Shown as stat cards. Only add confirmed numbers; the block is hidden while it's empty." },
       ),
-      object("quote", "Client quote", [
+      object("quote", "Testimonial", [
         longText("text", "Quote", { required: true, maxLength: 600 }),
         text("name", "Name", { required: true, maxLength: 120, width: "half" }),
-        text("role", "Role", { maxLength: 120, width: "half" }),
-      ], { help: "Approved quotes only." }),
-      imageWithAlt("image", "Image", { caption: true }),
+        text("role", "Title", { maxLength: 120, width: "half" }),
+        text("company", "Company", { maxLength: 160 }),
+      ], { help: "Approved quotes only. Leave empty to hide the block." }),
+      object("cta", "Call to action", [
+        text("heading", "Heading", { required: true, maxLength: 160 }),
+        longText("body", "Text", { maxLength: 400 }),
+        text("buttonLabel", "Button label", { required: true, maxLength: 60, width: "half" }),
+        text("buttonUrl", "Button link", { required: true, maxLength: 300, help: "UTM tags for this case study are added automatically.", width: "half" }),
+      ]),
+      text("serviceSlug", "Related service slug", { maxLength: 120, help: "Optional. Links the case study to a service page." }),
       ...seoFields,
     ],
   },

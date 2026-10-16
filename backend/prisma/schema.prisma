@@ -156,18 +156,33 @@ model CaseStudy {
   createdById String?
   updatedById String?
 
-  client         String
-  sector         String
-  service        String
-  serviceSlug    String?
-  timeframe      String?
-  summary        String
-  challenge      String[]
-  solution       String[]
-  implementation String[]
-  results        Json     @default("[]")
-  quote          Json?
-  image          Json?
+  // Index card
+  title    String   @default("")
+  category String   @default("")
+  tags     String[]
+  summary  String
+  image    Json?
+  // Hero and meta strip
+  headline  String   @default("")
+  lede      String   @default("")
+  client    String
+  sector    String
+  region    String?
+  service   String
+  timeframe String?
+  team      String?
+  tech      String[]
+  // Body
+  overview    String[]
+  challenge   Json     @default("[]")
+  solution    Json     @default("[]")
+  features    Json     @default("[]")
+  delivery    Json     @default("[]")
+  results     Json     @default("[]")
+  quote       Json?
+  cta         Json?
+  serviceSlug String?
+
   seoTitle       String?
   seoDescription String?
   ogImage        String?

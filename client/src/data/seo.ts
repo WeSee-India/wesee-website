@@ -1,7 +1,11 @@
 import { services } from "./services";
 import { serviceDefinitions } from "./serviceDefinitions";
-import { caseStudies } from "./caseStudies";
+import content from "../generated/content.json";
+import type { CaseStudy } from "../content/types";
 import { projects } from "./projects";
+
+/** Published case studies from the CMS snapshot the build bundles (scripts/fetch-content.mjs). */
+const caseStudies = ((content as { collections: { caseStudies?: CaseStudy[] } }).collections.caseStudies ?? []) as CaseStudy[];
 
 export const SITE_URL = "https://www.weseegpt.com";
 export const SITE_NAME = "WeSee";
@@ -29,9 +33,9 @@ const pages: Record<string, Omit<RouteMeta, "path">> = {
       "Explore 50+ WeSee services: AI agents and voice bots, workflow automation, performance marketing, SEO, web and e-commerce development, CRM, analytics and more.",
   },
   "/case-studies": {
-    title: "Case Studies — AI Agents, Automation & Software Results | WeSee",
+    title: "Case Studies | WeSee: AI Agents, Automation & Custom Software",
     description:
-      "How WeSee has used AI agents, workflow automation and custom software to take work off client teams: the problem, what we built, and measured results.",
+      "See what WeSee has built: AI finance tools, cloud platforms, trading products and brand sites for clients in Japan and beyond.",
   },
   "/projects": {
     title: "Projects — AI Agents, Automations & Apps We Have Built | WeSee",
@@ -130,9 +134,9 @@ export function getRouteMeta(rawPath: string): RouteMeta {
     const cs = caseStudies.find((c) => c.slug === caseMatch[1]);
     if (cs) {
       return {
-        title: `${cs.client} — ${cs.service} Case Study | WeSee`,
-        description: truncate(cs.summary),
-        image: cs.image?.src,
+        title: cs.seoTitle || `${cs.title} | WeSee Case Study`,
+        description: truncate(cs.seoDescription || cs.summary),
+        image: cs.ogImage || cs.image?.src,
         path,
       };
     }
@@ -189,7 +193,7 @@ export function getBreadcrumbs(rawPath: string): Crumb[] | null {
   const caseMatch = path.match(/^\/case-studies\/([^/]+)$/);
   if (caseMatch) {
     const cs = caseStudies.find((c) => c.slug === caseMatch[1]);
-    if (cs) return [home, { name: "Case Studies", path: "/case-studies" }, { name: cs.client, path }];
+    if (cs) return [home, { name: "Case Studies", path: "/case-studies" }, { name: cs.title, path }];
   }
 
   const blogMatch = path.match(/^\/blog\/([^/]+)$/);

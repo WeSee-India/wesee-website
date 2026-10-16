@@ -1,4 +1,5 @@
-import type { CoreService } from "./caseStudies";
+/** The three core services, in the order and wording used site-wide. */
+export type CoreService = "AI Agents" | "AI Workflow Automation" | "Custom Software & Integrations";
 
 /**
  * Projects portfolio, shown at /projects. A lighter gallery than case studies:
@@ -33,7 +34,7 @@ export interface Project {
   /** Short capability tags. */
   tags: string[];
   image?: { src: string; alt: string };
-  /** Slug of a matching entry in caseStudies.ts, when a full write-up exists. */
+  /** Slug of a published case study in the CMS, when a full write-up exists. */
   caseStudySlug?: string;
   /** Public live URL, only if the client is happy for it to be linked. */
   url?: string;

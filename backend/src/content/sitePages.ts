@@ -97,9 +97,18 @@ export const siteSectionTypes: SectionTypeDef[] = [
   { type: "projects.empty", label: "Coming-soon panel", description: "Shown while no projects are published.", fields: [text("title", "Title", { maxLength: 120 }), longText("body", "Text", { maxLength: 500 })] },
 
   // Case studies
-  { type: "caseStudies.header", label: "Header", fields: [text("eyebrow", "Eyebrow", { maxLength: 60 }), heading("heading", "Heading", true), longText("body", "Text", { maxLength: 500 })] },
+  { type: "caseStudies.header", label: "Header", fields: [text("eyebrow", "Eyebrow", { maxLength: 60 }), heading("heading", "Heading", true), longText("body", "Intro", { maxLength: 800 }), longText("subline", "Sub-line", { maxLength: 300 })] },
   { type: "caseStudies.empty", label: "Coming-soon panel", description: "Shown while no case studies are published.", fields: [text("title", "Title", { maxLength: 120 }), longText("body", "Text", { maxLength: 500 })] },
-  { type: "caseStudies.next", label: "Closing prompt", description: "Shown at the end of each case study.", fields: [heading("heading", "Heading", true)] },
+  {
+    type: "caseStudies.next",
+    label: "Case study page",
+    description: "Shared parts of every case study page.",
+    fields: [
+      heading("heading", "“More case studies” heading", true),
+      text("footerLine", "Footer line", { maxLength: 160 }),
+      text("footerEmail", "Footer email", { maxLength: 120 }),
+    ],
+  },
 
   // Services
   { type: "services.ring", label: "Ring heading", fields: [heading("heading", "Heading", true)] },
@@ -206,7 +215,7 @@ export const sitePages: SystemPageDef[] = [
     path: "/case-studies",
     title: "Case studies",
     description: "The case study index and detail template.",
-    sections: [s("header", "caseStudies.header", "Header"), s("empty", "caseStudies.empty", "Coming-soon panel"), s("next", "caseStudies.next", "Closing prompt")],
+    sections: [s("header", "caseStudies.header", "Header"), s("empty", "caseStudies.empty", "Coming-soon panel"), s("next", "caseStudies.next", "Case study page")],
   },
   { key: "services", path: "/services", title: "Services", description: "The service catalogue and service page template.", sections: [s("ring", "services.ring", "Ring heading"), s("detail", "services.detail", "Service page template")] },
   {
