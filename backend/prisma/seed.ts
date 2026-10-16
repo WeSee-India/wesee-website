@@ -13,6 +13,7 @@ import { objectSchema } from "../src/content/fields.js";
 import { systemPages } from "../src/content/pages.js";
 import { settings } from "../src/content/settings.js";
 import { blogSeo, pageSeo, sectionDefaults, settingDefaults } from "./seed/defaults.js";
+import { caseStudies } from "./seed/caseStudies.js";
 import extracted from "./seed/extracted.json" with { type: "json" };
 
 const prisma = new PrismaClient();
@@ -39,7 +40,11 @@ const byKey = (key: string) => collections.find((c) => c.key === key)!;
 type Delegate = { count(): Promise<number>; create(args: unknown): Promise<unknown>; deleteMany(): Promise<unknown> };
 const model = (def: CollectionDef) => (prisma as unknown as Record<string, Delegate>)[def.model];
 
-async function seedCollection(key: string, items: Array<{ slug?: string; values: Record<string, unknown>; publishedAt?: Date; extra?: Record<string, unknown> }>) {
+async function seedCollection(
+  key: string,
+  items: Array<{ slug?: string; values: Record<string, unknown>; publishedAt?: Date; extra?: Record<string, unknown> }>,
+  opts: { draft?: boolean } = {},
+) {
   const def = byKey(key);
   const m = model(def);
   // Validate everything first so a bad record can't leave the table half-filled.
@@ -52,8 +57,8 @@ async function seedCollection(key: string, items: Array<{ slug?: string; values:
         ...(item.slug ? { slug: item.slug } : {}),
         ...item.data,
         ...item.extra,
-        status: "PUBLISHED",
-        publishedAt: item.publishedAt ?? new Date(),
+        status: opts.draft ? "DRAFT" : "PUBLISHED",
+        publishedAt: opts.draft ? null : (item.publishedAt ?? new Date()),
         sortOrder: i,
       },
     });
@@ -132,8 +137,8 @@ async function main() {
     }),
   );
 
-  // Case studies: the original list is empty (none approved yet), so there is nothing to seed.
-  if (reset) await prisma.caseStudy.deleteMany();
+  // Case studies from the developer handoff. They still contain [PLACEHOLDERS] to confirm, so they start as drafts.
+  await seedCollection("caseStudies", caseStudies, { draft: true });
 
   // Authors before articles.
   let authorId: string | undefined;

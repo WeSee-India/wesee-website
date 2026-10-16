@@ -234,3 +234,53 @@ describe("collections: projects, ordering and caching", () => {
     for (const a of ["auth.login", "page.publish", "content.create", "content.publish", "content.unpublish", "settings.update"]) expect(actions).toContain(a);
   });
 });
+
+describe("case studies: handoff placeholders", () => {
+  it("seeds the five handoff case studies as drafts, hidden from the public site", async () => {
+    const list = (await owner.get("/api/admin/collections/caseStudies")).body.items as Array<{ status: string; values: { slug: string } }>;
+    expect(list.map((i) => i.values.slug)).toEqual(["reconciliation-ai", "cloudops-console", "jmarkets", "twenty-cents", "nagamori"]);
+    expect(list.every((i) => i.status === "DRAFT")).toBe(true);
+    expect((await pub("/collections/caseStudies")).body).toEqual([]);
+  });
+
+  it("refuses to publish while a [PLACEHOLDER] is left, and publishes once they are filled", async () => {
+    const list = (await owner.get("/api/admin/collections/caseStudies")).body.items as Array<{ id: string; values: Record<string, unknown> }>;
+    const item = list.find((i) => i.values.slug === "nagamori")!;
+
+    const blocked = await owner.post(`/api/admin/collections/caseStudies/${item.id}/publish`, {});
+    expect(blocked.status).toBe(400);
+    expect(blocked.body.error).toMatch(/Replace the \[PLACEHOLDERS\] in .*Timeline.*Testimonial/);
+    expect(blocked.body.fields).toHaveProperty("results");
+
+    const strip = (v: unknown): unknown =>
+      typeof v === "string" ? v.replace(/\s*\[[A-Z][^\]]*\]/g, "").trim() : Array.isArray(v) ? v.map(strip) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, strip(x)])) : v;
+    const stripped = strip(item.values) as Record<string, unknown>;
+    const values = {
+      ...stripped,
+      // A step that was only a placeholder is removed, as an editor would.
+      delivery: (stripped.delivery as Array<{ text: string }>).filter((p) => p.text),
+      timeframe: "8 weeks",
+      team: "2 engineers + 1 designer",
+      results: [],
+      quote: null,
+      tech: ["Hosted on Vercel", "Booking via LINE"],
+      cta: { ...(item.values.cta as object), buttonUrl: "https://cal.com/wesee/30min" },
+    };
+    const saved = await owner.put(`/api/admin/collections/caseStudies/${item.id}`, values);
+    expect(saved.body.error ?? null).toBeNull();
+
+    const published = await owner.post(`/api/admin/collections/caseStudies/${item.id}/publish`, {});
+    expect(published.status).toBe(200);
+    const live = (await pub("/collections/caseStudies/nagamori")).body;
+    expect(live.headline).toBe("Nagamori: turning expertise into trust, and trust into bookings");
+    expect(JSON.stringify(live)).not.toMatch(/\[[A-Z]{2,}/);
+  });
+
+  it("does not flag ordinary markdown links as placeholders", async () => {
+    const posts = (await owner.get("/api/admin/collections/blogPosts")).body.items as Array<{ id: string; values: Record<string, unknown> }>;
+    const post = posts[0];
+    const body = `${post.values.body}\n\nSee [our services](/services).`;
+    expect((await owner.put(`/api/admin/collections/blogPosts/${post.id}`, { ...post.values, body })).status).toBe(200);
+    expect((await owner.post(`/api/admin/collections/blogPosts/${post.id}/publish`, {})).status).toBe(200);
+  });
+});

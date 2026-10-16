@@ -3,7 +3,7 @@ import { prisma } from "../db.js";
 import { snapshot } from "../lib/audit.js";
 import { badRequest, conflict, notFound } from "../lib/errors.js";
 import { getCollection, type CollectionDef } from "./collections.js";
-import { objectSchema, type FieldDef } from "./fields.js";
+import { collectStrings, objectSchema, type FieldDef } from "./fields.js";
 import { zodFields } from "../lib/errors.js";
 
 /**
@@ -215,11 +215,29 @@ export async function saveItem(def: CollectionDef, id: string, input: unknown, u
   return { row: updated, live: !def.publishable };
 }
 
+/**
+ * Content handoffs mark unconfirmed facts like "[REGION: confirm …]" or "[CLIENT QUOTE: to be collected]".
+ * Two or more capitals after the bracket, then ":" "," or "]", so markdown links like [Read more](…) don't match.
+ */
+const PLACEHOLDER = /\[[A-Z]{2,}[A-Z0-9 /&-]*(?:[:,][^\]]*)?\]/;
+
+/** Labels of the fields that still contain a placeholder. */
+export function placeholderFields(def: CollectionDef, values: Record<string, unknown>) {
+  return def.fields.filter((f) => collectStrings(values[f.name]).some((s) => PLACEHOLDER.test(s)));
+}
+
 export async function publishItem(def: CollectionDef, id: string, userId: string, publishAt?: Date | null) {
   if (!def.publishable) throw badRequest(`${def.label} are always live.`);
   const row = await getRow(def, id);
   // Re-validate: referenced items or uniqueness may have changed since the edits were saved.
   const values = await validateValues(def, workingValues(def, row), id);
+  const pending = placeholderFields(def, values);
+  if (pending.length) {
+    throw badRequest(
+      `Replace the [PLACEHOLDERS] in ${pending.map((f) => f.label).join(", ")} before publishing.`,
+      Object.fromEntries(pending.map((f) => [f.name, "Still has a [PLACEHOLDER]. Fill it in, or remove it."])),
+    );
+  }
   const publishedAt = publishAt ?? (row.status === "PUBLISHED" && row.publishedAt ? row.publishedAt : new Date());
   const updated = await delegate(def).update({
     where: { id },
