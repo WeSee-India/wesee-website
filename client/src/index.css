@@ -5843,6 +5843,14 @@ body {
 }
 
 /* ── Case studies: light palette (paper, white, gold; no black UI blocks) ── */
+/* Filter tabs sit directly on the page, no container */
+.csx-band {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
 .csx-band button { color: var(--ink-50); }
 .csx-band button:hover { color: var(--ink); border-color: var(--ink-12); }
 .csx-band button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
