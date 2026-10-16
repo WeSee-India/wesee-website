@@ -6,7 +6,7 @@
     "watchPatterns": ["backend/**", "pnpm-lock.yaml", "package.json", "pnpm-workspace.yaml"]
   },
   "deploy": {
-    "preDeployCommand": ["pnpm --filter @wesee/backend db:deploy"],
+    "preDeployCommand": ["pnpm --filter @wesee/backend db:deploy && pnpm --filter @wesee/backend db:seed"],
     "startCommand": "pnpm --filter @wesee/backend start",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 120,
