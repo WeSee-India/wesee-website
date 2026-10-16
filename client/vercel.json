@@ -1,9 +1,8 @@
 {
-  "buildCommand": "vite build",
-  "outputDirectory": "dist/public",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/contact", "destination": "/api/contact" },
     { "source": "/landing", "destination": "/landing/index.html" },
     { "source": "/privacy", "destination": "/landing/privacy.html" },
     { "source": "/terms", "destination": "/landing/terms.html" },
