@@ -66,13 +66,26 @@ function applyPreview(base: ContentSnapshot, preview: PreviewResponse): ContentS
 
 let started = false;
 
-/** Fetch the live snapshot (and a draft preview, if requested). Call once at startup. */
+/**
+ * Fetch the live snapshot (and a draft preview, if requested) at startup, and again when the tab
+ * comes back into view, so an edit published in another tab shows without a manual reload.
+ */
 export function startContentSync() {
   if (started || typeof window === "undefined") return;
   started = true;
+  sync();
+  let last = Date.now();
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible" || Date.now() - last < 5_000) return;
+    last = Date.now();
+    sync();
+  });
+}
+
+function sync() {
   const token = new URLSearchParams(window.location.search).get("preview");
 
-  // no-cache = revalidate every load (a cheap 304 via ETag), so a publish shows on the next refresh.
+  // no-cache = revalidate every time (a cheap 304 via ETag), so a publish shows straight away.
   const live = fetch(`${API}/api/public/snapshot`, { cache: "no-cache", headers: { Accept: "application/json" } })
     .then((r) => (r.ok ? (r.json() as Promise<ContentSnapshot & { collections: { services?: unknown } }>) : null))
     .catch(() => null);
