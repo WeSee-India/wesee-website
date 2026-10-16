@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { z } from "zod";
+import { config } from "./config.js";
 
 export interface ContactPayload {
   name: string;
@@ -76,11 +77,12 @@ function sanitizeHeader(value: string): string {
 }
 
 export async function sendContactEmail(payload: ContactPayload) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  if (!config.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not set, so contact emails can't be sent.");
+  const resend = new Resend(config.RESEND_API_KEY);
   const { name, email, company, service, message, phone, consentNonMarketing, consentMarketing } = payload;
 
-  const toAddress = process.env.CONTACT_TO || "harsh.khanna@weseegpt.com";
-  const fromAddress = process.env.RESEND_FROM || "WeSee Contact Form <onboarding@resend.dev>";
+  const toAddress = config.CONTACT_TO;
+  const fromAddress = config.RESEND_FROM;
 
   const eName = escapeHtml(name);
   const eEmail = escapeHtml(email);
@@ -89,7 +91,7 @@ export async function sendContactEmail(payload: ContactPayload) {
   const ePhone = phone ? escapeHtml(phone) : "";
   const eMessage = escapeHtml(message);
 
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: fromAddress,
     to: toAddress,
     replyTo: sanitizeHeader(`${name} <${email}>`),
@@ -146,4 +148,5 @@ export async function sendContactEmail(payload: ContactPayload) {
     `,
     text: `New contact form submission\n\nName: ${name}\nEmail: ${email}${company ? `\nCompany: ${company}` : ""}${service ? `\nService: ${service}` : ""}${phone ? `\nPhone: ${phone}` : ""}${consentNonMarketing !== undefined ? `\nNon-marketing SMS: ${consentNonMarketing ? "Yes" : "No"}` : ""}${consentMarketing !== undefined ? `\nMarketing SMS: ${consentMarketing ? "Yes" : "No"}` : ""}\n\nMessage:\n${message}`,
   });
+  if (error) throw new Error(`Resend rejected the email: ${error.message}`);
 }
