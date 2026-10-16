@@ -31,11 +31,6 @@ export default function CaseStudies() {
       <header className="csx-hero">
         <div className="container csx-hero-inner">
           <h1>{header?.heading ?? "Case studies"}</h1>
-          <nav aria-label="Breadcrumb" className="csx-crumbs">
-            <Link href="/">Home</Link>
-            <span aria-hidden="true">→</span>
-            <span aria-current="page">{header?.eyebrow ?? "Case studies"}</span>
-          </nav>
           {header?.body && <p className="csx-intro">{header.body}</p>}
           {header?.subline && <p className="csx-subline">{header.subline}</p>}
         </div>

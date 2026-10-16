@@ -5053,23 +5053,6 @@ body {
   color: var(--ink);
 }
 
-.csx-crumbs {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 22px;
-  padding: 8px 20px;
-  border-radius: 999px;
-  background: var(--ink);
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.csx-crumbs a { color: #fff; }
-.csx-crumbs a:hover { color: var(--accent); }
-.csx-crumbs [aria-current] { color: var(--accent); }
-
 .csx-intro {
   margin: 28px 0 0;
   max-width: 62ch;
@@ -5860,24 +5843,6 @@ body {
 }
 
 /* ── Case studies: light palette (paper, white, gold; no black UI blocks) ── */
-.csx-crumbs {
-  background: #fff;
-  box-shadow: 0 0 0 1px var(--ink-6), 0 18px 40px -30px rgba(17, 19, 23, 0.35);
-}
-
-/* Filter tabs sit directly on the page, no container */
-.csx-band {
-  padding: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.csx-crumbs { color: var(--ink-30); }
-.csx-crumbs a { color: var(--ink-80); }
-.csx-crumbs a:hover,
-.csx-crumbs [aria-current] { color: var(--accent-ink); }
-
 .csx-band button { color: var(--ink-50); }
 .csx-band button:hover { color: var(--ink); border-color: var(--ink-12); }
 .csx-band button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
