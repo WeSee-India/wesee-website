@@ -1,0 +1,18 @@
+# Local development database. `docker compose up -d db` then see README.md.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wesee
+      POSTGRES_PASSWORD: wesee
+      POSTGRES_DB: wesee
+    ports:
+      - "5435:5432"
+    volumes:
+      - wesee-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wesee"]
+      interval: 5s
+      retries: 10
+volumes:
+  wesee-db:

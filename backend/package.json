@@ -1,0 +1,50 @@
+{
+  "name": "@wesee/backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "user:create": "tsx --env-file-if-exists=.env scripts/create-user.ts"
+  },
+  "prisma": {
+    "seed": "tsx --env-file-if-exists=.env prisma/seed.ts"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "@prisma/client": "6.19.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "file-type": "^21.0.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.2",
+    "resend": "^6.9.4",
+    "sharp": "^0.34.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.7.0",
+    "@types/supertest": "^6.0.3",
+    "prisma": "6.19.3",
+    "supertest": "^7.1.4",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3",
+    "vitest": "^2.1.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
