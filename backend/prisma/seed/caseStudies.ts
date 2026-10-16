@@ -7,7 +7,8 @@
  * Content rules from the handoff: no metric, client name or quote here was
  * supplied by a client, so none are added. Reconciliation AI and CloudOps
  * Console clients stay anonymous. Images are added in the admin once the
- * clients approve publishing screenshots.
+ * clients approve publishing screenshots. JMarkets, Twenty Cents and Nagamori use the
+ * screenshots already published on /projects; the other two use illustrative site photos.
  */
 
 const p = (lead: string | null, text: string) => ({ lead, text });
@@ -22,7 +23,7 @@ export const caseStudies = [
       category: "AI & Automation",
       tags: ["Finance", "AI matching", "ERP integration"],
       summary: "An AI tool that matches ERP, bank and tax records, sends only the unclear items to a person, and logs every decision.",
-      image: null,
+      image: { src: "/services/analytics.jpg", alt: "Illustration of a rising financial chart over an office (not a product screenshot)" },
       headline: "Reconciliation AI: month-end close without the spreadsheet marathon",
       lede: "We built an AI matching tool that ties every sale to its payment and its tax receipt. It shows where the gap comes from and puts each decision on record.",
       client: "Distribution company (not named)",
@@ -110,7 +111,7 @@ export const caseStudies = [
       category: "Platforms & Cloud",
       tags: ["DevOps & SRE", "Cloud architecture", "Integrations"],
       summary: "One console that shows how a distribution platform is built, shipped, watched and secured, and where its data lives.",
-      image: null,
+      image: { src: "/services/datacenter.jpg", alt: "Illustration of a data centre server aisle (not a product screenshot)" },
       headline: "CloudOps Console: a platform you can explain to your board and run at 3 a.m.",
       lede: "We built the operations console behind a distribution platform. It covers releases, monitoring, incidents, security and data residency in one place.",
       client: "Distribution company (not named)",
@@ -233,7 +234,7 @@ export const caseStudies = [
       category: "Fintech",
       tags: ["Fintech", "Trading", "Japanese market"],
       summary: "A Japanese-language CFD trading platform that takes traders from sign-up to their first trade, with support and campaigns built in.",
-      image: null,
+      image: { src: "/projects/jmarkets.webp", alt: "JMarkets trading platform home screen" },
       headline: "JMarkets: a CFD trading platform built for Japanese-speaking traders",
       lede: "We built JMarkets' trading platform. It covers account opening, MT4/MT5 access, market content, campaigns and client support, all in Japanese.",
       client: "JMarkets [CONFIRM: permission to name]",
@@ -321,7 +322,7 @@ export const caseStudies = [
       category: "Web & Brand",
       tags: ["Creative studio", "Web", "Japan"],
       summary: "A website for a Japanese creative studio that sells video, design and development as one offer and explains how it works.",
-      image: null,
+      image: { src: "/projects/twentycents.webp", alt: "Twenty Cents studio website" },
       headline: "Twenty Cents: one site for a studio that does video, design and code",
       lede: "We built the website for Twenty Cents, a creative studio in Japan. It shows a wide service range as one offer and makes the next step obvious.",
       client: "Twenty Cents (20 Cents Inc.) [CONFIRM: permission to name]",
@@ -410,7 +411,7 @@ export const caseStudies = [
       category: "Web & Brand",
       tags: ["Beauty", "Booking", "Japan"],
       summary: "A brand site for an artmake specialist that builds trust with clear treatment pages and turns visitors into bookings.",
-      image: null,
+      image: { src: "/projects/nagamori.webp", alt: "Nagamori artmake beauty website" },
       headline: "Nagamori: turning expertise into trust, and trust into bookings",
       lede: "We built the website for Nagamori, a semi-permanent makeup (artmake) specialist. It explains each treatment clearly, shows the artist's credentials and makes booking easy.",
       client: "Nagamori [CONFIRM: permission to name]",

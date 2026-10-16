@@ -5858,3 +5858,74 @@ body {
   .cs2-panel--front { width: 66%; }
   .cs2-headline { font-size: 28px; }
 }
+
+/* ── Case studies: light palette (paper, white, gold; no black UI blocks) ── */
+.csx-crumbs,
+.csx-band {
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--ink-6), 0 18px 40px -30px rgba(17, 19, 23, 0.35);
+}
+
+.csx-crumbs { color: var(--ink-30); }
+.csx-crumbs a { color: var(--ink-80); }
+.csx-crumbs a:hover,
+.csx-crumbs [aria-current] { color: var(--accent-ink); }
+
+.csx-band button { color: var(--ink-50); }
+.csx-band button:hover { color: var(--ink); border-color: var(--ink-12); }
+.csx-band button[aria-pressed="true"] { background: var(--accent); color: var(--ink); }
+
+.csx-card-media { background: var(--paper-dark); }
+
+.csx-card-art,
+.cs2-art {
+  background:
+    radial-gradient(80% 90% at 85% 10%, rgba(201, 168, 76, 0.35), transparent 60%),
+    linear-gradient(140deg, #FBF8F1, #F1E9D6);
+  color: var(--ink);
+}
+
+.csx-card-art-icon,
+.cs2-art-icon { color: rgba(122, 95, 16, 0.45); }
+
+.csx-card-icon,
+.cs2-stat-icon {
+  background: rgba(201, 168, 76, 0.2);
+  color: var(--accent-ink);
+}
+
+/* Summary boxes alternate gold tint and white instead of black */
+.csx-card-box--dark { background: #F6F0E1; color: var(--ink-80); }
+
+.csx-btn,
+.cs2 .cs-btn--dark {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.csx-btn:hover,
+.cs2 .cs-btn--dark:hover { background: #B8963A; border-color: #B8963A; color: var(--ink); }
+
+.cs2-bubble {
+  background:
+    radial-gradient(circle at 30% 25%, #fff, transparent 60%),
+    #F3EAD4;
+  color: var(--ink);
+  box-shadow: 0 50px 80px -50px rgba(122, 95, 16, 0.45), inset 0 0 0 1px rgba(201, 168, 76, 0.35);
+}
+
+.cs2-bubble-icon { color: var(--accent-ink); }
+.cs2-bubble-label { color: var(--ink-50); }
+
+.cs2 .cs-cta {
+  background:
+    radial-gradient(60% 120% at 90% 0%, rgba(201, 168, 76, 0.28), transparent 60%),
+    #F6F0E1;
+  color: var(--ink);
+}
+
+.cs2 .cs-cta h2 { color: var(--ink); }
+.cs2 .cs-cta p { color: var(--ink-50); }
+.cs2 .cs-cta .cs-btn--light { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+.cs2 .cs-cta .cs-btn--light:hover { background: #B8963A; border-color: #B8963A; }
