@@ -1,5 +1,6 @@
 import { imgDims } from "@/data/imageSizes";
 import { useEffect } from "react";
+import { useCollection } from "@/content";
 import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import MagneticButton from "@/components/MagneticButton";
@@ -8,51 +9,23 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const directors = [
-  {
-    name: "Harsh Khanna",
-    title: "Founder & CEO",
-    bio: "Harsh founded WeSee in 2021 with the belief that AI automation should be accessible, measurable, and transformative. With a background in product engineering and growth marketing, he leads WeSee's strategic direction and client relationships.",
-    photo: "/client/harsh.webp",
-    linkedin: "https://www.linkedin.com/in/harshkhanna96/",
-  },
-  {
-    name: "Takeshi",
-    title: "Co Founder & Partner",
-    bio: "Takeshi is a passionate crypto and blockchain enthusiast who leads Japanese client management at WeSee, ensuring strong relationships, clear communication, and seamless collaboration. He understands how to align business vision with client expectations, especially in fast-moving and innovation-driven markets.",
-    photo: "/client/takeshi.webp",
-    twitter: "https://x.com/S7_SECTORSEVEN",
-  },
- 
-];
-
-const engineeringTeam = [
-  { name: "sanjeev vishwakarma", title: "Full Stack Developer", photo: "/services/sanjiv.webp" },
-  { name: "yuvraj khanna", title: "graphic team lead", photo: "/client/yuvraj.webp" },
-  { name: "deepak yadav", title: "full stack developer", photo: "/services/deepak.webp" },
-  { name: "pranav ", title: "UX Designer", photo: "/client/pranav.webp" },
-  { name: "virendra singh", title: "full stack developer", photo: "/client/virendra.jpg" },
-  { name: "mani bajpai", title: "blockchain developer", photo: "/client/manii.webp" },
- 
-  { name: "Shravani shinde", title: "ai developer", photo: "/client/shravani.webp" },
-  { name: "Anjali Singh", title: "ui/ux designer", photo: "/client/anjali.webp" },
-  { name: "suhani tiwari", title: "full stack developer", photo: "/client/suhani.jpg" },
-  
-];
-
-/** 2-2-1-2-2: outer pairs sit high, the middle photo sits low */
-const teamColumns = [
-  engineeringTeam.slice(0, 2),
-  engineeringTeam.slice(2, 4),
-  engineeringTeam.slice(4, 5),
-  engineeringTeam.slice(5, 7),
-  engineeringTeam.slice(7, 9),
-];
+/** 2-2-1-2-2 for nine people: outer columns sit high, the middle photo sits low. */
+function toColumns<T>(people: T[]): T[][] {
+  const middle = Math.max(1, Math.floor(people.length / 9));
+  const outer = people.length - middle;
+  const sizes = Array.from({ length: 4 }, (_, i) => Math.floor(outer / 4) + (i < outer % 4 ? 1 : 0));
+  sizes.splice(2, 0, Math.min(middle, people.length));
+  let start = 0;
+  return sizes.map((n) => people.slice(start, (start += n))).filter((col) => col.length > 0);
+}
 
 const WORDMARK = "FOUNDERS";
 
 export default function Team() {
   const reduceMotion = useReducedMotion();
+  const members = useCollection("teamMembers");
+  const directors = members.filter((m) => m.group === "Leadership");
+  const teamColumns = toColumns(members.filter((m) => m.group !== "Leadership"));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -117,9 +90,9 @@ export default function Team() {
         </div>
 
         {directors.map((d) => (
-          <article key={d.name} className="tm-bio gsap-reveal">
+          <article key={d.slug} className="tm-bio gsap-reveal">
             <div className="tm-bio-photo">
-              <img {...imgDims(d.photo)} src={d.photo} alt={d.name} loading="eager" decoding="async" />
+              {d.photo && <img {...imgDims(d.photo)} src={d.photo} alt={d.name} loading="eager" decoding="async" />}
             </div>
             <div className="tm-bio-head">
               <svg className="tm-bio-arrow" viewBox="0 0 24 24" aria-hidden>
@@ -130,16 +103,16 @@ export default function Team() {
                 <div className="tm-bio-role">{d.title}</div>
               </div>
             </div>
-            <p className="tm-bio-text">{d.bio}</p>
+            {d.bio && <p className="tm-bio-text">{d.bio}</p>}
             <div className="tm-bio-links">
-              {"linkedin" in d && d.linkedin ? (
+              {d.linkedin ? (
                 <a href={d.linkedin} target="_blank" rel="noopener noreferrer" className="tm-pill" aria-label={`${d.name} on LinkedIn`}>
                   <svg viewBox="0 0 24 24" aria-hidden>
                     <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z" />
                   </svg>
                 </a>
               ) : null}
-              {"twitter" in d && d.twitter ? (
+              {d.twitter ? (
                 <a href={d.twitter} target="_blank" rel="noopener noreferrer" className="tm-pill" aria-label={`${d.name} on X`}>
                   <svg viewBox="0 0 24 24" aria-hidden>
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -166,9 +139,9 @@ export default function Team() {
             {teamColumns.map((col, c) => (
               <li key={c} className="tm-grid-col">
                 {col.map((m) => (
-                  <figure key={m.photo} className="tm-member gsap-reveal">
+                  <figure key={m.slug} className="tm-member gsap-reveal">
                     <div className="tm-member-photo">
-                      <img {...imgDims(m.photo)} src={m.photo} alt={m.name.trim()} loading="lazy" decoding="async" />
+                      {m.photo && <img {...imgDims(m.photo)} src={m.photo} alt={m.name.trim()} loading="lazy" decoding="async" />}
                     </div>
                     <figcaption>
                       <span className="tm-member-name">{m.name.trim()}</span>

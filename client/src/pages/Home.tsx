@@ -1,3 +1,4 @@
+import { useCollection, useSection, type Link as ContentLink } from "@/content";
 import { imgDims } from "@/data/imageSizes";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -76,41 +77,7 @@ const features = [
   { icon: "⬡", title: "Infrastructure", desc: "Reliable cloud, data, and system architecture that supports your business operations and keeps everything running smoothly." },
 ];
 
-/** Plain-text presales answers, shown in full on the page. */
-const faqs = [
-  {
-    topic: "General",
-    q: "What does WeSee build?",
-    a: "We build custom AI agents (sales, customer support, receptionist and voice), workflow automation, marketing and growth systems, websites and e-commerce stores, and the CRM, analytics and cloud setup behind them.",
-  },
-  {
-    topic: "Process & pricing",
-    q: "How does a project start?",
-    a: "With a free 30-minute discovery call. We walk through your current tools and bottlenecks, pick two or three automation or AI-agent opportunities, and talk through feasibility, timelines and likely return before anyone commits.",
-  },
-  {
-    topic: "Process & pricing",
-    q: "How much does it cost?",
-    a: "It depends on scope. Our services come in Starter, Growth and Enterprise sizes, and we cover feasibility, timelines and potential ROI on the discovery call so you can decide with real numbers. The call is free and carries no obligation.",
-  },
-  {
-    topic: "Tools & industries",
-    q: "Can you work with the tools we already use?",
-    a: "Yes. We connect the tools you already have, such as your CRM, ERP, e-commerce platform, accounting software and messaging channels, using no-code platforms like n8n, Zapier and Make, or custom code where needed.",
-  },
-  {
-    topic: "Tools & industries",
-    q: "Which industries do you work with?",
-    a: "Healthcare, real estate, e-commerce, education, finance, hospitality, SaaS, manufacturing, logistics, retail, legal, government, and beauty and wellness, among others.",
-  },
-  {
-    topic: "General",
-    q: "Where is WeSee based?",
-    a: "Our headquarters are in Japan and our operations team is in Mumbai, India.",
-  },
-];
-
-const faqTopics = ["General", "Process & pricing", "Tools & industries"] as const;
+type FaqSection = { eyebrow?: string; heading?: string; moreText?: string; moreLink?: ContentLink | null };
 
 /* ─── Component) ───────────────────────────────────────────────── */
 
@@ -123,7 +90,12 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isHeroLogoHovered, setIsHeroLogoHovered] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [faqTopic, setFaqTopic] = useState<string>(faqTopics[0]);
+  /* FAQs from the CMS: the ones placed on the homepage; topic order follows question order. */
+  const faqSection = useSection<FaqSection>("home", "faq");
+  const faqs = useCollection("faqs").filter((f) => f.placements.includes("home"));
+  const faqTopics = Array.from(new Set(faqs.map((f) => f.topic)));
+  const [pickedFaqTopic, setFaqTopic] = useState("");
+  const faqTopic = faqTopics.includes(pickedFaqTopic) ? pickedFaqTopic : (faqTopics[0] ?? "");
   const [hoveredServiceIdx, setHoveredServiceIdx] = useState<number | null>(null);
   const [svcPopTop, setSvcPopTop] = useState<number>(0);
   const svcListRef = useRef<HTMLDivElement>(null);
@@ -990,37 +962,43 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════ FAQ (visible text, no schema) ══════════════════════════ */}
+      {faqSection && faqs.length > 0 && (
       <section className="section-pad home-faq" style={{ background: "var(--paper)" }} aria-labelledby="home-faq-title">
         <div className="container faq-grid">
           {/* Left: title + topic filter */}
           <div className="faq-side">
-            <span className="faq-pill">Before you book</span>
+            {faqSection.eyebrow && <span className="faq-pill">{faqSection.eyebrow}</span>}
             <h2 id="home-faq-title" className="faq-title">
-              What do people ask before working with WeSee?
+              {faqSection.heading}
             </h2>
-            <div className="faq-topics" role="group" aria-label="Filter questions by topic">
-              {faqTopics.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className="faq-topic"
-                  aria-pressed={faqTopic === t}
-                  onClick={() => setFaqTopic(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            <p className="faq-more">
-              Still have a question? <Link href="/book">Book a free call →</Link>
-            </p>
+            {faqTopics.length > 1 && (
+              <div className="faq-topics" role="group" aria-label="Filter questions by topic">
+                {faqTopics.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="faq-topic"
+                    aria-pressed={faqTopic === t}
+                    onClick={() => setFaqTopic(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+            {(faqSection.moreText || faqSection.moreLink) && (
+              <p className="faq-more">
+                {faqSection.moreText}{" "}
+                {faqSection.moreLink && <Link href={faqSection.moreLink.href}>{faqSection.moreLink.label}</Link>}
+              </p>
+            )}
           </div>
 
           {/* Right: accordion. Answers stay in the DOM (native details) so they remain crawlable. */}
           <div className="faq-list">
             {faqs.map((f, i) => (
               <details
-                key={f.q}
+                key={f.slug}
                 className="faq-item"
                 name="home-faq"
                 onToggle={(e) => {
@@ -1035,15 +1013,16 @@ export default function Home() {
                 open={i === faqs.findIndex((x) => x.topic === faqTopic) || undefined}
               >
                 <summary>
-                  <h3>{f.q}</h3>
+                  <h3>{f.question}</h3>
                   <span className="faq-icon" aria-hidden="true" />
                 </summary>
-                <p>{f.a}</p>
+                <p>{f.answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════ DARK CTA ══════════════════════════ */}
       <section className="section-pad home-dark-cta" style={{
