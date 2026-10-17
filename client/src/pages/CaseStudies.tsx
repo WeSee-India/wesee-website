@@ -1,17 +1,18 @@
-import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect } from "react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Linkedin, Star } from "lucide-react";
 import { Link } from "wouter";
 import ComingSoonPanel from "@/components/ComingSoonPanel";
 import { caseStudyIcon } from "@/components/caseStudyIcons";
+import { reviewProfiles } from "@/components/reviewProfiles";
 import { useCollection, useSection, type CaseStudy } from "@/content";
-
-/** Filter tabs in display order (backend CASE_STUDY_TABS). Only tabs with a published case study are shown. */
-const TABS = ["AI & Automation", "Platforms & Cloud", "Fintech", "Web & Brand"];
 
 type HeaderContent = { eyebrow?: string; heading?: string; body?: string; subline?: string };
 type EmptyContent = { title?: string; body?: string };
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Review and directory profiles shown under the hero (Google lives in the footer only). */
+const heroProfiles = reviewProfiles.filter((p) => p.label !== "Google");
 
 /** One case study as a full-width row: image on one side, story on the other. */
 function Row({ cs, n, total }: { cs: CaseStudy; n: number; total: number }) {
@@ -59,45 +60,80 @@ export default function CaseStudies() {
   const howWeStart = useCollection("faqs").find((f) => /how does a project start/i.test(f.question));
   const header = useSection<HeaderContent>("case-studies", "header");
   const empty = useSection<EmptyContent>("case-studies", "empty");
-  const [tab, setTab] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const tabs = TABS.filter((t) => caseStudies.some((c) => c.category === t));
-  const list = tab ? caseStudies.filter((c) => c.category === tab) : caseStudies;
-
   return (
     <div className="csr">
       <header className="container csr-hero">
-        {header?.eyebrow && <span className="csr-eyebrow">{header.eyebrow}</span>}
-        <h1>{header?.heading ?? "Case studies"}</h1>
-        {header?.body && <p className="csr-intro">{header.body}</p>}
-        {header?.subline && <p className="csr-subline">{header.subline}</p>}
+        <div className="csr-hero-copy">
+          {header?.eyebrow && <span className="csr-eyebrow">{header.eyebrow}</span>}
+          <h1>
+            {header?.heading ?? "Case studies"}
+            <span className="csr-hero-dot">.</span>
+          </h1>
+          {header?.body && <p className="csr-intro">{header.body}</p>}
+          {header?.subline && <p className="csr-subline">{header.subline}</p>}
+          <div className="csr-hero-actions">
+            <Link href="/book" className="csr-btn csr-btn--solid">
+              Book a free call
+              <ArrowUpRight size={16} strokeWidth={2} aria-hidden="true" />
+            </Link>
+            {caseStudies.length > 0 && (
+              <a href="#work" className="csr-btn csr-btn--ghost">
+                See the work
+                <ArrowDown size={16} strokeWidth={2} aria-hidden="true" />
+              </a>
+            )}
+          </div>
+        </div>
+
+        <figure className="csr-hero-media">
+          <img src="/case-study-cassette.webp" width={735} height={896} alt="A cassette tape between the words Client CASE study" loading="eager" />
+          {caseStudies.length > 0 && (
+            <figcaption className="csr-hero-badge">
+              <strong>{pad(caseStudies.length)}</strong> case studies
+            </figcaption>
+          )}
+        </figure>
       </header>
+
+      <div className="container">
+        <div className="csr-proof">
+          <div className="csr-proof-head">
+            <span className="csr-proof-label">Find us on</span>
+            <p>Reviews and profiles on the platforms clients use to choose a partner.</p>
+          </div>
+          <ul className="csr-proof-list">
+            {heroProfiles.map((p) => (
+              <li key={p.label}>
+                <a href={p.href} target="_blank" rel="noopener noreferrer" className="csr-proof-tile" aria-label={`WeSee on ${p.label}`}>
+                  <span className={`csr-proof-logo csr-proof-logo--${p.label.toLowerCase()}`}>
+                    {p.label === "Trustpilot" && <Star className="csr-proof-icon" fill="currentColor" strokeWidth={0} />}
+                    {p.label === "LinkedIn" && <Linkedin className="csr-proof-icon" />}
+                    {p.label === "Sortlist" ? "sortlist" : p.label}
+                  </span>
+                  <span className="csr-proof-cta">
+                    View profile <ArrowUpRight size={13} strokeWidth={2} aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
       {caseStudies.length === 0 ? (
         <section className="container" aria-label="Case studies">
           <ComingSoonPanel title={empty?.title ?? "Our first case studies are on the way."} body={empty?.body ?? ""} />
         </section>
       ) : (
-        <section className="container" aria-label="Case studies">
-          {tabs.length > 1 && (
-            <div className="csr-tabs" role="group" aria-label="Filter case studies">
-              {[null, ...tabs].map((t) => (
-                <button key={t ?? "all"} type="button" aria-pressed={tab === t} onClick={() => setTab(t)}>
-                  {t ?? "All work"}
-                </button>
-              ))}
-            </div>
-          )}
-          <p className="sr-only" role="status">
-            {tab ? `${list.length} case ${list.length === 1 ? "study" : "studies"} in ${tab}` : `${list.length} case studies`}
-          </p>
+        <section id="work" className="container csr-work" aria-label="Case studies">
           <ol className="csr-list">
-            {list.map((c, i) => (
-              <Row key={c.slug} cs={c} n={i + 1} total={list.length} />
+            {caseStudies.map((c, i) => (
+              <Row key={c.slug} cs={c} n={i + 1} total={caseStudies.length} />
             ))}
           </ol>
         </section>
