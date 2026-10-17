@@ -1463,7 +1463,7 @@
      "RBAC and residency"
     ],
     "image": null,
-    "caseStudySlug": null,
+    "caseStudySlug": "cloudops-console",
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.896Z",
     "updatedAt": "2026-10-16T05:26:56.190Z"
@@ -1515,7 +1515,7 @@
      "Audit ledger"
     ],
     "image": null,
-    "caseStudySlug": null,
+    "caseStudySlug": "reconciliation-ai",
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.918Z",
     "updatedAt": "2026-10-16T05:26:56.190Z"
@@ -1544,7 +1544,7 @@
      "alt": "JMarkets trading platform home screen",
      "src": "/projects/jmarkets.webp"
     },
-    "caseStudySlug": null,
+    "caseStudySlug": "jmarkets",
     "url": "https://jmarket-jet.vercel.app/",
     "publishedAt": "2026-10-16T05:03:47.928Z",
     "updatedAt": "2026-10-16T05:26:56.190Z"
@@ -1737,7 +1737,7 @@
      "alt": "Twenty Cents studio website",
      "src": "/projects/twentycents.webp"
     },
-    "caseStudySlug": null,
+    "caseStudySlug": "twenty-cents",
     "url": "https://www.20cent-jp.com/",
     "publishedAt": "2026-10-16T05:03:47.981Z",
     "updatedAt": "2026-10-16T05:26:56.190Z"
@@ -1790,13 +1790,722 @@
      "alt": "Nagamori artmake beauty website",
      "src": "/projects/nagamori.webp"
     },
-    "caseStudySlug": null,
+    "caseStudySlug": "nagamori",
     "url": "https://www.nagamoriart-make.com/",
     "publishedAt": "2026-10-16T05:03:48.000Z",
     "updatedAt": "2026-10-16T05:26:56.190Z"
    }
   ],
-  "caseStudies": [],
+  "caseStudies": [
+   {
+    "slug": "reconciliation-ai",
+    "title": "Reconciliation AI",
+    "category": "AI & Automation",
+    "tags": [
+     "Finance",
+     "AI matching",
+     "ERP integration"
+    ],
+    "summary": "An AI tool that matches ERP, bank and tax records, sends only the unclear items to a person, and logs every decision.",
+    "image": {
+     "src": "/services/analytics.jpg",
+     "alt": "Illustration of a rising financial chart over an office (not a product screenshot)"
+    },
+    "headline": "Reconciliation AI: month-end close without the spreadsheet marathon",
+    "lede": "We built an AI matching tool that ties every sale to its payment and its tax receipt. It shows where the gap comes from and puts each decision on record.",
+    "client": "Distribution company (not named)",
+    "sector": "Distribution / Finance operations",
+    "region": null,
+    "service": "AI Workflow Automation · Custom Software & Integrations",
+    "timeframe": null,
+    "team": null,
+    "tech": [
+     "ERP (Tally)",
+     "Bank feeds",
+     "Mobile-money wallets",
+     "Tax e-receipt records",
+     "AI matching engine",
+     "React web app"
+    ],
+    "overview": [
+     "The client is a distribution business that sells across several depots. Customers pay by bank transfer, mobile money and cash. The finance team closes the books every month in their ERP, and every sale has to match a government tax receipt."
+    ],
+    "challenge": [
+     {
+      "lead": "Three systems, no single answer.",
+      "text": "The ERP, the bank statements and the tax records each told part of the story. Nothing linked them."
+     },
+     {
+      "lead": "A gap nobody could explain fast.",
+      "text": "Sales at the till didn't match what reached the ERP. Finding out why meant going row by row."
+     },
+     {
+      "lead": "Messy payments.",
+      "text": "Bank charges, split payments and customer names spelled five different ways broke simple matching rules."
+     },
+     {
+      "lead": "Weak audit trail.",
+      "text": "Credit notes and write-offs needed a named approver and a record no one could edit later."
+     },
+     {
+      "lead": "A slow close.",
+      "text": "One open item could hold up every task after it."
+     }
+    ],
+    "solution": [
+     {
+      "lead": null,
+      "text": "We built a reconciliation workbench. The machine does the matching. People make the calls."
+     },
+     {
+      "lead": "The AI never closes an item on its own.",
+      "text": "Each proposed match gets a confidence score and lands in one of three bands: certain, probable or needs review. The team can approve the certain band in one go. Anything less goes to a review lane, with an evidence panel that shows which records matched and why."
+     },
+     {
+      "lead": "The confidence comes from the evidence, not from the model.",
+      "text": "A match scores high only when the supporting records actually line up. If the tool can't prove part of the gap, it says so. It does not guess."
+     },
+     {
+      "lead": "It starts with the size of the problem.",
+      "text": "The tool takes the total unexplained gap and breaks it into causes: missing imports, sales with no tax receipt, unusual credit notes, high refunds. Finance can see where the money went before opening a single row."
+     },
+     {
+      "lead": "Every action goes into a hash-chained audit log.",
+      "text": "Each entry links to the one before it. Change one entry and every entry after it breaks, so tampering shows."
+     }
+    ],
+    "features": [
+     {
+      "lead": null,
+      "text": "Three-way matching across ERP entries, bank and mobile-money feeds, and tax receipts."
+     },
+     {
+      "lead": null,
+      "text": "Confidence bands (certain, probable, review), with bulk approval for the certain band."
+     },
+     {
+      "lead": null,
+      "text": "Fuzzy name matching that handles spelling differences, bank charges and split payments."
+     },
+     {
+      "lead": null,
+      "text": "Evidence panel on every match, so reviewers see the reason, not just a score."
+     },
+     {
+      "lead": null,
+      "text": "Gap breakdown chart showing how much of the gap each cause explains."
+     },
+     {
+      "lead": null,
+      "text": "Anomaly flags for odd credit notes, missing receipts and high refund rates."
+     },
+     {
+      "lead": "Approval limits.",
+      "text": "Write-offs above a set amount need a second approver."
+     },
+     {
+      "lead": null,
+      "text": "Month-end close tracker that shows which tasks each open item is blocking."
+     },
+     {
+      "lead": null,
+      "text": "Tamper-evident audit log you can replay. It records who did what, and when."
+     }
+    ],
+    "delivery": [
+     {
+      "lead": "Started from the client's own figures.",
+      "text": "We worked from their real period data, not sample data, so the tool showed their actual problem from day one."
+     },
+     {
+      "lead": "Set the rules with finance.",
+      "text": "Confidence bands, tolerances and approval limits were agreed with the people who sign off the books."
+     },
+     {
+      "lead": "Built the full flow.",
+      "text": "Gap, match, exception, approval, close and audit, all in one web app."
+     }
+    ],
+    "results": [],
+    "quote": null,
+    "cta": {
+     "heading": "Is your month-end close still a matching exercise?",
+     "body": "Send us one month of exports. We'll show you what matches, what doesn't, and why.",
+     "buttonLabel": "Book a 30-minute call",
+     "buttonUrl": "https://cal.com/wesee/30min"
+    },
+    "serviceSlug": null,
+    "seoTitle": "Reconciliation AI: Faster Month-End Close | WeSee Case Study",
+    "seoDescription": "How WeSee built an AI matching tool that reconciles ERP, bank and tax records, flags what it can't prove, and keeps a tamper-evident audit trail.",
+    "ogImage": null,
+    "publishedAt": "2026-10-17T04:27:52.459Z",
+    "updatedAt": "2026-10-17T04:27:52.459Z"
+   },
+   {
+    "slug": "cloudops-console",
+    "title": "CloudOps Console",
+    "category": "Platforms & Cloud",
+    "tags": [
+     "DevOps & SRE",
+     "Cloud architecture",
+     "Integrations"
+    ],
+    "summary": "One console that shows how a distribution platform is built, shipped, watched and secured, and where its data lives.",
+    "image": {
+     "src": "/services/datacenter.jpg",
+     "alt": "Illustration of a data centre server aisle (not a product screenshot)"
+    },
+    "headline": "CloudOps Console: a platform you can explain to your board and run at 3 a.m.",
+    "lede": "We built the operations console behind a distribution platform. It covers releases, monitoring, incidents, security and data residency in one place.",
+    "client": "Distribution company (not named)",
+    "sector": "Distribution / Logistics",
+    "region": null,
+    "service": "Custom Software & Integrations · Cloud architecture, DevOps & SRE",
+    "timeframe": null,
+    "team": null,
+    "tech": [
+     "Node.js / TypeScript",
+     "PostgreSQL (row-level security)",
+     "Redis",
+     "Kafka / NATS JetStream",
+     "Kubernetes",
+     "Terraform",
+     "Argo CD",
+     "Docker",
+     "Prometheus",
+     "Grafana",
+     "Playwright",
+     "Vitest",
+     "Signed images (cosign)",
+     "SBOM scanning (Syft, Grype)",
+     "WhatsApp Business Cloud API",
+     "Tally ERP",
+     "Bank APIs",
+     "Mobile money",
+     "Tax e-receipts",
+     "GPS telematics",
+     "Weighbridges"
+    ],
+    "overview": [
+     "The client runs orders, dispatch and deliveries across several depots and a truck fleet. Their platform talks to an ERP, banks, mobile money, a tax authority, GPS trackers and weighbridges at the depot gates. Some of their data must, by law, stay in the country."
+    ],
+    "challenge": [
+     {
+      "lead": "Nobody could explain the platform.",
+      "text": "Leadership was asking simple questions with no clear answers. How is it built? Where is it hosted? Who can see what? Where does the data actually sit?"
+     },
+     {
+      "lead": "Integrations fail in ordinary ways.",
+      "text": "ERP calls time out. Bank APIs go down for maintenance. Payment providers send the same callback twice. Depot gates lose signal."
+     },
+     {
+      "lead": "Releases were risky.",
+      "text": "One bad release could stop orders across every depot."
+     },
+     {
+      "lead": "Data residency rules.",
+      "text": "Tax and customer records had to stay in the country, with a clear record of where everything else went."
+     }
+    ],
+    "solution": [
+     {
+      "lead": null,
+      "text": "We built a single console for the people who run the platform, plus the architecture behind it."
+     },
+     {
+      "lead": "Our rule: an outage can delay a message, never lose it.",
+      "text": "Every incoming order, payment and GPS ping is written to a durable event log before anything else happens. If the ERP is down, orders queue in their original order and post when it comes back. Finance sees a queue length, not missing data."
+     },
+     {
+      "lead": "Releases go out in small steps.",
+      "text": "Each release goes to a small share of traffic first. If errors pass a set limit, it rolls back on its own. Production needs a named approval, and every approval is logged."
+     },
+     {
+      "lead": "Every part of the system is documented the same way.",
+      "text": "What it runs on, how it scales, how it fails, and what still works when it's down. The client's IT team gets real sample payloads for each integration, ready to hand to their ERP, bank and tax contacts."
+     },
+     {
+      "lead": "AI is one step in the pipeline, not a black box.",
+      "text": "Wherever AI reads documents or orders, it gives a confidence score. A person checks anything below the bar."
+     }
+    ],
+    "features": [
+     {
+      "lead": "CI/CD pipeline view.",
+      "text": "Lint, type checks, tests, a software bill of materials and a vulnerability scan that blocks high and critical issues. Images are signed."
+     },
+     {
+      "lead": null,
+      "text": "Production approval gate with a named approver and an audit record."
+     },
+     {
+      "lead": null,
+      "text": "Staged (canary) rollouts with automatic error-rate guardrails and one-click rollback. Rollbacks need a second approver."
+     },
+     {
+      "lead": null,
+      "text": "Monitoring and alerts with service-level objectives and error budgets."
+     },
+     {
+      "lead": null,
+      "text": "Incident response from first alert to mitigation to a blameless postmortem, all on one timeline."
+     },
+     {
+      "lead": null,
+      "text": "Service map with regions, replicas and replication lag."
+     },
+     {
+      "lead": null,
+      "text": "Reference architecture and integration contracts with real payload examples."
+     },
+     {
+      "lead": null,
+      "text": "Role-based access by role and depot. If the depot context is missing, the system shows nothing rather than the wrong data."
+     },
+     {
+      "lead": null,
+      "text": "Data residency map showing where each class of data lives, and what never leaves the country."
+     },
+     {
+      "lead": null,
+      "text": "Hash-chained audit trail for every ingest, change and action, with safe replay that never touches live data."
+     },
+     {
+      "lead": null,
+      "text": "Cloud cost view with spend by service and savings suggestions."
+     }
+    ],
+    "delivery": [
+     {
+      "lead": "Mapped every integration.",
+      "text": "For each external system we wrote down how it fails and what the platform does when it does."
+     },
+     {
+      "lead": "Designed for the worst place first.",
+      "text": "The depot gate has the weakest signal, so gate hardware buffers locally and syncs when the link returns."
+     },
+     {
+      "lead": "Wrote the security and residency model.",
+      "text": "Encryption, access, key storage and data location were set per data class, not per service."
+     },
+     {
+      "lead": null,
+      "text": "Built the console on top, so operators, IT and leadership all look at the same picture."
+     }
+    ],
+    "results": [],
+    "quote": null,
+    "cta": {
+     "heading": "Can you explain how your platform runs, and what happens when it breaks?",
+     "body": "We'll review your architecture and integrations and show you where the risk is.",
+     "buttonLabel": "Book a 30-minute call",
+     "buttonUrl": "https://cal.com/wesee/30min"
+    },
+    "serviceSlug": null,
+    "seoTitle": "CloudOps Console: Ship, Monitor and Secure a Logistics Platform | WeSee",
+    "seoDescription": "How WeSee built one console to ship, monitor, secure and explain a distribution platform, from canary releases to incident response and data residency.",
+    "ogImage": null,
+    "publishedAt": "2026-10-17T04:27:52.459Z",
+    "updatedAt": "2026-10-17T04:27:52.459Z"
+   },
+   {
+    "slug": "jmarkets",
+    "title": "JMarkets",
+    "category": "Fintech",
+    "tags": [
+     "Fintech",
+     "Trading",
+     "Japanese market"
+    ],
+    "summary": "A Japanese-language CFD trading platform that takes traders from sign-up to their first trade, with support and campaigns built in.",
+    "image": {
+     "src": "/projects/jmarkets.webp",
+     "alt": "JMarkets trading platform home screen"
+    },
+    "headline": "JMarkets: a CFD trading platform built for Japanese-speaking traders",
+    "lede": "We built JMarkets' trading platform. It covers account opening, MT4/MT5 access, market content, campaigns and client support, all in Japanese.",
+    "client": "JMarkets",
+    "sector": "Fintech / Online brokerage (CFD)",
+    "region": "Japanese-speaking market",
+    "service": "Custom Software & Integrations",
+    "timeframe": null,
+    "team": null,
+    "tech": [
+     "Next.js",
+     "Hosted on Vercel",
+     "MetaTrader 4 / 5 access"
+    ],
+    "overview": [
+     "JMarkets is an online broker. Its customers trade CFDs on currencies, indices and commodities. It serves Japanese-speaking traders."
+    ],
+    "challenge": [
+     {
+      "lead": "Trust comes first.",
+      "text": "Trading platforms are a target for scams. A new broker has to look credible from the first screen."
+     },
+     {
+      "lead": "Beginners need help.",
+      "text": "Many visitors don't know what a spread is, or how margin works. Without plain explanations, they leave."
+     },
+     {
+      "lead": "Too many separate tools.",
+      "text": "Account opening, trading access, marketing campaigns and support often live in different systems. That adds friction for traders and staff."
+     },
+     {
+      "lead": "It has to feel Japanese.",
+      "text": "A translated English site doesn't work. Layout, tone and content need to match how Japanese traders read and decide."
+     }
+    ],
+    "solution": [
+     {
+      "lead": null,
+      "text": "We built a platform that takes a trader from “what is a CFD?” to their first trade, in Japanese, without sending them anywhere else."
+     },
+     {
+      "lead": "A short path to the first trade.",
+      "text": "Account opening is three clear steps: create an account, verify identity (KYC), then fund and trade on MT4 or MT5. Each step says what happens next."
+     },
+     {
+      "lead": "Education sits next to the trade.",
+      "text": "Short, plain answers explain CFDs, spreads and margin risk, with a nudge to try the demo first. Traders learn before they put money in."
+     },
+     {
+      "lead": "Market context in one place.",
+      "text": "An economic calendar, market news, analysis and a glossary help traders understand why prices moved."
+     },
+     {
+      "lead": "Risk is visible, not hidden.",
+      "text": "Risk disclosures and scam warnings appear across the site, not buried in the footer."
+     },
+     {
+      "lead": "The business side is built in.",
+      "text": "Staff run campaigns and promotions and handle client support from the same platform."
+     }
+    ],
+    "features": [
+     {
+      "lead": null,
+      "text": "Japanese-first design and copy across the whole platform."
+     },
+     {
+      "lead": null,
+      "text": "Three-step account opening with identity verification (KYC)."
+     },
+     {
+      "lead": null,
+      "text": "MT4 / MT5 access on desktop (Windows, Mac) and mobile (iOS, Android)."
+     },
+     {
+      "lead": null,
+      "text": "Beginner Q&A on CFDs, spreads and margin, plus a route to the demo."
+     },
+     {
+      "lead": null,
+      "text": "Market information hub: economic calendar, news, analysis and a glossary."
+     },
+     {
+      "lead": null,
+      "text": "Campaign and promotion management for the marketing team."
+     },
+     {
+      "lead": null,
+      "text": "Client support: FAQ, login help and support tools."
+     },
+     {
+      "lead": null,
+      "text": "Risk disclosures and fraud warnings on every page."
+     }
+    ],
+    "delivery": [
+     {
+      "lead": null,
+      "text": "Mapped the trader journey from first visit to first trade, and cut every step that wasn't needed."
+     },
+     {
+      "lead": "Wrote for beginners and experts.",
+      "text": "Short answers up front, with detail one click away."
+     },
+     {
+      "lead": null,
+      "text": "Built the site and staff tools on one platform, so campaigns and support don't need separate systems."
+     }
+    ],
+    "results": [],
+    "quote": null,
+    "cta": {
+     "heading": "Launching a financial product in Japan?",
+     "body": "We build Japanese-first platforms that earn trust fast. Tell us what you're launching.",
+     "buttonLabel": "Book a 30-minute call",
+     "buttonUrl": "https://cal.com/wesee/30min"
+    },
+    "serviceSlug": null,
+    "seoTitle": "JMarkets: Japanese-Language CFD Trading Platform | WeSee Case Study",
+    "seoDescription": "How WeSee built JMarkets, a Japanese-language CFD trading platform with account opening, MT4/MT5 access, market content, campaigns and client support.",
+    "ogImage": null,
+    "publishedAt": "2026-10-17T04:27:52.459Z",
+    "updatedAt": "2026-10-17T04:27:52.459Z"
+   },
+   {
+    "slug": "twenty-cents",
+    "title": "Twenty Cents",
+    "category": "Web & Brand",
+    "tags": [
+     "Creative studio",
+     "Web",
+     "Japan"
+    ],
+    "summary": "A website for a Japanese creative studio that sells video, design and development as one offer and explains how it works.",
+    "image": {
+     "src": "/projects/twentycents.webp",
+     "alt": "Twenty Cents studio website"
+    },
+    "headline": "Twenty Cents: one site for a studio that does video, design and code",
+    "lede": "We built the website for Twenty Cents, a creative studio in Japan. It shows a wide service range as one offer and makes the next step obvious.",
+    "client": "Twenty Cents (20 Cents Inc.)",
+    "sector": "Creative production / Marketing",
+    "region": "Japan",
+    "service": "Custom Software (web)",
+    "timeframe": null,
+    "team": null,
+    "tech": [
+     "Next.js",
+     "Hosted on Vercel"
+    ],
+    "overview": [
+     "Twenty Cents is an integrated creative studio in Japan. It makes music videos, commercials and short dramas. It also does brand design, UI/UX and systems development. Its teams work across Tokyo, Paris and Mumbai, handing work across time zones so production keeps moving around the clock."
+    ],
+    "challenge": [
+     {
+      "lead": "A wide offer is hard to read.",
+      "text": "Video, VFX, social content, design, localisation and software. Listed one by one, it looks like a scattered agency, not one studio."
+     },
+     {
+      "lead": "Two audiences.",
+      "text": "Japanese companies want a creative partner at home. Overseas companies want help selling in Japan. Each needs to find its own path."
+     },
+     {
+      "lead": "A new way of working.",
+      "text": "The studio splits work between people and AI on purpose. People handle ideas and direction. AI handles repetitive production. That had to be explained simply, without sounding like a gimmick."
+     },
+     {
+      "lead": "Craft has to show.",
+      "text": "A template site would undercut a studio whose product is quality."
+     }
+    ],
+    "solution": [
+     {
+      "lead": null,
+      "text": "We built a site that tells one story: one studio, one team, everything joined up."
+     },
+     {
+      "lead": "Clear strengths up front.",
+      "text": "Four points lead the page: a one-stop team, senior creators, round-the-clock production across three cities, and a deliberate split between human and AI work."
+     },
+     {
+      "lead": "Services split by audience.",
+      "text": "The service list is grouped into Japan-focused and international offers. Each visitor finds their part quickly."
+     },
+     {
+      "lead": "The work does the talking.",
+      "text": "A showcase of short PR ads sits high on the page, so visitors see the output before reading about it."
+     },
+     {
+      "lead": "A simple path to start.",
+      "text": "Four steps: get in touch, get a quote, see a quick demo or storyboard, then start. The site ends with the studio's major clients and a contact point."
+     }
+    ],
+    "features": [
+     {
+      "lead": null,
+      "text": "Strengths section covering the one-stop team, senior creators, follow-the-sun production and the AI/human split."
+     },
+     {
+      "lead": null,
+      "text": "Short PR ad showcase."
+     },
+     {
+      "lead": null,
+      "text": "Service lineup grouped into Japan-focused and international."
+     },
+     {
+      "lead": null,
+      "text": "“How we use AI” section explaining what AI does and what people do."
+     },
+     {
+      "lead": null,
+      "text": "Four-step engagement flow from enquiry to kickoff."
+     },
+     {
+      "lead": null,
+      "text": "Client logo section and contact."
+     },
+     {
+      "lead": null,
+      "text": "Language switch."
+     },
+     {
+      "lead": null,
+      "text": "Legal pages: company profile, privacy policy, terms, copyright and Japan's commercial transactions disclosure."
+     }
+    ],
+    "delivery": [
+     {
+      "lead": "Organised the offer first.",
+      "text": "We sorted a long service list into a structure a buyer can scan in seconds."
+     },
+     {
+      "lead": "Designed around the work.",
+      "text": "Visuals lead and copy supports."
+     },
+     {
+      "lead": null,
+      "text": "Built on a modern web stack for fast loading and easy updates."
+     }
+    ],
+    "results": [],
+    "quote": null,
+    "cta": {
+     "heading": "Does your website explain what you actually do?",
+     "body": "We build sites that make a complex offer simple, in Japanese, English or both.",
+     "buttonLabel": "Book a 30-minute call",
+     "buttonUrl": "https://cal.com/wesee/30min"
+    },
+    "serviceSlug": null,
+    "seoTitle": "Twenty Cents: Website for a Tokyo Creative Studio | WeSee Case Study",
+    "seoDescription": "How WeSee built the website for Twenty Cents, an integrated creative studio in Japan, presenting video, design and development as one clear offer.",
+    "ogImage": null,
+    "publishedAt": "2026-10-17T04:27:52.459Z",
+    "updatedAt": "2026-10-17T04:27:52.459Z"
+   },
+   {
+    "slug": "nagamori",
+    "title": "Nagamori",
+    "category": "Web & Brand",
+    "tags": [
+     "Beauty",
+     "Booking",
+     "Japan"
+    ],
+    "summary": "A brand site for an artmake specialist that builds trust with clear treatment pages and turns visitors into bookings.",
+    "image": {
+     "src": "/projects/nagamori.webp",
+     "alt": "Nagamori artmake beauty website"
+    },
+    "headline": "Nagamori: turning expertise into trust, and trust into bookings",
+    "lede": "We built the website for Nagamori, a semi-permanent makeup (artmake) specialist. It explains each treatment clearly, shows the artist's credentials and makes booking easy.",
+    "client": "Nagamori",
+    "sector": "Beauty / Aesthetics (artmake)",
+    "region": "Japan",
+    "service": "Custom Software (web)",
+    "timeframe": null,
+    "team": null,
+    "tech": [
+     "Hosted on Vercel",
+     "Booking via LINE"
+    ],
+    "overview": [
+     "Nagamori is the brand of an artmake artist in Japan with a nursing background. Artmake is semi-permanent makeup for brows, eyeliner, lips and hairline. It is a medical-adjacent treatment, so clients look hard at skill, safety and credentials before they book."
+    ],
+    "challenge": [
+     {
+      "lead": "Trust decides the booking.",
+      "text": "The treatment lasts for years. Clients need to believe in the artist before they commit."
+     },
+     {
+      "lead": "Techniques are hard to explain.",
+      "text": "The differences between methods matter, but they're technical. Most clients don't know what to ask."
+     },
+     {
+      "lead": "Risks must be stated honestly.",
+      "text": "Clients need to know about healing, fading and side effects up front."
+     },
+     {
+      "lead": "Booking by phone and message took time.",
+      "text": "Back-and-forth slowed the step from interest to appointment."
+     }
+    ],
+    "solution": [
+     {
+      "lead": null,
+      "text": "We built a calm, premium site where every section answers one question a new client has."
+     },
+     {
+      "lead": "One page per treatment.",
+      "text": "Brows, tail eyeline, shadow eyeline, lips and hairline each get a plain explanation of the technique and what to expect."
+     },
+     {
+      "lead": "Credentials up front.",
+      "text": "The artist's background, training and awards sit next to endorsements from medical professionals. Trust is built before the booking button."
+     },
+     {
+      "lead": "Honest about risk.",
+      "text": "The site explains how colour settles, how long results last, and the possible side effects. Clients book knowing what to expect."
+     },
+     {
+      "lead": "Booking where clients already are.",
+      "text": "Enquiries and bookings run through LINE, the messaging app most Japanese clients use every day."
+     }
+    ],
+    "features": [
+     {
+      "lead": null,
+      "text": "Treatment pages for brows, tail eyeline, shadow eyeline, lips and hairline."
+     },
+     {
+      "lead": null,
+      "text": "Artist profile with background, training and awards."
+     },
+     {
+      "lead": null,
+      "text": "Endorsements section for medical professionals' comments."
+     },
+     {
+      "lead": null,
+      "text": "Treatment menu with clear service listings."
+     },
+     {
+      "lead": null,
+      "text": "Risk and aftercare information."
+     },
+     {
+      "lead": null,
+      "text": "Artist schedule page showing working days, plus appointment booking."
+     },
+     {
+      "lead": null,
+      "text": "LINE booking and enquiries."
+     }
+    ],
+    "delivery": [
+     {
+      "lead": "Started with the client's questions.",
+      "text": "We listed what a first-time client worries about, then built a section for each."
+     },
+     {
+      "lead": "Designed for a premium feel.",
+      "text": "Clean layout, careful typography and room to breathe."
+     },
+     {
+      "lead": null,
+      "text": "Put booking one tap away on every page."
+     }
+    ],
+    "results": [],
+    "quote": null,
+    "cta": {
+     "heading": "Selling a service where trust decides the sale?",
+     "body": "We build sites that explain your expertise clearly and make booking easy.",
+     "buttonLabel": "Book a 30-minute call",
+     "buttonUrl": "https://cal.com/wesee/30min"
+    },
+    "serviceSlug": null,
+    "seoTitle": "Nagamori: Website and Booking for an Artmake Specialist | WeSee Case Study",
+    "seoDescription": "How WeSee built the site for Nagamori, an artmake (semi-permanent makeup) specialist in Japan, with treatment pages, credentials and simple booking.",
+    "ogImage": null,
+    "publishedAt": "2026-10-17T04:27:52.459Z",
+    "updatedAt": "2026-10-17T04:27:52.459Z"
+   }
+  ],
   "blogPosts": [
    {
     "slug": "ai-sales-agents-replacing-sdr-teams",
