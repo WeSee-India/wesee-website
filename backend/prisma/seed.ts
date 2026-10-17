@@ -4,9 +4,11 @@
  *   pnpm db:seed           fill anything empty (safe to re-run; never overwrites edits)
  *   pnpm db:seed --reset   replace ALL content with the original (asks no questions: dev only)
  *
- * Also creates the first owner from SEED_OWNER_* when there are no users.
+ * Also creates the first owner when there are no users: SEED_OWNER_* if set, otherwise
+ * support@weseegpt.com with a generated password printed once.
  */
 import { Prisma, PrismaClient } from "@prisma/client";
+import { randomBytes } from "node:crypto";
 import { hash } from "@node-rs/argon2";
 import { collections, type CollectionDef } from "../src/content/collections.js";
 import { objectSchema } from "../src/content/fields.js";
@@ -18,6 +20,7 @@ import extracted from "./seed/extracted.json" with { type: "json" };
 
 const prisma = new PrismaClient();
 const reset = process.argv.includes("--reset");
+const DEFAULT_OWNER_EMAIL = "support@weseegpt.com";
 const x = extracted;
 
 const json = (v: unknown) => JSON.parse(JSON.stringify(v)) as Prisma.InputJsonValue;
@@ -240,16 +243,19 @@ async function main() {
   }
 
   // ── First owner ──
+  // Only on an empty user table. With no SEED_OWNER_PASSWORD, a random one is generated and
+  // printed once here (in the deploy's build log); no fixed default password ever exists.
   if ((await prisma.user.count()) === 0) {
-    const { SEED_OWNER_EMAIL: email, SEED_OWNER_NAME: name, SEED_OWNER_PASSWORD: password } = process.env;
-    if (email && password && password.length >= 12) {
-      await prisma.user.create({
-        data: { email: email.toLowerCase(), name: name || "Owner", role: "OWNER", passwordHash: await hash(password, { memoryCost: 19456, timeCost: 2, parallelism: 1 }) },
-      });
-      console.log(`  Owner account: ${email}`);
-    } else {
-      console.log("  No users yet. Set SEED_OWNER_EMAIL and SEED_OWNER_PASSWORD (12+ characters) and re-run, or use `pnpm user:create`.");
-    }
+    const email = (process.env.SEED_OWNER_EMAIL || DEFAULT_OWNER_EMAIL).toLowerCase();
+    const name = process.env.SEED_OWNER_NAME || "WeSee Admin";
+    const given = process.env.SEED_OWNER_PASSWORD;
+    if (given && given.length < 12) throw new Error("SEED_OWNER_PASSWORD must be at least 12 characters.");
+    const password = given || randomBytes(18).toString("base64url");
+    await prisma.user.create({
+      data: { email, name, role: "OWNER", passwordHash: await hash(password, { memoryCost: 19456, timeCost: 2, parallelism: 1 }) },
+    });
+    console.log(`  Owner account: ${email}`);
+    if (!given) console.log(`  Generated password (shown once, change it after signing in): ${password}`);
   }
 }
 
