@@ -271,22 +271,18 @@ export default function About() {
       </section>
 
       {/* ══════════════ MISSION ══════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper-dark)" }}>
+      <section className="ab-mission" aria-labelledby="ab-mission-title">
         <div className="container">
-          <div style={{
-            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
-            gap: "clamp(28px, 5vw, 60px)", alignItems: "start",
-          }}>
-            <div className="about-mobile-center-block">
-              <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 0 }}>
-                Automation that changes how business works.
-              </h2>
+          <div className="ab-mission-head">
+            <div className="gsap-reveal">
+              <span className="ab-kicker">Our mission</span>
+              <h2 id="ab-mission-title" className="ab-title">Automation that changes how business works.</h2>
             </div>
-            <div>
-              <p className="body-text gsap-reveal" style={{ marginTop: 0, fontSize: 16 }}>
+            <div className="ab-mission-copy gsap-reveal">
+              <p className="ab-lead">
                 At WeSee, we believe the gap between great companies and average ones is increasingly determined by how intelligently they operate. We exist to close that gap — using AI and automation to give ambitious businesses the operational leverage that was once only available to tech giants.
               </p>
-              <p className="body-text gsap-reveal" style={{ marginTop: 16, fontSize: 16 }}>
+              <p>
                 Every system we build is designed to eliminate manual work, accelerate decision-making, and create compounding business value that grows with our clients.
               </p>
             </div>
@@ -294,58 +290,34 @@ export default function About() {
         </div>
       </section>
 
-      {/* ══════════════ TEAM PHOTO ══════════════ */}
-      <section style={{ background: "var(--paper-dark)" }}>
-        <div className="container" style={{ paddingBottom: 80 }}>
-          <div className="img-zoom gsap-reveal" style={{ height: "clamp(220px, 40vw, 420px)", borderRadius: "24px !important" }}>
-            <img
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1600&q=70" width={1600} height={1067}
-              alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* ══════════════ TIMELINE ══════════════ */}
-      <section className="section-pad" style={{ background: "var(--paper)" }}>
-        <div className="container">
-          <div className="about-mobile-center-block">
-            <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginTop: 0, marginBottom: 60 }}>
-              Building for the long run.
-            </h2>
+      <section className="ab-timeline" aria-labelledby="ab-timeline-title">
+        <div className="container ab-timeline-grid">
+          <div className="ab-timeline-head gsap-reveal">
+            <span className="ab-kicker">Our story</span>
+            <h2 id="ab-timeline-title" className="ab-title">Building for the long run.</h2>
+            <p>From a performance marketing agency in Japan to an applied AI studio across three offices.</p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <ol className="ab-rail">
             {milestones.map((m, i) => (
-              <div
-                key={i}
-                className="gsap-reveal"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "80px 1fr",
-                  gap: 24,
-                  paddingBottom: 36,
-                  borderBottom: i < milestones.length - 1 ? "1px solid var(--ink-12)" : "none",
-                  marginBottom: i < milestones.length - 1 ? 36 : 0,
-                  alignItems: "start",
-                }}
+              <li
+                key={m.year}
+                className="ab-rail-item gsap-reveal"
+                aria-current={i === milestones.length - 1 ? "step" : undefined}
               >
-                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--accent)", letterSpacing: "0.04em", paddingTop: 3 }}>
-                  {m.year}
-                </div>
+                <span className="ab-rail-dot" aria-hidden="true" />
+                <span className="ab-rail-year">{m.year}</span>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em", marginBottom: 8 }}>
+                  <h3>
                     {m.title}
-                  </div>
-                  <div style={{ fontSize: 14, color: "var(--ink-50)", lineHeight: 1.7 }}>
-                    {m.desc}
-                  </div>
+                    {i === milestones.length - 1 && <span className="ab-rail-now">Now</span>}
+                  </h3>
+                  <p>{m.desc}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 

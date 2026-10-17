@@ -58,6 +58,7 @@ export const projects: Project[] = [
       "Delay root-cause tracing across WhatsApp, ERP, weighbridge and vehicle tracking",
     ],
     tags: ["Autonomous dispatch", "Reasoning trace", "Exception queue"],
+    image: { src: "/projects/control-tower.webp", alt: "Control Tower live ops screen with the order pipeline, corridor map and live event stream" },
   },
   {
     slug: "automation-studio",
@@ -75,6 +76,7 @@ export const projects: Project[] = [
       "Live execution with branch pruning, human approval gates and replay",
     ],
     tags: ["WhatsApp order capture", "Human approval gate", "Run history and replay"],
+    image: { src: "/projects/automation-studio.webp", alt: "Automation Studio workflow builder turning a WhatsApp order into a verified sales order" },
   },
   {
     slug: "cloudops-console",
@@ -92,6 +94,7 @@ export const projects: Project[] = [
       "Reference architecture, integration contracts, RBAC and data residency",
     ],
     tags: ["CI/CD pipelines", "Canary and rollback", "RBAC and residency"],
+    image: { src: "/projects/cloudops.webp", alt: "CloudOps Console pipelines screen with workflow runs, build stages and logs" },
   },
   {
     slug: "driver-app",
@@ -109,6 +112,7 @@ export const projects: Project[] = [
       "Customer ordering that lands straight in the depot yard",
     ],
     tags: ["Three linked roles", "Offline sync", "Signature capture"],
+    image: { src: "/projects/driver-app.webp", alt: "Driver App field screen showing a driver's assigned load and trip steps" },
   },
 
   /* ── Trading & finance ── */
@@ -128,6 +132,7 @@ export const projects: Project[] = [
       "Month-end close tracking and a hash-chained, replayable audit ledger",
     ],
     tags: ["Gap decomposition", "Three-way matching", "Audit ledger"],
+    image: { src: "/projects/reconciliation-ai.webp", alt: "Reconciliation AI summary screen breaking down the reconciliation gap by cause" },
   },
   {
     slug: "jmarkets",

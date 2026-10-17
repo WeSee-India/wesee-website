@@ -1436,7 +1436,10 @@
      "Human approval gate",
      "Run history and replay"
     ],
-    "image": null,
+    "image": {
+     "src": "/projects/automation-studio.webp",
+     "alt": "Automation Studio workflow builder turning a WhatsApp order into a verified sales order"
+    },
     "caseStudySlug": null,
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.888Z",
@@ -1462,7 +1465,10 @@
      "Canary and rollback",
      "RBAC and residency"
     ],
-    "image": null,
+    "image": {
+     "src": "/projects/cloudops.webp",
+     "alt": "CloudOps Console pipelines screen with workflow runs, build stages and logs"
+    },
     "caseStudySlug": "cloudops-console",
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.896Z",
@@ -1488,7 +1494,10 @@
      "Offline sync",
      "Signature capture"
     ],
-    "image": null,
+    "image": {
+     "src": "/projects/driver-app.webp",
+     "alt": "Driver App field screen showing a driver's assigned load and trip steps"
+    },
     "caseStudySlug": null,
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.907Z",
@@ -1514,7 +1523,10 @@
      "Three-way matching",
      "Audit ledger"
     ],
-    "image": null,
+    "image": {
+     "src": "/projects/reconciliation-ai.webp",
+     "alt": "Reconciliation AI summary screen breaking down the reconciliation gap by cause"
+    },
     "caseStudySlug": "reconciliation-ai",
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.918Z",
@@ -1598,7 +1610,10 @@
      "Reasoning trace",
      "Exception queue"
     ],
-    "image": null,
+    "image": {
+     "alt": "Control Tower live ops screen with the order pipeline, corridor map and live event stream",
+     "src": "/projects/control-tower.webp"
+    },
     "caseStudySlug": null,
     "url": null,
     "publishedAt": "2026-10-16T05:03:47.875Z",
@@ -1808,8 +1823,8 @@
     ],
     "summary": "An AI tool that matches ERP, bank and tax records, sends only the unclear items to a person, and logs every decision.",
     "image": {
-     "src": "/services/analytics.jpg",
-     "alt": "Illustration of a rising financial chart over an office (not a product screenshot)"
+     "src": "/projects/reconciliation-ai.webp",
+     "alt": "Reconciliation AI summary screen breaking down the reconciliation gap by cause"
     },
     "headline": "Reconciliation AI: month-end close without the spreadsheet marathon",
     "lede": "We built an AI matching tool that ties every sale to its payment and its tax receipt. It shows where the gap comes from and puts each decision on record.",
@@ -1952,8 +1967,8 @@
     ],
     "summary": "One console that shows how a distribution platform is built, shipped, watched and secured, and where its data lives.",
     "image": {
-     "src": "/services/datacenter.jpg",
-     "alt": "Illustration of a data centre server aisle (not a product screenshot)"
+     "src": "/projects/cloudops.webp",
+     "alt": "CloudOps Console pipelines screen with workflow runs, build stages and logs"
     },
     "headline": "CloudOps Console: a platform you can explain to your board and run at 3 a.m.",
     "lede": "We built the operations console behind a distribution platform. It covers releases, monitoring, incidents, security and data residency in one place.",
