@@ -12,5 +12,5 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src/**/*", "prisma/**/*", "scripts/**/*", "tests/**/*"]
+  "include": ["server.ts", "src/**/*", "prisma/**/*", "scripts/**/*", "tests/**/*"]
 }
