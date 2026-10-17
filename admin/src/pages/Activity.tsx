@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-import { Button, cx, ErrorState, PageHeader, Spinner } from "@/components/ui";
+import { LogIn, ShieldAlert } from "lucide-react";
+import { Avatar, Button, cx, ErrorState, ListSkeleton, PageHeader, SegmentedControl } from "@/components/ui";
 
 interface Entry {
   id: string;
@@ -38,51 +39,54 @@ export default function Activity() {
   return (
     <>
       <PageHeader title="Activity log" description="Every important change in the admin: who did it and when." />
-      <div className="mb-4 flex flex-wrap gap-1" role="group" aria-label="Filter activity">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            aria-pressed={action === f.key}
-            onClick={() => {
-              setAction(f.key);
-              setSkip(0);
-            }}
-            className={cx("rounded-lg px-2.5 py-1 text-[13px]", action === f.key ? "bg-ink text-white" : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50")}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        className="mb-4"
+        label="Filter activity"
+        value={action}
+        options={FILTERS}
+        onChange={(k) => {
+          setAction(k);
+          setSkip(0);
+        }}
+      />
       {q.isLoading ? (
-        <Spinner />
+        <ListSkeleton rows={10} />
       ) : q.error ? (
         <ErrorState error={q.error} retry={() => q.refetch()} />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-            <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-[13px] text-neutral-600">
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-card">
+            <table className="data-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2 font-medium">When</th>
-                  <th className="px-4 py-2 font-medium">Who</th>
-                  <th className="px-4 py-2 font-medium">What</th>
+                  <th>Who</th>
+                  <th>What</th>
+                  <th className="text-right">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody>
                 {q.data!.items.map((e) => (
                   <tr key={e.id}>
-                    <td className="whitespace-nowrap px-4 py-2 text-[13px] text-neutral-600">{formatDateTime(e.createdAt)}</td>
-                    <td className="px-4 py-2 text-[13px]">{e.user?.name ?? <span className="text-neutral-400">{e.action === "auth.login_failed" ? "Unknown" : "Removed user"}</span>}</td>
-                    <td className={cx("px-4 py-2", e.action === "auth.login_failed" && "text-red-700")}>
-                      {e.summary}
-                      {e.ip && <span className="ml-2 text-xs text-neutral-400">{e.ip}</span>}
+                    <td className="w-56">
+                      <span className="flex items-center gap-2.5">
+                        {e.user ? (
+                          <Avatar name={e.user.name} size="sm" />
+                        ) : (
+                          <span className="flex size-6 items-center justify-center rounded-full bg-neutral-100 text-neutral-400">{e.action === "auth.login_failed" ? <ShieldAlert className="size-3.5" /> : <LogIn className="size-3.5" />}</span>
+                        )}
+                        <span className="truncate text-[13px] font-medium">{e.user?.name ?? <span className="font-normal text-neutral-400">{e.action === "auth.login_failed" ? "Unknown" : "Removed user"}</span>}</span>
+                      </span>
                     </td>
+                    <td className={cx(e.action === "auth.login_failed" && "text-red-700")}>
+                      {e.summary}
+                      {e.ip && <span className="ml-2 font-mono text-[11.5px] text-neutral-400">{e.ip}</span>}
+                    </td>
+                    <td className="whitespace-nowrap text-right text-[13px] text-neutral-500">{formatDateTime(e.createdAt)}</td>
                   </tr>
                 ))}
                 {!q.data!.items.length && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-neutral-500">
+                    <td colSpan={3} className="py-12 text-center text-neutral-500">
                       Nothing logged yet.
                     </td>
                   </tr>

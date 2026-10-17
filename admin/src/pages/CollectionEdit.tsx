@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock, Eye, Send, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -11,7 +11,7 @@ import type { CollectionDef, Item, Values } from "@/lib/types";
 import { useUnsavedChanges } from "@/lib/unsaved";
 import { Fields } from "@/components/fields/FieldRenderer";
 import { RevisionsPanel } from "@/components/Revisions";
-import { Button, Card, ConfirmDialog, EmptyState, ErrorState, FieldShell, Input, PageHeader, Spinner, StatusBadge } from "@/components/ui";
+import { Button, Card, ConfirmDialog, cx, EmptyState, ErrorState, FieldShell, Input, Notice, PageHeader, Spinner, StatusBadge } from "@/components/ui";
 
 export default function CollectionEdit({ collectionKey, id }: { collectionKey: string; id: string }) {
   const schema = useSchema();
@@ -128,8 +128,8 @@ function Editor({ def, item, siteUrl }: { def: CollectionDef; item: Item | null;
   }
 
   const back = (
-    <Link href={`/content/${def.key}`} className="mb-2 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-ink">
-      <ArrowLeft className="size-3.5" /> {def.label}
+    <Link href={`/content/${def.key}`} className="group mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-neutral-500 hover:text-ink">
+      <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" /> {def.label}
     </Link>
   );
 
@@ -158,18 +158,16 @@ function Editor({ def, item, siteUrl }: { def: CollectionDef; item: Item | null;
       />
 
       {errorCount > 0 && (
-        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <Notice tone="red" icon={<AlertCircle />}>
           {errorCount === 1 ? "One field needs attention." : `${errorCount} fields need attention.`} Fix the highlighted fields, then save again.
-        </p>
+        </Notice>
       )}
       {item?.hasPendingChanges && (
-        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          This item has saved changes that aren't on the website yet. Preview them, then publish, or discard them to go back to the live version.
-        </p>
+        <Notice icon={<Clock />}>This item has saved changes that aren't on the website yet. Preview them, then publish, or discard them to go back to the live version.</Notice>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <Card>
+      <div className={item ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" : "max-w-3xl"}>
+        <Card title="Content" description={`Fields shown on the website for this ${def.singular.toLowerCase()}`}>
           {def.slugFrom && (
             <div className="mb-4">
               <FieldShell id="slug" label="URL slug" help={`Leave empty to generate it from the ${def.fields.find((f) => f.name === def.slugFrom)?.label.toLowerCase()}. Changing it changes the page address.`} error={errors.slug}>
@@ -182,9 +180,10 @@ function Editor({ def, item, siteUrl }: { def: CollectionDef; item: Item | null;
 
         <div className="space-y-4">
           {item && def.publishable && (
-            <Card title="Publishing">
+            <Card title="Publishing" icon={<Send />}>
               <div className="space-y-3 text-sm">
-                <p className="text-neutral-600">
+                <p className="flex items-start gap-2.5 rounded-lg bg-neutral-50 px-3 py-2.5 text-neutral-700 ring-1 ring-inset ring-neutral-200/70">
+                  <span className={cx("mt-1.5 size-2 shrink-0 rounded-full", item.status === "DRAFT" ? "bg-neutral-400" : item.scheduled ? "bg-sky-500" : "bg-emerald-500")} aria-hidden />
                   {item.status === "DRAFT"
                     ? "Not on the website."
                     : item.scheduled
@@ -249,7 +248,7 @@ function Editor({ def, item, siteUrl }: { def: CollectionDef; item: Item | null;
           {item && can(def.adminOnly ? "structure.edit" : "content.delete") && (
             <ConfirmDialog
               trigger={
-                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50" icon={<Trash2 className="size-4" />}>
+                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50 hover:text-red-700" icon={<Trash2 className="size-4" />}>
                   Delete {def.singular.toLowerCase()}
                 </Button>
               }

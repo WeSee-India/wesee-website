@@ -31,12 +31,12 @@ export function SortableList<T>({ items, getId, onReorder, disabled, children }:
 function Row({ id, disabled, children }: { id: string; disabled?: boolean; children(handle: ReactNode): ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
   const handle = disabled ? null : (
-    <button type="button" className="cursor-grab touch-none rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 active:cursor-grabbing" aria-label="Drag to reorder" {...attributes} {...listeners}>
+    <button type="button" className="cursor-grab touch-none rounded-md p-1 text-neutral-300 transition-colors hover:bg-neutral-100 hover:text-neutral-700 active:cursor-grabbing" aria-label="Drag to reorder" {...attributes} {...listeners}>
       <GripVertical className="size-4" />
     </button>
   );
   return (
-    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : undefined, position: "relative", opacity: isDragging ? 0.85 : 1 }}>
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : undefined, position: "relative", opacity: isDragging ? 0.92 : 1, boxShadow: isDragging ? "var(--shadow-pop)" : undefined }}>
       {children(handle)}
     </div>
   );

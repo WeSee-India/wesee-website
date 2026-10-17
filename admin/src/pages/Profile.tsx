@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Badge, Button, Card, FieldShell, Input, PageHeader } from "@/components/ui";
+import { Avatar, Badge, Button, Card, FieldShell, Input } from "@/components/ui";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -50,22 +50,30 @@ export default function Profile() {
 
   return (
     <>
-      <PageHeader title="Your profile" description={user?.email} />
+      <div className="mb-8 flex items-center gap-4">
+        <Avatar name={user?.name} size="lg" className="size-14 text-lg" />
+        <div className="min-w-0">
+          <h1 className="text-[22px] font-semibold tracking-tight sm:text-2xl">{user?.name}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral-500">
+            {user?.email}
+            <Badge tone="gold">
+              <span className="capitalize">{user?.role.toLowerCase()}</span>
+            </Badge>
+          </p>
+        </div>
+      </div>
       <div className="grid max-w-3xl gap-6">
-        <Card title="Details">
+        <Card title="Details" description="Your name appears in the activity log">
           <form onSubmit={saveName} className="space-y-4" noValidate>
             <FieldShell id="p-name" label="Name">
               <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} />
             </FieldShell>
-            <p className="text-sm text-neutral-600">
-              Role: <Badge>{user?.role.toLowerCase()}</Badge>
-            </p>
             <Button type="submit" variant="primary" loading={busy === "name"} disabled={!name.trim() || name === user?.name}>
               Save
             </Button>
           </form>
         </Card>
-        <Card title="Change password">
+        <Card title="Change password" description="Other devices are signed out when you change it">
           <form onSubmit={savePassword} className="space-y-4" noValidate>
             <FieldShell id="p-current" label="Current password" error={errors.currentPassword}>
               <Input id="p-current" type="password" autoComplete="current-password" invalid={!!errors.currentPassword} value={current} onChange={(e) => setCurrent(e.target.value)} />

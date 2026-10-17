@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, FileText, Search, Upload } from "lucide-react";
+import { Check, Copy, FileText, ImageIcon, Trash2, Upload, UploadCloud } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import type { MediaAsset } from "@/lib/types";
 import { ACCEPT, mediaSrc, uploadFiles } from "@/components/fields/MediaPicker";
-import { Button, ConfirmDialog, cx, EmptyState, ErrorState, FieldShell, Input, Modal, PageHeader, Spinner } from "@/components/ui";
+import { Button, ConfirmDialog, EmptyState, ErrorState, FieldShell, Input, Modal, PageHeader, SearchInput, SegmentedControl, Skeleton } from "@/components/ui";
 
 interface Usage {
   kind: string;
@@ -56,8 +56,15 @@ export default function Media() {
         setDragging(false);
         if (e.dataTransfer.files.length) void upload(e.dataTransfer.files);
       }}
-      className={cx("min-h-[60vh] rounded-xl transition-colors", dragging && "bg-amber-50 ring-2 ring-accent")}
+      className="relative min-h-[60vh]"
     >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl border-2 border-dashed border-accent bg-accent-soft/80 backdrop-blur-[1px]">
+          <p className="flex flex-col items-center gap-2 text-sm font-medium text-accent-ink">
+            <UploadCloud className="size-8" aria-hidden /> Drop files to upload
+          </p>
+        </div>
+      )}
       <PageHeader
         title="Media library"
         description="Images and documents used across the website. JPG, PNG, WebP, AVIF, GIF or PDF, up to 10 MB each. Drop files anywhere here to upload."
@@ -72,35 +79,41 @@ export default function Media() {
           )
         }
       />
-      <div className="mb-4 flex flex-wrap gap-2">
-        <div className="relative min-w-52 flex-1 sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-400" aria-hidden />
-          <Input aria-label="Search media" placeholder="Search by name or alt text" className="pl-8" value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        <div className="inline-flex rounded-lg bg-neutral-200/60 p-0.5" role="group" aria-label="File type">
-          {([["", "All"], ["image", "Images"], ["document", "Documents"]] as const).map(([k, l]) => (
-            <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={cx("rounded-md px-2.5 py-1 text-[13px]", type === k ? "bg-white font-medium shadow-sm" : "text-neutral-600")}>
-              {l}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <SegmentedControl<"" | "image" | "document">
+          label="File type"
+          value={type}
+          onChange={setType}
+          options={[
+            { key: "", label: "All" },
+            { key: "image", label: "Images" },
+            { key: "document", label: "Documents" },
+          ]}
+        />
+        <SearchInput label="Search media" placeholder="Search by name or alt text" value={q} onChange={setQ} className="w-full sm:ml-auto sm:w-72" />
       </div>
 
       {list.isLoading ? (
-        <Spinner />
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5" role="status" aria-label="Loading">
+          {Array.from({ length: 10 }, (_, i) => (
+            <li key={i}>
+              <Skeleton className="aspect-[4/3] rounded-xl" />
+            </li>
+          ))}
+        </ul>
       ) : list.error ? (
         <ErrorState error={list.error} retry={() => list.refetch()} />
       ) : !list.data?.items.length ? (
-        <EmptyState title={q || type ? "Nothing matches" : "No files yet"}>{q || type ? "Try another search." : "Upload images here, then pick them from any image field."}</EmptyState>
+        <EmptyState title={q || type ? "Nothing matches" : "No files yet"} icon={<ImageIcon />}>{q || type ? "Try another search." : "Upload images here, then pick them from any image field."}</EmptyState>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {list.data.items.map((m) => (
             <li key={m.id}>
-              <button type="button" onClick={() => setSelected(m)} className="w-full overflow-hidden rounded-lg border border-neutral-200 bg-white text-left hover:border-accent-dark">
-                <div className="flex aspect-[4/3] items-center justify-center bg-neutral-100">
-                  {m.mimeType.startsWith("image/") ? <img src={mediaSrc(m)} alt={m.alt ?? ""} className="size-full object-cover" loading="lazy" /> : <FileText className="size-8 text-neutral-400" />}
+              <button type="button" onClick={() => setSelected(m)} className="group w-full overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-xs transition-shadow hover:shadow-card hover:ring-2 hover:ring-accent/40">
+                <div className="checker flex aspect-[4/3] items-center justify-center overflow-hidden">
+                  {m.mimeType.startsWith("image/") ? <img src={mediaSrc(m)} alt={m.alt ?? ""} className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" /> : <FileText className="size-8 text-neutral-400" />}
                 </div>
-                <div className="px-2 py-1.5">
+                <div className="border-t border-neutral-100 px-2.5 py-2">
                   <p className="truncate text-xs font-medium">{m.originalName}</p>
                   <p className="text-[11px] text-neutral-500">
                     {m.width && m.height ? `${m.width}×${m.height} · ` : ""}
@@ -181,7 +194,7 @@ function MediaDetails({ asset, onClose, onChange }: { asset: MediaAsset; onClose
   return (
     <Modal open onOpenChange={(o) => !o && onClose()} title={asset.originalName} description={`${asset.mimeType} · ${formatBytes(asset.size)}${asset.width ? ` · ${asset.width}×${asset.height}` : ""}`} wide>
       <div className="grid gap-6 md:grid-cols-[1fr_320px]">
-        <div className="flex items-center justify-center rounded-lg bg-neutral-100 p-2">
+        <div className="checker flex items-center justify-center rounded-xl p-3 ring-1 ring-inset ring-neutral-200">
           {isImage ? <img src={mediaSrc(asset)} alt={asset.alt ?? ""} className="max-h-[60vh] object-contain" /> : <FileText className="size-16 text-neutral-400" />}
         </div>
         <div className="space-y-4">
@@ -216,7 +229,7 @@ function MediaDetails({ asset, onClose, onChange }: { asset: MediaAsset; onClose
           )}
 
           <div>
-            <p className="mb-1 text-[13px] font-medium">Used in</p>
+            <p className="mb-1.5 text-[13px] font-medium">Used in</p>
             {usage.isLoading ? (
               <p className="text-sm text-neutral-500">Checking…</p>
             ) : !used.length ? (
@@ -239,7 +252,7 @@ function MediaDetails({ asset, onClose, onChange }: { asset: MediaAsset; onClose
           {can("media.delete") && (
             <ConfirmDialog
               trigger={
-                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50">
+                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50 hover:text-red-700" icon={<Trash2 className="size-4" />}>
                   Delete file
                 </Button>
               }

@@ -6,7 +6,7 @@ import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
 import type { Role } from "@/lib/types";
-import { Badge, Button, ConfirmDialog, ErrorState, FieldShell, Input, Modal, PageHeader, Select, Spinner } from "@/components/ui";
+import { Avatar, Badge, Button, ConfirmDialog, ErrorState, FieldShell, Input, ListSkeleton, Modal, PageHeader, Select } from "@/components/ui";
 
 interface AdminUser {
   id: string;
@@ -52,37 +52,46 @@ export default function Users() {
         }
       />
       {q.isLoading ? (
-        <Spinner />
+        <ListSkeleton rows={4} />
       ) : q.error ? (
         <ErrorState error={q.error} retry={() => q.refetch()} />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-left text-[13px] text-neutral-600">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-card">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Role</th>
-                <th className="px-4 py-2 font-medium">Last sign-in</th>
-                <th className="px-4 py-2" />
+                <th>Name</th>
+                <th>Role</th>
+                <th>Last sign-in</th>
+                <th>
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody>
               {q.data!.map((u) => (
                 <tr key={u.id} className={u.isActive ? "" : "text-neutral-400"}>
-                  <td className="px-4 py-2.5">
-                    <p className="font-medium">
-                      {u.name} {u.id === me?.id && <span className="font-normal text-neutral-500">(you)</span>}
-                    </p>
-                    <p className="text-[13px] text-neutral-500">{u.email}</p>
+                  <td>
+                    <span className="flex items-center gap-3">
+                      <Avatar name={u.name} className={u.isActive ? "" : "opacity-50 grayscale"} />
+                      <span className="min-w-0">
+                        <span className="block font-medium">
+                          {u.name} {u.id === me?.id && <span className="font-normal text-neutral-500">(you)</span>}
+                        </span>
+                        <span className="block text-[13px] text-neutral-500">{u.email}</span>
+                      </span>
+                    </span>
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td>
                     <span className="inline-flex gap-1">
-                      <Badge tone={u.role === "OWNER" ? "amber" : u.role === "ADMIN" ? "blue" : "neutral"}>{u.role.toLowerCase()}</Badge>
+                      <Badge tone={u.role === "OWNER" ? "gold" : u.role === "ADMIN" ? "blue" : "neutral"}>
+                        <span className="capitalize">{u.role.toLowerCase()}</span>
+                      </Badge>
                       {!u.isActive && <Badge tone="red">Deactivated</Badge>}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-[13px]">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Never"}</td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="text-[13px] text-neutral-600">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Never"}</td>
+                  <td className="text-right">
                     <div className="inline-flex gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setEditing(u)}>
                         Edit
@@ -188,7 +197,7 @@ function UserDialog({ user, onClose }: { user: AdminUser | null; onClose(): void
         >
           <Input id="u-password" type="password" autoComplete="new-password" value={password} invalid={!!errors.password} onChange={(e) => setPassword(e.target.value)} />
         </FieldShell>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-2">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="primary" loading={busy}>
             {user ? "Save" : "Add user"}

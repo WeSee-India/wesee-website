@@ -2,10 +2,47 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Brand */
   --color-ink: #111317;
-  --color-paper: #f7f6f3;
+  --color-paper: #f4f4f2;
   --color-accent: #c9a84c;
   --color-accent-dark: #9c7a1e;
+  --color-accent-ink: #7a5f14;
+  --color-accent-soft: #f8f2e1;
+
+  /* Warm stone neutrals, matched to the website's palette. Every neutral-* class uses these. */
+  --color-neutral-50: #fafaf9;
+  --color-neutral-100: #f4f4f2;
+  --color-neutral-200: #e8e8e5;
+  --color-neutral-300: #d7d6d2;
+  --color-neutral-400: #a3a29d;
+  --color-neutral-500: #73726d;
+  --color-neutral-600: #585752;
+  --color-neutral-700: #43423e;
+  --color-neutral-800: #2a2a27;
+  --color-neutral-900: #1b1b19;
+  --color-neutral-950: #111317;
+
+  --shadow-xs: 0 1px 2px 0 rgb(17 19 23 / 0.05);
+  --shadow-card: 0 1px 2px 0 rgb(17 19 23 / 0.04), 0 1px 3px 0 rgb(17 19 23 / 0.04);
+  --shadow-pop: 0 10px 38px -10px rgb(17 19 23 / 0.28), 0 10px 20px -15px rgb(17 19 23 / 0.2);
+
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-pop-in: pop-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
 }
 
 html,
@@ -13,11 +50,77 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent-dark);
-  outline-offset: 2px;
+::selection {
+  background: rgb(201 168 76 / 0.3);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent-dark);
+    outline-offset: 2px;
+  }
+}
+
+/* Quiet scrollbars, so the sidebar and panels don't show a heavy native bar. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-300) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-300);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  /* Shared table look for Users, Activity and other tabular screens. */
+  .data-table {
+    width: 100%;
+    font-size: 0.875rem;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .data-table thead th {
+    background: var(--color-neutral-50);
+    border-bottom: 1px solid var(--color-neutral-200);
+    color: var(--color-neutral-500);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+    white-space: nowrap;
+  }
+  .data-table tbody td {
+    border-bottom: 1px solid var(--color-neutral-100);
+    padding: 0.7rem 1rem;
+    vertical-align: middle;
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .data-table tbody tr:hover td {
+    background: var(--color-neutral-50);
+  }
+
+  /* Checkerboard behind media previews, so transparent images read as transparent. */
+  .checker {
+    background-color: var(--color-neutral-50);
+    background-image: conic-gradient(var(--color-neutral-100) 25%, transparent 0 50%, var(--color-neutral-100) 0 75%, transparent 0);
+    background-size: 16px 16px;
+  }
 }
 
 /* Rendered Markdown in previews */
@@ -48,10 +151,10 @@ body {
 .prose-preview blockquote {
   border-left: 3px solid var(--color-accent);
   padding-left: 0.75rem;
-  color: #555;
+  color: var(--color-neutral-600);
 }
 .prose-preview a {
-  color: var(--color-accent-dark);
+  color: var(--color-accent-ink);
   text-decoration: underline;
 }
 
