@@ -21,10 +21,10 @@ export default function Settings({ settingKey }: { settingKey?: string }) {
   return (
     <>
       <PageHeader title="Settings" description="Site-wide content and configuration. Saved changes apply to the website straight away, and every change is kept in the activity log." />
-      <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
-        <nav aria-label="Settings sections" className="flex gap-1 overflow-x-auto lg:flex-col">
+      <div className="grid items-start gap-6 lg:grid-cols-[210px_1fr]">
+        <nav aria-label="Settings sections" className="flex gap-1 overflow-x-auto lg:sticky lg:top-20 lg:flex-col">
           {defs.map((d) => (
-            <Link key={d.key} href={`/settings/${d.key}`} aria-current={d.key === active.key ? "page" : undefined} className={cx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", d.key === active.key ? "bg-white font-medium shadow-sm ring-1 ring-neutral-200" : "text-neutral-600 hover:bg-neutral-200/50")}>
+            <Link key={d.key} href={`/settings/${d.key}`} aria-current={d.key === active.key ? "page" : undefined} className={cx("whitespace-nowrap rounded-lg px-3 py-2 text-[13.5px] transition-colors", d.key === active.key ? "bg-neutral-100 font-medium text-ink" : "text-neutral-600 hover:bg-neutral-50 hover:text-ink")}>
               {d.label}
             </Link>
           ))}
@@ -63,6 +63,7 @@ function SettingForm({ def, value, siteUrl }: { def: SettingDef; value: Values; 
   return (
     <Card
       title={def.label}
+      description={def.description}
       actions={
         editable && (
           <div className="flex gap-2">
@@ -78,7 +79,6 @@ function SettingForm({ def, value, siteUrl }: { def: SettingDef; value: Values; 
         )
       }
     >
-      <p className="mb-4 text-sm text-neutral-500">{def.description}</p>
       {!editable && <p className="mb-4 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Only admins and owners can change settings.</p>}
       <Fields fields={def.fields} values={values} onChange={setValues} ctx={{ errors, siteUrl, disabled: !editable }} />
     </Card>

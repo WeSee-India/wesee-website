@@ -24,7 +24,12 @@ function Guard({ permission, children }: { permission: Permission; children: Rea
 
 export default function App() {
   const { user, loading } = useAuth();
-  if (loading) return <Spinner label="Starting" />;
+  if (loading)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner label="Starting" />
+      </div>
+    );
   if (!user) return <Login />;
 
   return (

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ChevronDown, ChevronRight, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, Eye, EyeOff, Plus, Send, Settings2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -11,7 +11,7 @@ import { useUnsavedChanges } from "@/lib/unsaved";
 import { Fields } from "@/components/fields/FieldRenderer";
 import { RevisionsPanel } from "@/components/Revisions";
 import { SortableList } from "@/components/Sortable";
-import { Badge, Button, Card, ConfirmDialog, cx, ErrorState, FieldShell, Input, Modal, PageHeader, Spinner, StatusBadge } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, cx, ErrorState, FieldShell, Input, Modal, Notice, PageHeader, Spinner, StatusBadge } from "@/components/ui";
 
 export default function PageEdit({ id }: { id: string }) {
   const schema = useSchema();
@@ -113,14 +113,14 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
     <>
       <PageHeader
         back={
-          <Link href="/pages" className="mb-2 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-ink">
-            <ArrowLeft className="size-3.5" /> Pages
+          <Link href="/pages" className="group mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-neutral-500 hover:text-ink">
+            <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" /> Pages
           </Link>
         }
         title={state.title || "Untitled page"}
         description={
           <span className="inline-flex flex-wrap items-center gap-2">
-            <code className="text-[13px]">{state.path}</code>
+            <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[12px] text-neutral-600">{state.path}</code>
             {custom ? <StatusBadge status={page.status} pending={page.hasPendingChanges} /> : page.hasDraft && <Badge tone="amber">Unpublished changes</Badge>}
           </span>
         }
@@ -144,15 +144,15 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
       />
 
       {page.hasDraft && !dirty && (
-        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          {page.status === "PUBLISHED" ? "This page has saved changes that aren't on the website yet." : "This page is a draft and isn't on the website yet."}
-        </p>
+        <Notice icon={<Clock />}>{page.status === "PUBLISHED" ? "This page has saved changes that aren't on the website yet." : "This page is a draft and isn't on the website yet."}</Notice>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Sections</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold">
+              Sections <span className="ml-1 font-normal text-neutral-400">{state.sections.length}</span>
+            </h2>
             <p className="text-xs text-neutral-500">Drag to reorder · hide sections you don't want shown</p>
           </div>
           <SortableList items={state.sections} getId={(s) => s._id} onReorder={(sections) => setState((s) => ({ ...s, sections }))} disabled={!editable}>
@@ -161,19 +161,19 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
               const isOpen = open === section._id;
               const errs = Object.keys(sectionErrors(i)).length;
               return (
-                <div className={cx("mb-2 rounded-xl border bg-white", errs ? "border-red-300" : "border-neutral-200", !section.visible && "bg-neutral-50")}>
+                <div className={cx("mb-2 rounded-xl border shadow-xs transition-shadow", errs ? "border-red-300" : isOpen ? "border-neutral-300 shadow-card" : "border-neutral-200 hover:border-neutral-300", section.visible ? "bg-white" : "bg-neutral-50")}>
                   <div className="flex items-center gap-1 px-2 py-1.5">
                     {handle}
                     <button type="button" className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : section._id)}>
                       {isOpen ? <ChevronDown className="size-4 shrink-0 text-neutral-400" /> : <ChevronRight className="size-4 shrink-0 text-neutral-400" />}
-                      <span className={cx("truncate text-sm font-medium", !section.visible && "text-neutral-400")}>{section.label || def?.label || section.type}</span>
+                      <span className={cx("truncate text-sm font-medium", !section.visible && "text-neutral-400 line-through decoration-neutral-300")}>{section.label || def?.label || section.type}</span>
                       {!section.visible && <Badge>Hidden</Badge>}
                       {errs > 0 && <span className="text-xs text-red-600">{errs} to fix</span>}
                       <span className="hidden truncate text-[13px] text-neutral-400 sm:inline">{plain(section.content.heading ?? section.content.title ?? "")}</span>
                     </button>
                     <button
                       type="button"
-                      className="rounded p-1.5 text-neutral-500 hover:bg-neutral-100"
+                      className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-ink"
                       disabled={!editable}
                       onClick={() => setSection(i, { visible: !section.visible })}
                       aria-label={section.visible ? `Hide ${section.label ?? def?.label}` : `Show ${section.label ?? def?.label}`}
@@ -184,7 +184,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
                     {custom && editable && (
                       <ConfirmDialog
                         trigger={
-                          <button type="button" className="rounded p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${section.label ?? def?.label}`}>
+                          <button type="button" className="rounded-md p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${section.label ?? def?.label}`}>
                             <Trash2 className="size-4" />
                           </button>
                         }
@@ -196,7 +196,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
                     )}
                   </div>
                   {isOpen && def && (
-                    <div className="border-t border-neutral-100 p-4">
+                    <div className="border-t border-neutral-100 px-4 pb-5 pt-4">
                       {def.description && <p className="mb-3 text-[13px] text-neutral-500">{def.description}</p>}
                       <Fields fields={def.fields} values={section.content} onChange={(content) => setSection(i, { content })} ctx={{ errors: sectionErrors(i), siteUrl: schema.siteUrl, disabled: !editable }} />
                     </div>
@@ -206,14 +206,18 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
             }}
           </SortableList>
           {custom && editable && (
-            <Button icon={<Plus className="size-4" />} onClick={() => setAdding(true)}>
-              Add section
-            </Button>
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-neutral-300 py-3 text-sm font-medium text-neutral-600 transition-colors hover:border-accent hover:bg-accent-soft/40 hover:text-ink"
+            >
+              <Plus className="size-4" /> Add section
+            </button>
           )}
         </div>
 
         <div className="space-y-4">
-          <Card title="Page details">
+          <Card title="Page details" icon={<Settings2 />}>
             <div className="space-y-4">
               <FieldShell id="pg-title" label="Page name" error={errors.title}>
                 <Input id="pg-title" value={state.title} disabled={!editable} onChange={(e) => setState({ ...state, title: e.target.value })} />
@@ -233,7 +237,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
           </Card>
 
           {(page.hasDraft || custom) && can("content.publish") && (
-            <Card title="Publishing">
+            <Card title="Publishing" icon={<Send />}>
               <div className="space-y-2">
                 {page.hasDraft && page.status === "PUBLISHED" && (
                   <ConfirmDialog
@@ -279,7 +283,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
           {custom && can("structure.edit") && (
             <ConfirmDialog
               trigger={
-                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50" icon={<Trash2 className="size-4" />}>
+                <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50 hover:text-red-700" icon={<Trash2 className="size-4" />}>
                   Delete page
                 </Button>
               }
@@ -307,7 +311,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
               <li key={t.type}>
                 <button
                   type="button"
-                  className="w-full rounded-lg border border-neutral-200 p-3 text-left text-sm font-medium hover:border-accent-dark"
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-200 p-3 text-left text-sm font-medium shadow-xs transition-colors hover:border-accent/60 hover:bg-accent-soft/40"
                   onClick={() => {
                     const row: Row = { _id: `s${uid++}`, key: "", type: t.type, label: null, visible: true, content: emptyValues(t.fields) };
                     setState((s) => ({ ...s, sections: [...s.sections, row] }));
@@ -315,6 +319,9 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
                     setAdding(false);
                   }}
                 >
+                  <span className="flex size-7 items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
+                    <Plus className="size-3.5" aria-hidden />
+                  </span>
                   {t.label}
                 </button>
               </li>
