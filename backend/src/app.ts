@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from "./lib/errors.js";
 import { adminRouter } from "./routes/admin/index.js";
 import { authRouter } from "./routes/auth.js";
 import { contactRouter } from "./routes/contact.js";
+import { docsRouter } from "./docs/router.js";
 import { publicRouter } from "./routes/public.js";
 
 export function createApp() {
@@ -66,6 +67,9 @@ export function createApp() {
 
   app.use("/api/auth", loadSession, authRouter);
   app.use("/api/admin", loadSession, adminRouter);
+
+  // API reference (Swagger UI) at /docs.
+  app.use(docsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
