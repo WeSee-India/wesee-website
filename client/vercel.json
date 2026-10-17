@@ -6,6 +6,8 @@
     { "source": "/landing", "destination": "/landing/index.html" },
     { "source": "/privacy", "destination": "/landing/privacy.html" },
     { "source": "/terms", "destination": "/landing/terms.html" },
+    { "source": "/admin", "destination": "https://wesee-admin.vercel.app/" },
+    { "source": "/admin/:path*", "destination": "https://wesee-admin.vercel.app/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "redirects": [

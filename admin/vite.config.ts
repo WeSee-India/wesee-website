@@ -7,7 +7,10 @@ const root = import.meta.dirname;
 const env = loadEnv("development", root, "");
 const API = env.VITE_API_PROXY_TARGET || "http://localhost:4000";
 
-export default defineConfig({
+// Production is served from the website at weseegpt.com/admin (a rewrite in the site's
+// vercel.json proxies it here), so built asset URLs carry the /admin prefix.
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? "/admin/" : "/",
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(root, "src") } },
   server: {
@@ -18,4 +21,4 @@ export default defineConfig({
   },
   preview: { port: 3001 },
   build: { outDir: "dist", sourcemap: false },
-});
+}));
