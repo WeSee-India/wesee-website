@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import gsap from "gsap";
+import { useSection, useSettings } from "@/content";
 import { prefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type Phase = "idle" | "typing" | "ready";
@@ -18,22 +19,20 @@ export default function GlobalConnectWidget() {
 
   const portalTarget = typeof document !== "undefined" ? document.body : null;
 
-  const whatsappUrl = useMemo(() => {
-    const whatsappPhone = (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim();
-    const whatsappMessage = (import.meta.env.VITE_WHATSAPP_MESSAGE as string | undefined)?.trim();
-    if (!whatsappPhone) return undefined;
-    const digits = whatsappPhone.replace(/[^\d]/g, "");
-    if (!digits) return undefined;
-    return `https://wa.me/${digits}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ""}`;
-  }, []);
+  const contact = useSettings("contact");
+  const connect = useSection<{ message?: string; footnote?: string }>("contact", "connect");
 
-  const callHref = useMemo(() => {
-    const whatsappPhone = (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim();
-    if (!whatsappPhone) return undefined;
-    const digits = whatsappPhone.replace(/[^\d]/g, "");
-    if (!digits) return undefined;
-    return `tel:+${digits}`;
-  }, []);
+  // Settings first; build-time env vars are only a fallback when Settings are empty.
+  const { whatsappUrl, callHref } = useMemo(() => {
+    const phone = contact?.whatsappPhone?.trim() || (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim() || "";
+    const message = contact?.whatsappMessage?.trim() || (import.meta.env.VITE_WHATSAPP_MESSAGE as string | undefined)?.trim() || "";
+    const digits = phone.replace(/[^\d]/g, "");
+    if (!digits) return { whatsappUrl: undefined, callHref: undefined };
+    return {
+      whatsappUrl: `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ""}`,
+      callHref: `tel:+${digits}`,
+    };
+  }, [contact?.whatsappPhone, contact?.whatsappMessage]);
 
   // Don't show global widget on Contact page (it already has a bespoke section).
   if (location === "/contact") return null;
@@ -471,7 +470,7 @@ export default function GlobalConnectWidget() {
                         </span>
                       ) : (
                         <span style={{ fontSize: 14, fontWeight: 400, color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>
-                          Hey — choose how you'd like to connect with WeSee.
+                          {connect?.message ?? "Hey, choose how you'd like to connect with WeSee."}
                         </span>
                       )}
                     </div>
@@ -549,7 +548,7 @@ export default function GlobalConnectWidget() {
 
                     <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                       <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", lineHeight: 1.7, fontWeight: 400 }}>
-                        Typically responds within a few hours during business days.
+                        {connect?.footnote ?? "Typically responds within a few hours during business days."}
                       </p>
                     </div>
                   </div>

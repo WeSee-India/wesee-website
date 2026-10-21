@@ -2,10 +2,20 @@ import { services } from "./services";
 import { serviceDefinitions } from "./serviceDefinitions";
 import content from "../generated/content.json";
 import type { CaseStudy } from "../content/types";
-import { projects } from "./projects";
 
-/** Published case studies from the CMS snapshot the build bundles (scripts/fetch-content.mjs). */
-const caseStudies = ((content as { collections: { caseStudies?: CaseStudy[] } }).collections.caseStudies ?? []) as CaseStudy[];
+type CmsSeo = { seoTitle?: string | null; seoDescription?: string | null; ogImage?: string | null };
+type CmsPage = CmsSeo & { path: string; noindex?: boolean };
+type CmsBlogPost = CmsSeo & { slug: string; title: string; excerpt?: string | null; coverImage?: string | null };
+
+const snapshot = content as unknown as {
+  pages: Record<string, CmsPage>;
+  collections: { caseStudies?: CaseStudy[]; projects?: { slug: string }[]; blogPosts?: CmsBlogPost[] };
+};
+
+/** Published content from the CMS snapshot the build bundles (scripts/fetch-content.mjs). */
+const caseStudies = (snapshot.collections.caseStudies ?? []) as CaseStudy[];
+const projects = snapshot.collections.projects ?? [];
+const cmsPages = new Map(Object.values(snapshot.pages ?? {}).map((p) => [p.path, p]));
 
 export const SITE_URL = "https://www.weseegpt.com";
 export const SITE_NAME = "WeSee";
@@ -23,12 +33,12 @@ export interface RouteMeta {
 
 const pages: Record<string, Omit<RouteMeta, "path">> = {
   "/": {
-    title: "WeSee — AI Agents, Automation & Software",
+    title: "WeSee: AI Agents, Automation & Software",
     description:
-      "WeSee designs, builds, and ships AI agents, automation, and custom software for ambitious businesses — from lead generation and marketing to internal operations. From Tokyo to Mumbai.",
+      "WeSee designs, builds, and ships AI agents, automation, and custom software for ambitious businesses, from lead generation and marketing to internal operations. From Tokyo to Mumbai.",
   },
   "/services": {
-    title: "Services — AI Agents, Automation, Marketing & Web | WeSee",
+    title: "Services: AI Agents, Automation, Marketing & Web | WeSee",
     description:
       "Explore 50+ WeSee services: AI agents and voice bots, workflow automation, performance marketing, SEO, web and e-commerce development, CRM, analytics and more.",
   },
@@ -38,32 +48,32 @@ const pages: Record<string, Omit<RouteMeta, "path">> = {
       "See what WeSee has built: AI finance tools, cloud platforms, trading products and brand sites for clients in Japan and beyond.",
   },
   "/projects": {
-    title: "Projects — AI Agents, Automations & Apps We Have Built | WeSee",
+    title: "Projects: AI Agents, Automations & Apps We Have Built | WeSee",
     description:
       "A portfolio of AI agents, workflow automations, apps and dashboards designed and shipped by WeSee, with the tools and platforms behind each one.",
   },
   "/about": {
-    title: "About WeSee — AI & Engineering Studio, Tokyo to Mumbai",
+    title: "About WeSee: AI & Engineering Studio, Tokyo to Mumbai",
     description:
       "Meet WeSee, a senior product, engineering and AI studio helping ambitious companies automate operations and grow, with teams in Tokyo and Mumbai.",
   },
   "/team": {
-    title: "Our Team — The People Behind WeSee",
+    title: "Our Team: The People Behind WeSee",
     description:
       "The engineers, designers, marketers and AI specialists at WeSee who design, build and ship software, automation and growth systems for our clients.",
   },
   "/contact": {
-    title: "Contact WeSee — Talk to Our AI & Automation Team",
+    title: "Contact WeSee: Talk to Our AI & Automation Team",
     description:
       "Get in touch with WeSee about AI agents, workflow automation, marketing or custom software. Tell us what you want to build and we will reply quickly.",
   },
   "/blog": {
-    title: "Blog — AI, Automation & Growth Insights | WeSee",
+    title: "Blog: AI, Automation & Growth Insights | WeSee",
     description:
       "Practical articles from WeSee on AI sales agents, chatbots, workflow automation and AI-driven paid advertising for growing businesses.",
   },
   "/careers": {
-    title: "Careers at WeSee — Join Our AI & Engineering Studio",
+    title: "Careers at WeSee: Join Our AI & Engineering Studio",
     description:
       "Explore open roles at WeSee and help build AI agents, automation and software for ambitious companies. Teams in Tokyo and Mumbai.",
   },
@@ -78,7 +88,7 @@ const blogPosts: Record<string, { title: string; description: string; image: str
   "ai-sales-agents-replacing-sdr-teams": {
     title: "How AI Sales Agents Are Replacing SDR Teams in 2025 | WeSee",
     description:
-      "The traditional SDR model is breaking. AI sales agents can now qualify leads, book meetings, and follow up — at a fraction of the cost.",
+      "The traditional SDR model is breaking. AI sales agents can now qualify leads, book meetings, and follow up, at a fraction of the cost.",
     image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80",
   },
   "hidden-cost-manual-workflows": {
@@ -101,7 +111,31 @@ const blogPosts: Record<string, { title: string; description: string; image: str
   },
 };
 
-export const notFoundMeta = (path: string): RouteMeta => ({
+// Articles come from the CMS; the hand-written entries above are only used when the snapshot has none.
+const cmsPosts = snapshot.collections.blogPosts ?? [];
+if (cmsPosts.length) for (const slug of Object.keys(blogPosts)) if (!cmsPosts.some((p) => p.slug === slug)) delete blogPosts[slug];
+for (const post of cmsPosts) {
+  blogPosts[post.slug] = {
+    title: post.seoTitle || `${post.title} | WeSee`,
+    description: post.seoDescription || post.excerpt || blogPosts[post.slug]?.description || "",
+    image: post.ogImage || post.coverImage || blogPosts[post.slug]?.image || "",
+  };
+}
+
+/** A built-in page's title and description, as set under Pages → SEO in the admin when filled in. */
+function staticPageMeta(path: string): Omit<RouteMeta, "path"> {
+  const cms = cmsPages.get(path);
+  const base = pages[path];
+  return {
+    ...base,
+    title: cms?.seoTitle || base.title,
+    description: cms?.seoDescription || base.description,
+    image: cms?.ogImage || base.image,
+    noindex: cms?.noindex || undefined,
+  };
+}
+
+export const notFoundMeta =(path: string): RouteMeta => ({
   title: "Page not found | WeSee",
   description: "The page you are looking for does not exist or has moved.",
   path,
@@ -125,9 +159,9 @@ export function getRouteMeta(rawPath: string): RouteMeta {
   const path = rawPath.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
 
   // Collection pages stay out of search until they have approved entries.
-  if (path === "/case-studies" && caseStudies.length === 0) return { ...pages[path], path, noindex: true };
-  if (path === "/projects" && projects.length === 0) return { ...pages[path], path, noindex: true };
-  if (pages[path]) return { ...pages[path], path };
+  if (path === "/case-studies" && caseStudies.length === 0) return { ...staticPageMeta(path), path, noindex: true };
+  if (path === "/projects" && projects.length === 0) return { ...staticPageMeta(path), path, noindex: true };
+  if (pages[path]) return { ...staticPageMeta(path), path };
 
   const caseMatch = path.match(/^\/case-studies\/([^/]+)$/);
   if (caseMatch) {
@@ -147,8 +181,8 @@ export function getRouteMeta(rawPath: string): RouteMeta {
     const service = services.find((s) => s.slug === serviceMatch[1]);
     if (service) {
       return {
-        title: `${service.name} — ${service.category} | WeSee`,
-        description: truncate(serviceDefinitions[service.slug] ?? service.shortDescription),
+        title: service.seoTitle || `${service.name}: ${service.category} | WeSee`,
+        description: truncate(service.seoDescription || service.definition || serviceDefinitions[service.slug] || service.shortDescription),
         path,
       };
     }

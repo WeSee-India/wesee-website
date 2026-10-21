@@ -1,3 +1,4 @@
+import { useSettings } from "@/content";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { ArrowUpRight, Instagram, Linkedin, Mail, Twitter } from "lucide-react";
@@ -6,45 +7,24 @@ import { reviewProfiles } from "./reviewProfiles";
 import { useFinePointer } from "@/hooks/useFinePointer";
 import { scrollToTop } from "@/hooks/useLenis";
 
-const CONTACT_EMAIL = "careers@weseegpt.com";
+type FooterLink = { label: string; href: string };
 
-const columns = [
-  {
-    title: "Services",
-    links: [
-      { label: "AI Agents", href: "/services?category=1" },
-      { label: "Workflow Automation", href: "/services?category=2" },
-      { label: "Paid Advertising", href: "/services?category=3" },
-      { label: "SEO & Content", href: "/services?category=4" },
-      { label: "Web Design", href: "/services?category=6" },
-      { label: "E-Commerce", href: "/services?category=7" },
-    ],
-  },
-  {
-    title: "Work",
-    links: [
-      { label: "Case Studies", href: "/case-studies" },
-      { label: "Projects", href: "/projects" },
-      { label: "Blog", href: "/blog" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "/about" },
-      { label: "Team", href: "/team" },
-      { label: "Careers", href: "/careers" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
-];
+interface CmsFooter {
+  ctaHeading?: string | null;
+  ctaEmail?: string | null;
+  tagline?: string | null;
+  columns?: { title?: string; links?: Partial<FooterLink>[] }[];
+  legalLinks?: Partial<FooterLink>[];
+  copyright?: string | null;
+}
 
-const socials = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/wesee-agi", icon: Linkedin },
-  { label: "Instagram", href: "https://www.instagram.com/weseeventures", icon: Instagram },
-  { label: "X", href: "https://x.com/weseeventures", icon: Twitter },
-  { label: "Email", href: `mailto:${CONTACT_EMAIL}`, icon: Mail },
-];
+const socialIcons: Record<string, typeof Linkedin> = { linkedin: Linkedin, instagram: Instagram, x: Twitter, twitter: Twitter };
+
+const validLinks = (links?: Partial<FooterLink>[]): FooterLink[] =>
+  (links ?? []).filter((l): l is FooterLink => !!l.label && !!l.href);
+
+/** Editors may type dashes in copy; the site avoids them. */
+const noDash = (t: string) => t.replace(/\s*[—–]\s*/g, ", ");
 
 /** Sizes the wordmark so it spans the full width of its box at any viewport. */
 function useFitText<T extends HTMLElement>() {
@@ -70,7 +50,21 @@ function useFitText<T extends HTMLElement>() {
 }
 
 export default function Footer() {
+  const footer = useSettings("footer") as CmsFooter;
+  const contact = useSettings("contact");
+  const social = useSettings("social") as { links?: Partial<FooterLink>[] };
   const finePointer = useFinePointer();
+
+  const email = contact.email || footer.ctaEmail || "";
+  const columns = (footer.columns ?? []).map((c) => ({ title: c.title ?? "", links: validLinks(c.links) })).filter((c) => c.title && c.links.length);
+  const legalLinks = validLinks(footer.legalLinks);
+  const socials = [
+    ...validLinks(social.links).map((l) => ({ label: l.label, href: l.href, icon: socialIcons[l.label.toLowerCase()] ?? Mail })),
+    ...(email ? [{ label: "Email", href: "mailto:" + email, icon: Mail }] : []),
+  ];
+  const heading = footer.ctaHeading || "Have a project in mind?";
+  const headingAccent = heading.endsWith("?");
+  const copyright = (footer.copyright || "© {year} WeSee AI Automation").replace("{year}", String(new Date().getFullYear()));
   const wordmark = useFitText<HTMLSpanElement>();
 
   return (
@@ -79,16 +73,16 @@ export default function Footer() {
         {/* CTA + socials */}
         <div className="site-footer__cta">
           <h2 className="site-footer__brand">
-            Have a project in mind<span>?</span>
+            {headingAccent ? <>{heading.slice(0, -1)}<span>?</span></> : heading}
           </h2>
           <p className="site-footer__lede">
-            AI agents and automation that help businesses operate smarter, faster, and at scale.
+            {noDash((footer.tagline || "").replace(/\s+/g, " ").trim())}
           </p>
 
           <div className="site-footer__form">
             <ParticleWrapper>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="site-footer__email">
-                {CONTACT_EMAIL}
+              <a href={"mailto:" + email} className="site-footer__email">
+                {email}
               </a>
             </ParticleWrapper>
             <ParticleWrapper>
@@ -153,10 +147,11 @@ export default function Footer() {
 
       {/* Legal row */}
       <div className="site-footer__legal">
-        <p>© {new Date().getFullYear()} WeSee AI Automation · Japan HQ · Mumbai</p>
+        <p>{copyright}</p>
         <div className="site-footer__legal-links">
-          <a href="/terms" className="site-footer__link">Terms</a>
-          <a href="/privacy" className="site-footer__link">Privacy</a>
+          {legalLinks.map((l) => (
+            <a key={l.href} href={l.href} className="site-footer__link">{l.label}</a>
+          ))}
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

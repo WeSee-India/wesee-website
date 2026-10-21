@@ -1,153 +1,68 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { TrendingUp } from "lucide-react";
-import ParticleWrapper from "./ParticleWrapper";
+import { useSettings } from "@/content";
+import { useServiceCategories, useServices } from "@/data/useServices";
 
-const navItems = [
-  { label: "Services", href: "/services", hasDropdown: true },
-  { label: "Case Studies", href: "/case-studies", hasDropdown: false },
-  { label: "Projects", href: "/projects", hasDropdown: false },
-  { label: "About", href: "/about", hasDropdown: false },
-  { label: "Team", href: "/team", hasDropdown: false },
-  { label: "Blog", href: "/blog", hasDropdown: false },
-  { label: "Careers", href: "/careers", hasDropdown: false },
-  { label: "Contact", href: "/contact", hasDropdown: false },
-];
+interface NavItem { label: string; href: string; hasDropdown: boolean }
 
-/** Matches `client/src/data/services.ts` slugs; `categoryId` when there is no dedicated ServiceDetail page. */
+/** A sub-link in the services menu: a service page (`slug`) or a category filter (`categoryId`). */
 type NavSubService =
   | { label: string; slug: string }
   | { label: string; categoryId: number };
+
+interface NavCategory { name: string; description: string; subServices: NavSubService[] }
 
 function subServiceHref(sub: NavSubService): string {
   return "slug" in sub ? `/services/${sub.slug}` : `/services?category=${sub.categoryId}`;
 }
 
-// 10 service categories with expandable sub-services
-const serviceCategories: Array<{
-  name: string;
-  description: string;
-  subServices: NavSubService[];
-}> = [
-  {
-    name: "Autonomous AI Agents",
-    description: "AI-powered agents that talk, think, and act on behalf of businesses — handling sales, support, appointments, and calls 24/7.",
-    subServices: [
-      { label: "AI Sales Agent", slug: "ai-sales-agent" },
-      { label: "AI Customer Support Bot", slug: "ai-customer-support-bot" },
-      { label: "AI Receptionist & Scheduler", slug: "ai-receptionist" },
-      { label: "Internal Knowledge AI (HR / IT / Ops)", slug: "internal-ai-assistant" },
-      { label: "Voice AI & Smart IVR", slug: "voice-ai-ivr" },
-      { label: "Custom AI Agent Development", slug: "custom-ai-agent-development" },
-    ],
-  },
-  {
-    name: "Workflow Automation & Systems Integration",
-    description: "Connect your existing tools and eliminate manual work using n8n, Zapier, Make, and custom code.",
-    subServices: [
-      { label: "No-Code Workflow Automation", slug: "no-code-workflow" },
-      { label: "Document & Invoice Automation", slug: "document-invoice-automation" },
-      { label: "Smart Lead Routing & Assignment", slug: "lead-routing" },
-      { label: "ERP & Multi-System Integration", slug: "erp-integration" },
-      { label: "Alerts, Escalations & Notification Engines", slug: "notification-systems" },
-    ],
-  },
-  {
-    name: "Performance Marketing & Paid Media",
-    description: "ROI-driven advertising across Meta, Google, YouTube, LinkedIn — every rupee tracked and optimized.",
-    subServices: [
-      { label: "Meta Ads — Facebook & Instagram", slug: "meta-ads" },
-      { label: "Google Ads — Search, Display & Shopping", slug: "google-ads" },
-      { label: "YouTube Video Advertising", slug: "youtube-ads" },
-      { label: "LinkedIn B2B Campaigns", slug: "linkedin-ads" },
-      { label: "Retargeting & Programmatic", slug: "retargeting" },
-      { label: "Influencer-Paid Hybrid Campaigns", slug: "influencer-affiliate" },
-    ],
-  },
-  {
-    name: "Search Dominance & Organic Discovery",
-    description: "Long-term organic visibility through technical SEO, content strategy, and authority building.",
-    subServices: [
-      { label: "Technical & On-Page SEO", slug: "technical-seo" },
-      { label: "Local SEO & Google Business", slug: "local-seo" },
-      { label: "Content Strategy & Authority Building", slug: "content-seo" },
-      { label: "AI-Powered Content at Scale", slug: "ai-powered-content" },
-      { label: "Answer Engine Optimisation (AEO)", slug: "answer-engine-optimisation" },
-    ],
-  },
-  {
-    name: "Conversational Marketing & Messaging",
-    description: "Automated multi-channel communication via WhatsApp, email, SMS, and push notifications.",
-    subServices: [
-      { label: "WhatsApp Business API & Automation", slug: "whatsapp-business" },
-      { label: "Email Marketing & Drip Campaigns", slug: "email-marketing" },
-      { label: "SMS & RCS Rich Messaging", slug: "sms-rcs" },
-      { label: "Omnichannel Unified Inbox", slug: "omnichannel-inbox" },
-      { label: "Push Notifications & In-App Messaging", slug: "push-notifications" },
-    ],
-  },
-  {
-    name: "Digital Experience & Creative Studio",
-    description: "High-converting websites, brand identities, and video content designed for performance.",
-    subServices: [
-      { label: "High-Performance Website Design & Dev", slug: "website-design" },
-      { label: "Landing Pages & Conversion Optimisation", slug: "landing-pages" },
-      { label: "Brand Identity & Visual Systems", slug: "brand-identity" },
-      { label: "Video Production & Motion Graphics", slug: "video-production" },
-      { label: "UI/UX Design & Prototyping", slug: "ui-ux-design" },
-      { label: "Social Media Creative & Content Design", slug: "social-media-creative" },
-    ],
-  },
-  {
-    name: "E-Commerce & D2C Growth Engine",
-    description: "Full-stack e-commerce solutions from store setup to marketplace management and optimization.",
-    subServices: [
-      { label: "D2C Brand Launch & Growth", slug: "d2c-brand-launch" },
-      { label: "E-Commerce Storefront Design", slug: "ecommerce-storefront-design" },
-      { label: "Marketplace Onboarding & Management", slug: "marketplace-management" },
-      { label: "Product Listing & Catalog Optimisation", slug: "product-feed" },
-      { label: "Subscription & Recurring Revenue Systems", slug: "subscription-recurring-revenue" },
-    ],
-  },
-  {
-    name: "Revenue Operations & Sales Automation",
-    description: "Systems that capture, nurture, convert, and retain customers — engineered for revenue.",
-    subServices: [
-      { label: "CRM Setup & Pipeline Optimisation", slug: "crm-setup" },
-      { label: "Sales Funnel & Conversion Automation", slug: "sales-funnel" },
-      { label: "Lead Generation — Inbound & Outbound", slug: "lead-generation" },
-      { label: "Influencer & Affiliate Program Management", slug: "influencer-affiliate" },
-      { label: "Loyalty, Referral & Retention Programs", slug: "loyalty-referral" },
-    ],
-  },
-  {
-    name: "Data Intelligence & Analytics",
-    description: "Custom dashboards and BI solutions that turn raw data into actionable insights for smarter decision-making.",
-    subServices: [
-      { label: "Custom BI Dashboards & Reporting", slug: "analytics-bi" },
-      { label: "Marketing Attribution & ROI Tracking", slug: "analytics-bi" },
-      { label: "Customer Analytics & Churn Prediction", slug: "analytics-bi" },
-      { label: "A/B Testing & Experimentation Frameworks", slug: "analytics-bi" },
-      { label: "AI-Powered Forecasting & Trend Analysis", slug: "analytics-bi" },
-    ],
-  },
-  {
-    name: "Cloud, Security & Business Operations",
-    description: "Cloud infrastructure, analytics dashboards, HR automation, and operational excellence.",
-    subServices: [
-      { label: "Cloud Architecture & DevOps", slug: "cloud-devops" },
-      { label: "Cybersecurity & Compliance", slug: "data-security" },
-      { label: "HR & Recruitment Automation", slug: "hr-automation" },
-      { label: "Reputation & Review Management", categoryId: 9 },
-      { label: "Business Strategy & Growth Consulting", categoryId: 9 },
-      { label: "Government Subsidy & Scheme Marketing", categoryId: 9 },
-    ],
-  },
-];
+/** Editors may type dashes in menu labels; the site copy avoids them. */
+const noDash = (t: string) => t.replace(/\s*[—–]\s*/g, ": ");
+
+interface CmsNavigation {
+  headerLinks?: { href?: string; label?: string; servicesMenu?: boolean }[];
+  servicesMenu?: {
+    name?: string;
+    description?: string;
+    items?: { label?: string; serviceSlug?: string | null; categoryNumber?: number | null }[];
+  }[];
+}
 
 const DROPDOWN_HOVER_DELAY_MS = 120;
 
 export default function Header() {
+  const nav = useSettings("navigation") as CmsNavigation;
+  const cmsCategories = useServiceCategories();
+  const cmsServices = useServices();
+
+  const navItems: NavItem[] = useMemo(
+    () =>
+      (nav.headerLinks ?? [])
+        .filter((l) => l.href && l.label)
+        .map((l) => ({ label: l.label as string, href: l.href as string, hasDropdown: !!l.servicesMenu })),
+    [nav.headerLinks],
+  );
+
+  // The mega menu comes from Navigation > Services menu groups; if that is empty it is built from the live service catalogue.
+  const serviceCategories: NavCategory[] = useMemo(() => {
+    const groups = (nav.servicesMenu ?? [])
+      .filter((g) => g.name)
+      .map((g) => ({
+        name: noDash(g.name as string),
+        description: g.description ?? "",
+        subServices: (g.items ?? []).flatMap((i): NavSubService[] =>
+          !i.label ? [] : i.serviceSlug ? [{ label: noDash(i.label), slug: i.serviceSlug }] : i.categoryNumber != null ? [{ label: noDash(i.label), categoryId: i.categoryNumber }] : [],
+        ),
+      }));
+    if (groups.length) return groups;
+    return cmsCategories.map((c) => ({
+      name: c.name,
+      description: c.summary,
+      subServices: cmsServices.filter((s) => s.categoryId === c.id).map((s) => ({ label: s.name, slug: s.slug })),
+    }));
+  }, [nav.servicesMenu, cmsCategories, cmsServices]);
+
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);

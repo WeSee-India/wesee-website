@@ -15,7 +15,9 @@ import {
   Workflow,
   type LucideIcon,
 } from "lucide-react";
-import { defaultServiceGrowthComparisonChart, services } from "@/data/services";
+import { defaultServiceGrowthComparisonChart, type Service, type ServiceGrowthComparisonChart } from "@/data/services";
+import { useSection } from "@/content";
+import { useServices } from "@/data/useServices";
 import { getServiceImage } from "@/pages/Services";
 import TextReveal from "@/components/TextReveal";
 import ImageReveal from "@/components/ImageReveal";
@@ -40,10 +42,35 @@ const SCOPE_ICONS: LucideIcon[] = [
   Sparkles,
 ];
 
+/** Shared copy on every service page ("services" page, "detail" section in the CMS). {service} = the service name. */
+type DetailContent = {
+  deliveryHeading?: string;
+  deliveryParagraphs?: string[];
+  ctaKicker?: string;
+  ctaHeading?: string;
+  ctaBody?: string;
+  ctaButton?: string;
+  defaultChart?: ServiceGrowthComparisonChart | null;
+  defaultFaqs?: { question?: string; answer?: string }[];
+};
+
+const DEFAULT_DELIVERY_HEADING = "How does WeSee deliver this?";
+const DEFAULT_DELIVERY_PARAGRAPHS = [
+  "At WeSee, we approach {service} with a rigorous discovery-first methodology. We begin by mapping your current workflows, identifying bottlenecks, and defining clear success metrics before writing a single line of code.",
+  "Our team of AI engineers and strategists then design, build, and deploy the solution in iterative sprints, with full transparency and client collaboration at every stage. Post-launch, we provide ongoing optimization and support to ensure the system scales with your business.",
+];
+
+const fillService = (text: string, name: string) => text.replace(/\{service\}/g, name);
+
 function parseDeliverable(text: string): { title: string; subtitle?: string } {
+  // Older content used "Title — subtitle"; the CMS now stores "Title: subtitle".
   const em = text.split(/\s[—–]\s/);
   if (em.length >= 2) {
-    return { title: em[0].trim(), subtitle: em.slice(1).join(" — ").trim() };
+    return { title: em[0].trim(), subtitle: em.slice(1).join(": ").trim() };
+  }
+  const colon = text.indexOf(": ");
+  if (colon > 0 && colon < 96) {
+    return { title: text.slice(0, colon).trim(), subtitle: text.slice(colon + 2).trim() };
   }
   const idx = text.indexOf(" - ");
   if (idx > 0 && idx < 96) {
@@ -52,7 +79,7 @@ function parseDeliverable(text: string): { title: string; subtitle?: string } {
   return { title: text };
 }
 
-function defaultServiceFaqs(service: (typeof services)[number]): { question: string; answer: string }[] {
+function builtInServiceFaqs(service: Service): { question: string; answer: string }[] {
   const name = service.name;
   return [
     {
@@ -85,6 +112,8 @@ function defaultServiceFaqs(service: (typeof services)[number]): { question: str
 
 export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const services = useServices();
+  const detail = useSection<DetailContent>("services", "detail");
   const service = services.find((s) => s.slug === slug);
   const serviceIndex = services.findIndex((s) => s.slug === slug);
 
@@ -130,13 +159,20 @@ export default function ServiceDetail() {
   }
 
   const heroImage = getServiceImage(service, serviceIndex);
-  const growthChartConfig = service.growthComparisonChart ?? defaultServiceGrowthComparisonChart;
+  const cmsChart = detail?.defaultChart && detail.defaultChart.rows?.length ? detail.defaultChart : null;
+  const growthChartConfig = service.growthComparisonChart ?? cmsChart ?? defaultServiceGrowthComparisonChart;
+  const cmsFaqs = (detail?.defaultFaqs ?? [])
+    .filter((f) => f.question && f.answer)
+    .map((f) => ({ question: fillService(f.question!, service.name), answer: fillService(f.answer!, service.name) }));
+  const faqItems = service.faqs ?? (cmsFaqs.length > 0 ? cmsFaqs : builtInServiceFaqs(service));
+  const cmsParagraphs = (detail?.deliveryParagraphs ?? []).filter(Boolean);
+  const deliveryParagraphs = cmsParagraphs.length > 0 ? cmsParagraphs : DEFAULT_DELIVERY_PARAGRAPHS;
 
   const relatedServices =
     service.relatedServiceSlugs && service.relatedServiceSlugs.length > 0
       ? service.relatedServiceSlugs
           .map((slug) => services.find((x) => x.slug === slug))
-          .filter((item): item is (typeof services)[number] => item != null && item.id !== service.id)
+          .filter((item): item is Service => item != null && item.id !== service.id)
           .slice(0, 3)
       : services.filter((s) => s.categoryId === service.categoryId && s.id !== service.id).slice(0, 3);
 
@@ -184,9 +220,9 @@ export default function ServiceDetail() {
               {service.name}
             </TextReveal>
 
-            {serviceDefinitions[service.slug] && (
+            {(service.definition || serviceDefinitions[service.slug]) && (
               <p className="mt-3 text-[16px] font-medium leading-relaxed text-neutral-900 md:mt-4 md:text-[19px] md:leading-[1.6] md:text-[var(--foreground)]">
-                {serviceDefinitions[service.slug]}
+                {service.definition || serviceDefinitions[service.slug]}
               </p>
             )}
 
@@ -269,18 +305,16 @@ export default function ServiceDetail() {
 
           <article className="gsap-reveal w-full max-w-none">
             <h2 className="text-lg font-bold tracking-[-0.02em] text-neutral-900 md:text-2xl md:font-semibold md:text-[var(--foreground)] md:text-[1.75rem]">
-              How does WeSee deliver this?
+              {detail?.deliveryHeading || DEFAULT_DELIVERY_HEADING}
             </h2>
-            <p className="mt-3 max-w-none text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
-              At WeSee, we approach {service.name.toLowerCase()} with a rigorous discovery-first methodology. We begin by
-              mapping your current workflows, identifying bottlenecks, and defining clear success metrics before writing a
-              single line of code.
-            </p>
-            <p className="mt-4 max-w-none text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]">
-              Our team of AI engineers and strategists then design, build, and deploy the solution in iterative sprints —
-              with full transparency and client collaboration at every stage. Post-launch, we provide ongoing optimization
-              and support to ensure the system scales with your business.
-            </p>
+            {deliveryParagraphs.map((p, i) => (
+              <p
+                key={i}
+                className={`${i === 0 ? "mt-3 md:mt-6" : "mt-4 md:mt-6"} max-w-none text-[15px] leading-[1.75] text-neutral-600 md:text-[17px] md:leading-[1.78] md:text-[var(--ink-80)]`}
+              >
+                {fillService(p, service.name)}
+              </p>
+            ))}
           </article>
 
           <div className="w-full mt-10 pt-0 text-left md:mt-14">
@@ -340,7 +374,7 @@ export default function ServiceDetail() {
                 collapsible
                 className="mt-6 w-full md:mt-10"
               >
-                {(service.faqs ?? defaultServiceFaqs(service)).map((item, i) => (
+                {faqItems.map((item, i) => (
                   <AccordionItem
                     key={i}
                     value={`faq-${i}`}
@@ -370,7 +404,7 @@ export default function ServiceDetail() {
         <div className="relative z-10 container">
           <div className="mx-auto max-w-xl text-center md:max-w-xl">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500 md:text-[11px] md:text-white/45">
-              Next step
+              {detail?.ctaKicker || "Next step"}
             </p>
             <TextReveal
               as="h2"
@@ -378,10 +412,10 @@ export default function ServiceDetail() {
               stagger={0.04}
               onScroll={false}
             >
-              Interested in this service?
+              {detail?.ctaHeading || "Interested in this service?"}
             </TextReveal>
             <p className="gsap-reveal mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-neutral-600 md:mt-6 md:text-[17px] md:text-white/55">
-              Book a free discovery call and we&apos;ll show you exactly how this can work for your business.
+              {detail?.ctaBody || "Book a free discovery call and we'll show you exactly how this can work for your business."}
             </p>
             <div className="gsap-reveal mt-7 md:mt-9">
               <MagneticButton as="div" style={{ display: "inline-block" }}>
@@ -389,7 +423,7 @@ export default function ServiceDetail() {
                   href={`/book?service=${service.slug}`}
                   className="inline-flex items-center gap-2 rounded-full bg-[#C9A84C] px-7 py-3.5 text-sm font-semibold text-[#0c0c0c] transition-transform hover:scale-[1.02]"
                 >
-                  Book a free discovery call →
+                  {detail?.ctaButton || "Book a free discovery call →"}
                 </Link>
               </MagneticButton>
             </div>

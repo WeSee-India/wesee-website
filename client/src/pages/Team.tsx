@@ -47,7 +47,7 @@ export default function Team() {
       {/* Wordmark, sized to the content width */}
       <div className="container tm-top">
         <div className="tm-meta">
-          <span>WeSee — Leadership</span>
+          <span>WeSee · Leadership</span>
           <span>Mumbai · Tokyo</span>
         </div>
         <h1 className="tm-wordmark">

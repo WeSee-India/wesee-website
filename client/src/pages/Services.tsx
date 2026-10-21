@@ -2,7 +2,8 @@ import { imgDims } from "@/data/imageSizes";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
-import { services, categories } from "@/data/services";
+import { useServiceCategories, useServices } from "@/data/useServices";
+import { useSection } from "@/content";
 
 import RotorGallery from "@/components/RotorGallery";
 
@@ -157,7 +158,7 @@ const Column = ({ images, y, isMobile = false }: ColumnProps) => {
           <>
             <img
               {...imgDims(item.src)} src={item.src}
-              alt={item.title ? `${item.title} — service` : "Service"}
+              alt={item.title ? `${item.title} service` : "Service"}
               className={`pointer-events-none w-full ${isMobile ? "object-contain" : "object-cover"}`}
               style={{ height: isMobile ? "auto" : "100%", minHeight: isMobile ? undefined : undefined, maxHeight: isMobile ? "none" : "none", display: "block", width: "100%" }}
             />
@@ -192,6 +193,8 @@ const Column = ({ images, y, isMobile = false }: ColumnProps) => {
 };
 
 const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string; name: string; category: string; slug: string }> }) => {
+  const allServices = useServices();
+  const allCategories = useServiceCategories();
   const gallery = useRef<HTMLDivElement>(null);
   const [dimension, setDimension] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
@@ -315,7 +318,7 @@ const ServicesParallaxGallery = ({ services }: { services: Array<{ image: string
               Our services.
             </div>
             <p className="body-text" style={{ maxWidth: "min(640px, 100%)", fontSize: "clamp(14px, 1.8vw, 16px)", color: "#3A3A3A", lineHeight: 1.6 }}>
-              9 categories, 43 services — everything your business needs to automate, grow, and scale intelligently.
+              {allCategories.length} categories, {allServices.length} services. Everything your business needs to automate, grow, and scale intelligently.
             </p>
           </div>
         </div>
@@ -1000,7 +1003,7 @@ const ServicesTerminalGrid = ({ services }: { services: ServiceCard[] }) => (
             fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace",
             fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em",
           }}>
-            wesee — services ({services.length})
+            wesee · services ({services.length})
           </div>
         </div>
         {/* Column headers */}
@@ -2500,7 +2503,7 @@ const ServicesBento = ({ services }: { services: ServiceCard[] }) => (
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       style={{ marginBottom: "clamp(28px,4vw,52px)" }}
     >
-      <div style={{ fontSize: "clamp(11px,1.5vw,12px)", fontWeight: 600, letterSpacing: "0.18em", color: "#999", textTransform: "uppercase", marginBottom: 10 }}>Services — Bento</div>
+      <div style={{ fontSize: "clamp(11px,1.5vw,12px)", fontWeight: 600, letterSpacing: "0.18em", color: "#999", textTransform: "uppercase", marginBottom: 10 }}>Services · Bento</div>
       <div style={{ fontSize: "clamp(26px,3.8vw,48px)", fontWeight: 800, color: "#0a0a0a", letterSpacing: "-0.03em" }}>Our Capabilities</div>
     </motion.div>
 
@@ -3028,7 +3031,7 @@ const ServicesGlitch = ({ services }: { services: ServiceCard[] }) => (
         fontSize: "clamp(9px,1.3vw,11px)", fontFamily: "monospace",
         color: "#ff2d55", letterSpacing: "0.22em", marginBottom: 10,
         textTransform: "uppercase",
-      }}>&gt;&gt; SYSTEM.SERVICES — LOADING</div>
+      }}>&gt;&gt; SYSTEM.SERVICES · LOADING</div>
       <div style={{
         fontSize: "clamp(30px,5vw,64px)", fontWeight: 900, letterSpacing: "-0.04em",
         color: "#fff", lineHeight: 1.05,
@@ -3144,7 +3147,7 @@ const ServicesCurtain = ({ services }: { services: ServiceCard[] }) => {
               fontSize: 10, fontWeight: 700, color: accent, letterSpacing: "0.2em",
               textTransform: "uppercase", fontFamily: "monospace",
             }}>
-              {String(active + 1).padStart(2,"0")} — {svc.category.split(" ").slice(0,2).join(" ")}
+              {String(active + 1).padStart(2,"0")} · {svc.category.split(" ").slice(0,2).join(" ")}
             </div>
           </div>
 
@@ -4061,7 +4064,7 @@ const ServicesEditorial = ({ services }: { services: ServiceCard[] }) => (
         display: "flex", justifyContent: "space-between", alignItems: "center",
       }}
     >
-      <div style={{ fontSize: 10, letterSpacing: "0.24em", color: "#aaa", textTransform: "uppercase", fontWeight: 600 }}>Services — Editorial</div>
+      <div style={{ fontSize: 10, letterSpacing: "0.24em", color: "#aaa", textTransform: "uppercase", fontWeight: 600 }}>Services · Editorial</div>
       <div style={{ fontSize: 10, letterSpacing: "0.16em", color: "#bbb", textTransform: "uppercase" }}>{services.length} entries</div>
     </motion.div>
     {services.map((svc, i) => <EditorialRow key={svc.slug} svc={svc} index={i} />)}
@@ -4782,7 +4785,7 @@ const ServicesSnap = ({ services }: { services: ServiceCard[] }) => {
             >
               {/* Index */}
               <div style={{ fontFamily: "monospace", fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.2em", marginBottom: 28 }}>
-                {String(i + 1).padStart(2, "0")} — {String(services.length).padStart(2, "0")}
+                {String(i + 1).padStart(2, "0")} / {String(services.length).padStart(2, "0")}
               </div>
 
               {/* Category */}
@@ -5160,6 +5163,9 @@ const ServicesAnimatedGrid = ({ services }: { services: ServiceCard[] }) => {
 };
 
 export default function Services() {
+  const ringSection = useSection<{ heading?: string }>("services", "ring");
+  const services = useServices();
+  const categories = useServiceCategories();
   const finePointer = useFinePointer();
   const search = useSearch();
   const params = new URLSearchParams(search);
@@ -5234,7 +5240,7 @@ export default function Services() {
       if (selectedStatus && s.status !== selectedStatus) return false;
       return true;
     });
-  }, [selectedCategory, selectedIndustry, selectedSize, selectedStatus]);
+  }, [services, selectedCategory, selectedIndustry, selectedSize, selectedStatus]);
 
   // Dispatch filter count to header
   useEffect(() => {
@@ -5294,7 +5300,7 @@ export default function Services() {
       currentIndex += count;
     }
     return catPositions;
-  }, [filtered]);
+  }, [filtered, categories]);
 
   const ringFilterApplied =
     selectedCategory !== null ||
@@ -5445,6 +5451,7 @@ export default function Services() {
               camY={5}
               categoryLabels={ringCategoryLabels}
               hideRingCardOverlay={ringFilterApplied}
+              heading={ringSection?.heading || undefined}
             />
           </ParticleWrapper>
         </div>
