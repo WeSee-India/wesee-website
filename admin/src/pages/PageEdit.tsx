@@ -216,7 +216,7 @@ function Editor({ page, schema }: { page: AdminPage; schema: Schema }) {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:-m-1 lg:p-1">
           <Card title="Page details" icon={<Settings2 />}>
             <div className="space-y-4">
               <FieldShell id="pg-title" label="Page name" error={errors.title}>

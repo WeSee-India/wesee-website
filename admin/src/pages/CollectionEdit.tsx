@@ -178,7 +178,7 @@ function Editor({ def, item, siteUrl }: { def: CollectionDef; item: Item | null;
           <Fields fields={def.fields} values={values} onChange={setValues} ctx={{ errors, siteUrl, disabled: !editable }} />
         </Card>
 
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overscroll-contain lg:-m-1 lg:p-1">
           {item && def.publishable && (
             <Card title="Publishing" icon={<Send />}>
               <div className="space-y-3 text-sm">
