@@ -1,5 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowRight, BookOpen, Briefcase, CornerDownLeft, ExternalLink, FolderKanban, ImagePlus, Search, UserCircle, type LucideIcon } from "lucide-react";
+import { ArrowRight, BookOpen, Briefcase, CornerDownLeft, ExternalLink, FolderKanban, Search, UserCircle, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
@@ -23,7 +23,6 @@ const actions: Command[] = [
   { id: "new-article", label: "Write an article", section: "Create", icon: BookOpen, href: "/content/blogPosts/new", permission: "content.edit" },
   { id: "new-project", label: "Add a project", section: "Create", icon: FolderKanban, href: "/content/projects/new", permission: "content.edit" },
   { id: "new-job", label: "Post a job", section: "Create", icon: Briefcase, href: "/content/jobs/new", permission: "content.edit" },
-  { id: "upload", label: "Upload media", section: "Create", icon: ImagePlus, href: "/media", permission: "media.upload" },
   { id: "profile", label: "Your profile", section: "Account", icon: UserCircle, href: "/profile" },
 ];
 

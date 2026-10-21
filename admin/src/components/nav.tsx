@@ -1,4 +1,4 @@
-import { BookOpen, Briefcase, FileText, FolderKanban, HelpCircle, History, Image, LayoutDashboard, LayoutTemplate, ListTree, Settings, Sparkles, UserCircle, Users, UsersRound, type LucideIcon } from "lucide-react";
+import { BookOpen, Briefcase, FileText, FolderKanban, HelpCircle, History, LayoutDashboard, LayoutTemplate, ListTree, Settings, Sparkles, UserCircle, Users, UsersRound, type LucideIcon } from "lucide-react";
 import type { Permission } from "@/lib/types";
 
 export interface NavItem {
@@ -31,7 +31,6 @@ export const navGroups: NavGroup[] = [
       { href: "/content/blogPosts", label: "Blog", icon: BookOpen },
       { href: "/content/authors", label: "Authors", icon: UserCircle },
       { href: "/content/faqs", label: "FAQs", icon: HelpCircle },
-      { href: "/media", label: "Media library", icon: Image },
     ],
   },
   {

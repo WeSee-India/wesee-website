@@ -14,7 +14,6 @@ const screens = {
   Activity: () => import("@/pages/Activity"),
   CollectionEdit: () => import("@/pages/CollectionEdit"),
   CollectionList: () => import("@/pages/CollectionList"),
-  Media: () => import("@/pages/Media"),
   PageEdit: () => import("@/pages/PageEdit"),
   PagesList: () => import("@/pages/PagesList"),
   Profile: () => import("@/pages/Profile"),
@@ -24,7 +23,6 @@ const screens = {
 const Activity = lazy(screens.Activity);
 const CollectionEdit = lazy(screens.CollectionEdit);
 const CollectionList = lazy(screens.CollectionList);
-const Media = lazy(screens.Media);
 const PageEdit = lazy(screens.PageEdit);
 const PagesList = lazy(screens.PagesList);
 const Profile = lazy(screens.Profile);
@@ -66,7 +64,6 @@ export default function App() {
           <Route path="/pages/:id">{(p) => <PageEdit id={p.id} />}</Route>
           <Route path="/content/:key">{(p) => <CollectionList key={p.key} collectionKey={p.key} />}</Route>
           <Route path="/content/:key/:id">{(p) => <CollectionEdit key={`${p.key}/${p.id}`} collectionKey={p.key} id={p.id} />}</Route>
-          <Route path="/media" component={Media} />
           <Route path="/settings">{() => <Settings />}</Route>
           <Route path="/settings/:key">{(p) => <Settings settingKey={p.key} />}</Route>
           <Route path="/users">

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, BookOpen, Briefcase, CalendarClock, CheckCircle2, ChevronRight, CircleDashed, Clock, FileText, FolderKanban, Home, Image, ImagePlus, RefreshCw, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, BookOpen, Briefcase, CalendarClock, CheckCircle2, ChevronRight, CircleDashed, Clock, FileText, FolderKanban, Home, RefreshCw, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "wouter";
 import { dashboardQuery } from "@/lib/queries";
@@ -22,7 +22,6 @@ const quick: { href: string; label: string; hint: string; icon: LucideIcon }[] =
   { href: "/content/projects/new", label: "Add a project", hint: "Portfolio", icon: FolderKanban },
   { href: "/content/jobs/new", label: "Post a job", hint: "Careers", icon: Briefcase },
   { href: "/pages", label: "Edit pages", hint: "Website", icon: Home },
-  { href: "/media", label: "Upload media", hint: "Library", icon: ImagePlus },
 ];
 
 const iconFor = (key: string): LucideIcon => navGroups.flatMap((g) => g.items).find((i) => i.href === `/content/${key}`)?.icon ?? FileText;
@@ -32,7 +31,6 @@ function activityHref(r: DashboardData["recent"][number]) {
   if (!r.entityType || !r.entityId || r.action.endsWith(".delete")) return null;
   if (r.entityType === "page") return `/pages/${r.entityId}`;
   if (r.entityType === "setting") return `/settings/${r.entityId}`;
-  if (r.entityType === "media") return "/media";
   if (r.entityType === "user") return null;
   return `/content/${r.entityType}/${r.entityId}`;
 }
@@ -70,7 +68,7 @@ function Stat({ label, value, icon: Icon, tone, href, note }: { label: string; v
 function DashboardSkeleton() {
   return (
     <div className="space-y-6" role="status" aria-label="Loading">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-[108px] rounded-xl" />
         ))}
@@ -125,11 +123,10 @@ export default function Dashboard() {
         <ErrorState error={q.error} retry={() => q.refetch()} />
       ) : d ? (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
             <Stat label="Live on the website" value={sum("published")} icon={CheckCircle2} tone="bg-emerald-50 text-emerald-600" note="Published items across all content" />
             <Stat label="Drafts" value={sum("draft")} icon={CircleDashed} tone="bg-neutral-100 text-neutral-600" note="Not on the website yet" />
             <Stat label="Waiting to publish" value={sum("pending") + d.pagesPending.length} icon={Clock} tone="bg-amber-50 text-amber-600" note="Saved changes not live yet" />
-            <Stat label="Media files" value={d.media} icon={Image} tone="bg-sky-50 text-sky-600" href="/media" note="Images and documents" />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
