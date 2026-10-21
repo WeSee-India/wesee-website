@@ -12,12 +12,12 @@ const link = (label: string, href: string) => ({ label, href });
 
 export const pageSeo: Record<string, { seoTitle: string; seoDescription: string }> = {
   home: {
-    seoTitle: "WeSee — AI Agents, Automation & Software",
+    seoTitle: "WeSee: AI Agents, Automation & Software",
     seoDescription:
-      "WeSee designs, builds, and ships AI agents, automation, and custom software for ambitious businesses — from lead generation and marketing to internal operations. From Tokyo to Mumbai.",
+      "WeSee designs, builds, and ships AI agents, automation, and custom software for ambitious businesses, from lead generation and marketing to internal operations. From Tokyo to Mumbai.",
   },
   services: {
-    seoTitle: "Services — AI Agents, Automation, Marketing & Web | WeSee",
+    seoTitle: "Services: AI Agents, Automation, Marketing & Web | WeSee",
     seoDescription: "Explore 50+ WeSee services: AI agents and voice bots, workflow automation, performance marketing, SEO, web and e-commerce development, CRM, analytics and more.",
   },
   "case-studies": {
@@ -25,27 +25,27 @@ export const pageSeo: Record<string, { seoTitle: string; seoDescription: string 
     seoDescription: "See what WeSee has built: AI finance tools, cloud platforms, trading products and brand sites for clients in Japan and beyond.",
   },
   projects: {
-    seoTitle: "Projects — AI Agents, Automations & Apps We Have Built | WeSee",
+    seoTitle: "Projects: AI Agents, Automations & Apps We Have Built | WeSee",
     seoDescription: "A portfolio of AI agents, workflow automations, apps and dashboards designed and shipped by WeSee, with the tools and platforms behind each one.",
   },
   about: {
-    seoTitle: "About WeSee — AI & Engineering Studio, Tokyo to Mumbai",
+    seoTitle: "About WeSee: AI & Engineering Studio, Tokyo to Mumbai",
     seoDescription: "Meet WeSee, a senior product, engineering and AI studio helping ambitious companies automate operations and grow, with teams in Tokyo and Mumbai.",
   },
   team: {
-    seoTitle: "Our Team — The People Behind WeSee",
+    seoTitle: "Our Team: The People Behind WeSee",
     seoDescription: "The engineers, designers, marketers and AI specialists at WeSee who design, build and ship software, automation and growth systems for our clients.",
   },
   contact: {
-    seoTitle: "Contact WeSee — Talk to Our AI & Automation Team",
+    seoTitle: "Contact WeSee: Talk to Our AI & Automation Team",
     seoDescription: "Get in touch with WeSee about AI agents, workflow automation, marketing or custom software. Tell us what you want to build and we will reply quickly.",
   },
   blog: {
-    seoTitle: "Blog — AI, Automation & Growth Insights | WeSee",
+    seoTitle: "Blog: AI, Automation & Growth Insights | WeSee",
     seoDescription: "Practical articles from WeSee on AI sales agents, chatbots, workflow automation and AI-driven paid advertising for growing businesses.",
   },
   careers: {
-    seoTitle: "Careers at WeSee — Join Our AI & Engineering Studio",
+    seoTitle: "Careers at WeSee: Join Our AI & Engineering Studio",
     seoDescription: "Explore open roles at WeSee and help build AI agents, automation and software for ambitious companies. Teams in Tokyo and Mumbai.",
   },
   book: {
@@ -57,7 +57,7 @@ export const pageSeo: Record<string, { seoTitle: string; seoDescription: string 
 export const blogSeo: Record<string, { seoTitle: string; seoDescription: string; ogImage: string }> = {
   "ai-sales-agents-replacing-sdr-teams": {
     seoTitle: "How AI Sales Agents Are Replacing SDR Teams in 2025 | WeSee",
-    seoDescription: "The traditional SDR model is breaking. AI sales agents can now qualify leads, book meetings, and follow up — at a fraction of the cost.",
+    seoDescription: "The traditional SDR model is breaking. AI sales agents can now qualify leads, book meetings, and follow up, at a fraction of the cost.",
     ogImage: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80",
   },
   "hidden-cost-manual-workflows": {
@@ -143,7 +143,7 @@ export const sectionDefaults: Record<string, Record<string, Record<string, unkno
     mission: {
       heading: "Automation that changes how business works.",
       paragraphs: [
-        "At WeSee, we believe the gap between great companies and average ones is increasingly determined by how intelligently they operate. We exist to close that gap — using AI and automation to give ambitious businesses the operational leverage that was once only available to tech giants.",
+        "At WeSee, we believe the gap between great companies and average ones is increasingly determined by how intelligently they operate. We exist to close that gap, using AI and automation to give ambitious businesses the operational leverage that was once only available to tech giants.",
         "Every system we build is designed to eliminate manual work, accelerate decision-making, and create compounding business value that grows with our clients.",
       ],
     },
@@ -164,7 +164,7 @@ export const sectionDefaults: Record<string, Record<string, Record<string, unkno
   team: {
     hero: {
       heading: "We are a community of builders.",
-      body: "We ship intelligent systems with an ambitious, collaborative spirit — across industries, time zones, and disciplines.",
+      body: "We ship intelligent systems with an ambitious, collaborative spirit, across industries, time zones, and disciplines.",
       disciplines: "Engineering · Design · Operations",
       collage: [
         { src: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&q=80", alt: "Team collaborating around a table", position: "center 38%" },
@@ -246,7 +246,7 @@ export const sectionDefaults: Record<string, Record<string, Record<string, unkno
       deliveryHeading: "How does WeSee deliver this?",
       deliveryParagraphs: [
         "At WeSee, we approach {service} with a rigorous discovery-first methodology. We begin by mapping your current workflows, identifying bottlenecks, and defining clear success metrics before writing a single line of code.",
-        "Our team of AI engineers and strategists then design, build, and deploy the solution in iterative sprints — with full transparency and client collaboration at every stage. Post-launch, we provide ongoing optimization and support to ensure the system scales with your business.",
+        "Our team of AI engineers and strategists then design, build, and deploy the solution in iterative sprints, with full transparency and client collaboration at every stage. Post-launch, we provide ongoing optimization and support to ensure the system scales with your business.",
       ],
       ctaKicker: "Next step",
       ctaHeading: "Interested in this service?",
@@ -291,22 +291,22 @@ export const sectionDefaults: Record<string, Record<string, Record<string, unkno
     connect: {
       heading: "Prefer a *quick chat?*",
       subheading: "No forms. No waiting. Just a direct line to the team.",
-      message: "Hey — choose how you'd like to connect with WeSee.",
+      message: "Hey, choose how you'd like to connect with WeSee.",
       footnote: "Typically responds within a few hours during business days.",
     },
   },
   book: {
     header: {
       heading: "Let's map the *signal* inside your business.",
-      body: "In 30 minutes, we'll understand your current systems, identify your highest–leverage automation opportunities, and outline a clear path to implementation.",
+      body: "In 30 minutes, we'll understand your current systems, identify your highest-leverage automation opportunities, and outline a clear path to implementation.",
     },
     expect: {
       kicker: "In this call",
       items: [
         "Quick walkthrough of your current tools, workflows, and bottlenecks.",
-        "Identify 2–3 concrete automation or AI-agent opportunities.",
+        "Identify 2 to 3 concrete automation or AI-agent opportunities.",
         "Discuss feasibility, timelines, and potential ROI.",
-        "Decide together on next steps—if it makes sense for both sides.",
+        "Decide together on next steps, if it makes sense for both sides.",
       ],
     },
     info: { chips: ["30 min discovery", "Free. No obligation."], email: "harsh.khanna@weseegpt.com" },
@@ -320,7 +320,7 @@ export const settingDefaults: Record<string, Record<string, unknown>> = {
     siteUrl: "https://www.weseegpt.com",
     logo: "/wesee.jpg",
     favicon: "/favicon.png",
-    defaultTitle: "WeSee — AI Agents, Automation & Software",
+    defaultTitle: "WeSee: AI Agents, Automation & Software",
     defaultDescription: "We design, build, and ship the AI agents, automation, and software ambitious companies run on.",
     defaultOgImage: "/landing/assets/og-image.png",
     organizationDescription: "AI automation and engineering studio building custom AI agents, automation, web platforms, and software for ambitious companies.",
