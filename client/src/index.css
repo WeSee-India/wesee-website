@@ -7156,8 +7156,14 @@ body {
   gap: 36px 24px;
 }
 
+/* However many columns the CMS gives, spread them so the last one ends at the right edge. */
 @media (min-width: 768px) {
-  .site-footer__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .site-footer__cols {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    justify-content: space-between;
+  }
 }
 
 .site-footer__ext {
