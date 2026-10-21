@@ -16,6 +16,7 @@ import { systemPages } from "../src/content/pages.js";
 import { settings } from "../src/content/settings.js";
 import { blogSeo, pageSeo, sectionDefaults, settingDefaults } from "./seed/defaults.js";
 import { caseStudies } from "./seed/caseStudies.js";
+import { publishCaseStudiesOnce, stripPlaceholders } from "./seed/publishCaseStudies.js";
 import extracted from "./seed/extracted.json" with { type: "json" };
 
 const prisma = new PrismaClient();
@@ -140,8 +141,13 @@ async function main() {
     }),
   );
 
-  // Case studies from the developer handoff. They still contain [PLACEHOLDERS] to confirm, so they start as drafts.
-  await seedCollection("caseStudies", caseStudies, { draft: true });
+  // Case studies from the developer handoff, published with the handoff's [PLACEHOLDER] notes removed.
+  await seedCollection(
+    "caseStudies",
+    caseStudies.map((c) => ({ ...c, values: stripPlaceholders(c.values) })),
+  );
+  // Databases seeded before that still hold them as drafts with the notes: publish those once.
+  await publishCaseStudiesOnce(prisma);
 
   // Authors before articles.
   let authorId: string | undefined;
