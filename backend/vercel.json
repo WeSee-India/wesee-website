@@ -4,5 +4,6 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build && pnpm db:deploy && pnpm db:seed",
   "outputDirectory": "public",
+  "regions": ["sin1"],
   "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
