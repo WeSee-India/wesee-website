@@ -5,7 +5,7 @@ import { api, assetUrl } from "@/lib/api";
 import { Markdown } from "@/lib/markdown";
 import { emptyValues, plain } from "@/lib/schema";
 import type { FieldDef, Item, Values } from "@/lib/types";
-import { Button, cx, FieldShell, Input, Select, Switch, Textarea } from "../ui";
+import { Button, cx, Dropdown, FieldShell, Input, Switch, Textarea } from "../ui";
 import { MediaPicker } from "./MediaPicker";
 
 export interface FieldContext {
@@ -14,6 +14,9 @@ export interface FieldContext {
   siteUrl: string;
   disabled?: boolean;
 }
+
+/** Props every input-like control in a field gets. */
+type FieldCommon = { id: string; invalid: boolean; disabled?: boolean; "aria-describedby"?: string; "aria-required"?: boolean };
 
 const join = (path: string, name: string | number) => (path ? `${path}.${name}` : String(name));
 
@@ -39,7 +42,7 @@ export function Field({ field, value, onChange, path, ctx }: { field: FieldDef; 
   const id = useId();
   const error = ctx.errors[path];
   const describedBy = error ? `${id}-error` : field.help ? `${id}-help` : undefined;
-  const common = { id, invalid: !!error, disabled: ctx.disabled, "aria-describedby": describedBy, "aria-required": field.required || undefined };
+  const common: FieldCommon = { id, invalid: !!error, disabled: ctx.disabled, "aria-describedby": describedBy, "aria-required": field.required || undefined };
   const str = typeof value === "string" ? value : value == null ? "" : String(value);
 
   switch (field.type) {
@@ -100,14 +103,7 @@ export function Field({ field, value, onChange, path, ctx }: { field: FieldDef; 
     case "select":
       return (
         <FieldShell id={id} label={field.label} required={field.required} help={field.help} error={error}>
-          <Select {...common} value={str} onChange={(e) => onChange(e.target.value || null)}>
-            {(!field.required || !str) && <option value="">{field.required ? "Choose…" : "—"}</option>}
-            {field.options.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </Select>
+          <Dropdown {...common} value={str} onChange={(v) => onChange(v || null)} clearable={!field.required} placeholder={field.required ? "Choose…" : "—"} options={field.options.map((o) => ({ value: o, label: o }))} />
         </FieldShell>
       );
     case "multiselect": {
@@ -204,24 +200,23 @@ function ImageField({ field, value, onChange, id, error, ctx }: { field: FieldDe
   );
 }
 
-function ReferenceField({ field, value, onChange, id, error, common }: { field: Extract<FieldDef, { type: "reference" }>; value: unknown; onChange(v: unknown): void; id: string; error?: string; common: object }) {
+function ReferenceField({ field, value, onChange, id, error, common }: { field: Extract<FieldDef, { type: "reference" }>; value: unknown; onChange(v: unknown): void; id: string; error?: string; common: FieldCommon }) {
   const q = useQuery({ queryKey: ["collection", field.collection, "options"], queryFn: () => api<{ items: Item[] }>(`/api/admin/collections/${field.collection}?take=500`) });
   const byNumber = field.valueField === "number";
   const str = value === null || value === undefined ? "" : String(value);
   return (
     <FieldShell id={id} label={field.label} required={field.required} help={field.help} error={error}>
-      <Select {...common} value={str} onChange={(e) => onChange(e.target.value === "" ? null : byNumber ? Number(e.target.value) : e.target.value)}>
-        <option value="">{q.isLoading ? "Loading…" : field.required ? "Choose…" : "—"}</option>
-        {q.data?.items.map((i) => {
-          const v = byNumber ? String(i.values.number) : i.id;
+      <Dropdown
+        {...common}
+        value={str}
+        onChange={(v) => onChange(v === "" ? null : byNumber ? Number(v) : v)}
+        clearable={!field.required}
+        placeholder={q.isLoading ? "Loading…" : field.required ? "Choose…" : "—"}
+        options={(q.data?.items ?? []).map((i) => {
           const name = String(i.values.name ?? i.values.title ?? i.id);
-          return (
-            <option key={i.id} value={v}>
-              {byNumber ? `${i.values.number}. ${name}` : name}
-            </option>
-          );
+          return byNumber ? { value: String(i.values.number), label: `${i.values.number}. ${name}` } : { value: i.id, label: name };
         })}
-      </Select>
+      />
     </FieldShell>
   );
 }

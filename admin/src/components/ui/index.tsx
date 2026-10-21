@@ -1,8 +1,20 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as Dialog from "@radix-ui/react-dialog";
 import clsx from "clsx";
-import { AlertTriangle, Inbox, Loader2, Search, X } from "lucide-react";
-import { forwardRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { AlertTriangle, Check, ChevronDown, Inbox, Loader2, Search, X } from "lucide-react";
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
 
 export { clsx as cx };
 
@@ -69,6 +81,173 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
     />
   );
 });
+
+export interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * A styled single-choice dropdown. Used instead of a native <select> wherever
+ * the option list is long, because the browser's own popup ignores our styles.
+ */
+export function Dropdown({
+  id,
+  value,
+  onChange,
+  options,
+  placeholder = "Choose…",
+  clearable,
+  invalid,
+  disabled,
+  className,
+  ...aria
+}: {
+  id?: string;
+  value: string;
+  onChange(v: string): void;
+  options: DropdownOption[];
+  placeholder?: string;
+  /** Offer the placeholder as an option, so the value can be emptied again. */
+  clearable?: boolean;
+  invalid?: boolean;
+  disabled?: boolean;
+  className?: string;
+  "aria-describedby"?: string;
+  "aria-required"?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [above, setAbove] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const typed = useRef({ text: "", at: 0 });
+  const listId = useId();
+  const items = clearable || !value ? [{ value: "", label: placeholder }, ...options] : options;
+  const selected = options.find((o) => o.value === value);
+
+  const show = () => {
+    if (disabled) return;
+    const rect = rootRef.current?.getBoundingClientRect();
+    setAbove(!!rect && window.innerHeight - rect.bottom < 300 && rect.top > window.innerHeight - rect.bottom);
+    setActive(Math.max(0, items.findIndex((o) => o.value === value)));
+    setOpen(true);
+  };
+  const pick = (v: string) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent) => !rootRef.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) listRef.current?.children[active]?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const last = items.length - 1;
+    const move = (i: number) => {
+      e.preventDefault();
+      if (!open) return show();
+      setActive(Math.min(last, Math.max(0, i)));
+    };
+    switch (e.key) {
+      case "ArrowDown":
+        return move(active + 1);
+      case "ArrowUp":
+        return move(active - 1);
+      case "Home":
+        return move(0);
+      case "End":
+        return move(last);
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        return open && items[active] ? pick(items[active].value) : show();
+      case "Escape":
+        if (open) {
+          e.preventDefault();
+          setOpen(false);
+        }
+        return;
+      case "Tab":
+        return setOpen(false);
+    }
+    if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      // Type-ahead: jump to the first option starting with what was typed.
+      const now = Date.now();
+      typed.current = { text: (now - typed.current.at < 600 ? typed.current.text : "") + e.key.toLowerCase(), at: now };
+      const i = items.findIndex((o) => o.label.toLowerCase().startsWith(typed.current.text));
+      if (i >= 0) {
+        if (open) setActive(i);
+        else onChange(items[i].value);
+      }
+    }
+  };
+
+  return (
+    <div ref={rootRef} className={clsx("relative", className)}>
+      <button
+        id={id}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
+        aria-invalid={invalid || undefined}
+        disabled={disabled}
+        onClick={() => (open ? setOpen(false) : show())}
+        onKeyDown={onKeyDown}
+        className={clsx(inputBase, inputBorder(invalid), "flex h-9 items-center gap-2 text-left", open && !invalid && "border-accent-dark ring-[3px] ring-accent/25")}
+        {...aria}
+      >
+        <span className={clsx("min-w-0 flex-1 truncate", !selected && "text-neutral-400")}>{selected?.label ?? placeholder}</span>
+        <ChevronDown className={clsx("size-4 shrink-0 text-neutral-500 transition-transform duration-150", open && "rotate-180")} aria-hidden />
+      </button>
+      {open && (
+        <ul
+          ref={listRef}
+          id={listId}
+          role="listbox"
+          className={clsx(
+            "absolute inset-x-0 z-40 max-h-72 animate-pop-in overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1 shadow-pop",
+            above ? "bottom-full mb-1.5" : "top-full mt-1.5",
+          )}
+        >
+          {items.map((o, i) => {
+            const isSelected = o.value === value;
+            return (
+              <li
+                key={o.value || "__empty"}
+                id={`${listId}-${i}`}
+                role="option"
+                aria-selected={isSelected}
+                onPointerMove={() => setActive(i)}
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={() => pick(o.value)}
+                className={clsx(
+                  "flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm leading-snug",
+                  i === active ? "bg-neutral-100 text-ink" : "text-neutral-700",
+                  isSelected && "font-medium text-ink",
+                  !o.value && "text-neutral-400",
+                )}
+              >
+                <span className="min-w-0 flex-1">{o.label}</span>
+                {isSelected && <Check className="size-4 shrink-0 text-accent-dark" aria-hidden />}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** Search box with a leading icon and a clear button. */
 export function SearchInput({ value, onChange, placeholder = "Search", label, className }: { value: string; onChange(v: string): void; placeholder?: string; label: string; className?: string }) {
