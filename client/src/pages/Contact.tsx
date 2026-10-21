@@ -1,31 +1,55 @@
 import { imgDims } from "@/data/imageSizes";
-import { useEffect, useState, useRef, type FormEvent } from "react";
+import { Fragment, useEffect, useState, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "wouter";
 import TextReveal from "@/components/TextReveal";
 import { track } from "@/lib/analytics";
+import { useSection, useSettings } from "@/content";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const contactTypes = [
-  { label: "General enquiries", email: "careers@weseegpt.com", person: "WeSee Team", title: "General", photo: "/client/yuvraj.webp" },
-  { label: "Business enquiries", email: "harsh.khanna@weseegpt.com", person: "Harsh Khanna", title: "Founder & CEO", photo: "/client/harsh.webp" },
-];
+type ContactCard = { label: string; email: string; person?: string; title?: string; photo?: string };
+type OfficeItem = { city: string; country?: string; role?: string; phone?: string; address?: string; mapUrl?: string };
 
-const offices = [
-  { city: "Tokyo", country: "Japan", role: "Headquarters", timeZone: "Asia/Tokyo", address: "1 Chome-1-17 Nakameguro, Meguro City, Tokyo 153-0061, Japan", phone: "+81 0704 2332 201", map: "https://www.google.com/maps/place/Japan,+%E3%80%92153-0061+Tokyo,+Meguro+City,+Nakameguro,+1-ch%C5%8Dme%E2%88%921%E2%88%9217+%E3%83%9E%E3%83%B3%E3%82%B7%E3%83%A7%E3%83%B3%E6%81%B5%E6%AF%94%E9%A0%88%E8%8B%91+102/@35.6439478,139.7037363,18.85z/data=!4m6!3m5!1s0x60188b47af800cd9:0x20304b16a49a858a!8m2!3d35.6442008!4d139.7034181!16s%2Fg%2F11vzdfqxf4?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
-  { city: "Mumbai", country: "India", role: "Operations", timeZone: "Asia/Kolkata", address: "Hubtown Viva, 12th Floor, Saraswati Baug, Shankarwadi, Jogeshwari East, Mumbai, Maharashtra 400060", phone: "+91 8604 1091 07", map: "https://www.google.com/maps/place/Hubtown+Viva/@19.1313645,72.8531528,17z/data=!3m2!4b1!5s0x3be7b7d5b663c4ad:0x2f60ba818419208b!4m6!3m5!1s0x3be7b7cecfe0f0fd:0x82655eeb16d16558!8m2!3d19.1313594!4d72.8557277!16s%2Fg%2F11gjhnxbbv?entry=ttu&g_ep=EgoyMDI2MDMzMC4wIKXMDSoASAFQAw%3D%3D" },
-];
+/** Time zones are not editable in the CMS, so they are looked up by city or country. */
+const CITY_TZ: Record<string, string> = {
+  tokyo: "Asia/Tokyo", mumbai: "Asia/Kolkata", delhi: "Asia/Kolkata", bangalore: "Asia/Kolkata", bengaluru: "Asia/Kolkata",
+  singapore: "Asia/Singapore", london: "Europe/London", dubai: "Asia/Dubai", "new york": "America/New_York",
+  "san francisco": "America/Los_Angeles", sydney: "Australia/Sydney",
+};
+const COUNTRY_TZ: Record<string, string> = { japan: "Asia/Tokyo", india: "Asia/Kolkata", singapore: "Asia/Singapore", "united kingdom": "Europe/London", uk: "Europe/London", uae: "Asia/Dubai" };
+function officeTimeZone(o: OfficeItem): string | undefined {
+  return CITY_TZ[o.city.trim().toLowerCase()] ?? COUNTRY_TZ[(o.country ?? "").trim().toLowerCase()];
+}
 
-// ─── Connect Instantly — Full-bleed editorial, no containers ─────────────────
+/** Splits CMS text on "*gold*" spans: odd indexes are the highlighted parts. */
+function splitHighlight(text: string): string[] {
+  return text.split(/\*([^*]+)\*/g);
+}
+
+/** WhatsApp number and message: Settings first, build-time env vars only as a fallback. */
+function useConnectLinks() {
+  const contact = useSettings("contact");
+  const phone = contact?.whatsappPhone?.trim() || (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim() || "";
+  const message = contact?.whatsappMessage?.trim() || (import.meta.env.VITE_WHATSAPP_MESSAGE as string | undefined)?.trim() || "";
+  const digits = phone.replace(/[^\d]/g, "");
+  return {
+    callHref: digits ? `tel:+${digits}` : undefined,
+    whatsappUrl: digits ? `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ""}` : undefined,
+  };
+}
+
+// --- Connect Instantly: full-bleed editorial, no containers ─────────────────
 function ConnectInstantly({
   whatsappUrl,
   callHref,
+  copy,
 }: {
   whatsappUrl?: string;
   callHref?: string;
+  copy: { heading: string; subheading: string; message: string; footnote: string };
 }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<"idle" | "typing" | "ready">("idle");
@@ -317,21 +341,25 @@ function ConnectInstantly({
               lineHeight: 1.0, letterSpacing: "-0.03em", color: "#0F0F0F",
               animation: "ciFlicker 8s ease-in-out infinite",
             }}>
-              Prefer a{" "}
-              <span style={{
-                background: "linear-gradient(100deg, #C9A84C 0%, #f5d87a 45%, #C9A84C 100%)",
-                backgroundSize: "200%",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                animation: "ciGlide 3.5s ease-in-out infinite", display: "inline-block",
-              }}>
-                quick chat?
-              </span>
+              {splitHighlight(copy.heading).map((part, k) =>
+                k % 2 === 0 ? (
+                  <Fragment key={k}>{part}</Fragment>
+                ) : (
+                  <span key={k} style={{
+                    background: "linear-gradient(100deg, #C9A84C 0%, #f5d87a 45%, #C9A84C 100%)",
+                    backgroundSize: "200%",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+                    animation: "ciGlide 3.5s ease-in-out infinite", display: "inline-block",
+                  }}>
+                    {part}
+                  </span>
+                ))}
             </div>
             <p style={{
               marginTop: "clamp(10px, 1.5vw, 16px)", fontSize: "clamp(13px, 1.5vw, 16px)",
               fontWeight: 400, color: "#888", letterSpacing: "0.01em", lineHeight: 1.7,
             }}>
-              No forms. No waiting. Just a direct line to the team.
+              {copy.subheading}
             </p>
           </div>
 
@@ -590,7 +618,7 @@ function ConnectInstantly({
                         </span>
                       ) : (
                         <span style={{ fontSize: 14, fontWeight: 400, color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>
-                          Hey — choose how you'd like to connect with WeSee. 👋
+                          {copy.message} 👋
                         </span>
                       )}
                     </div>
@@ -670,7 +698,7 @@ function ConnectInstantly({
                     {/* Footnote */}
                     <div style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                       <p style={{ fontSize: 11, color: "rgba(255,255,255,0.22)", lineHeight: 1.7, fontWeight: 400 }}>
-                        Typically responds within a few hours during business days.
+                        {copy.footnote}
                       </p>
                     </div>
                   </div>
@@ -685,9 +713,9 @@ function ConnectInstantly({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-function useLocalTime(timeZone: string) {
+function useLocalTime(timeZone: string | undefined) {
   const fmt = () =>
-    new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).format(new Date());
+    new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", ...(timeZone ? { timeZone } : {}) }).format(new Date());
   const [time, setTime] = useState(fmt);
   useEffect(() => {
     const id = window.setInterval(() => setTime(fmt()), 30_000);
@@ -696,23 +724,31 @@ function useLocalTime(timeZone: string) {
   return time;
 }
 
-function OfficeCard({ office }: { office: (typeof offices)[number] }) {
-  const time = useLocalTime(office.timeZone);
+function OfficeCard({ office }: { office: OfficeItem }) {
+  const time = useLocalTime(officeTimeZone(office));
   return (
     <article className="ct-office">
       <div className="ct-office-top">
-        <span>{office.role}</span>
+        <span>{office.role ?? office.country}</span>
         <span>{time} local</span>
       </div>
       <h3 className="ct-office-city">{office.city}</h3>
-      <a href={office.map} target="_blank" rel="noopener noreferrer" className="ct-office-address">
-        {office.address}
-      </a>
+      {office.address ? (
+        office.mapUrl ? (
+          <a href={office.mapUrl} target="_blank" rel="noopener noreferrer" className="ct-office-address">
+            {office.address}
+          </a>
+        ) : (
+          <span className="ct-office-address">{office.address}</span>
+        )
+      ) : null}
       <div className="ct-office-links">
-        <a href={`tel:${office.phone.replace(/\s/g, "")}`}>{office.phone}</a>
-        <a href={office.map} target="_blank" rel="noopener noreferrer">
-          Maps <span aria-hidden>↗</span>
-        </a>
+        {office.phone ? <a href={`tel:${office.phone.replace(/\s/g, "")}`}>{office.phone}</a> : null}
+        {office.mapUrl ? (
+          <a href={office.mapUrl} target="_blank" rel="noopener noreferrer">
+            Maps <span aria-hidden>↗</span>
+          </a>
+        ) : null}
       </div>
     </article>
   );
@@ -958,13 +994,13 @@ function ContactForm() {
 }
 
 export default function Contact() {
-  const whatsappPhone = (import.meta.env.VITE_WHATSAPP_PHONE as string | undefined)?.trim();
-  const whatsappMessage = (import.meta.env.VITE_WHATSAPP_MESSAGE as string | undefined)?.trim();
-  const callHref = whatsappPhone ? `tel:+${whatsappPhone.replace(/[^\d]/g, "")}` : undefined;
-
-  const whatsappUrl = whatsappPhone
-    ? `https://wa.me/${whatsappPhone.replace(/[^\d]/g, "")}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ""}`
-    : undefined;
+  const { whatsappUrl, callHref } = useConnectLinks();
+  const hero = useSection<{ heading?: string }>("contact", "hero");
+  const cardsSection = useSection<{ cards?: ContactCard[] }>("contact", "cards");
+  const officesSection = useSection<{ heading?: string; offices?: OfficeItem[] }>("contact", "offices");
+  const connect = useSection<{ heading?: string; subheading?: string; message?: string; footnote?: string }>("contact", "connect");
+  const cards = cardsSection?.cards ?? [];
+  const offices = officesSection?.offices ?? [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -974,7 +1010,7 @@ export default function Contact() {
     <div className="ct">
       <div className="container ct-wrap">
         <div className="ct-meta">
-          <span>WeSee — Contact</span>
+          <span>WeSee · Contact</span>
           <span>Mumbai · Tokyo</span>
         </div>
 
@@ -982,17 +1018,17 @@ export default function Contact() {
           {/* Left: headline, direct contacts, offices */}
           <div className="ct-info">
             <TextReveal as="h1" className="ct-title" stagger={0.06} onScroll={false}>
-              Let's build something together.
+              {hero?.heading ?? "Let's build something together."}
             </TextReveal>
             <p className="ct-lede">
               Prefer email or a call? Reach the right person directly. We usually reply within a few hours on business days.
             </p>
 
             <ul className="ct-rows">
-              {contactTypes.map((ct) => (
+              {cards.map((ct) => (
                 <li key={ct.email}>
                   <a href={`mailto:${ct.email}`} className="ct-row">
-                    <img {...imgDims(ct.photo)} src={ct.photo} alt="" loading="lazy" decoding="async" />
+                    {ct.photo ? <img {...imgDims(ct.photo)} src={ct.photo} alt="" loading="lazy" decoding="async" /> : null}
                     <span className="ct-row-body">
                       <span className="ct-row-kind">{ct.label}</span>
                       <span className="ct-row-email">{ct.email}</span>
@@ -1019,12 +1055,16 @@ export default function Contact() {
               </li>
             </ul>
 
-            <h2 className="ct-label"><span>Our offices</span></h2>
+            {officesSection ? (
+              <>
+            <h2 className="ct-label"><span>{officesSection.heading ?? "Our offices"}</span></h2>
             <div className="ct-offices">
               {offices.map((office) => (
                 <OfficeCard key={office.city} office={office} />
               ))}
             </div>
+              </>
+            ) : null}
           </div>
 
           {/* Right: sticky form */}
@@ -1035,8 +1075,17 @@ export default function Contact() {
       </div>
 
       {/* ── Connect Instantly ── */}
-      {(whatsappUrl || callHref) && (
-        <ConnectInstantly whatsappUrl={whatsappUrl} callHref={callHref} />
+      {connect && (whatsappUrl || callHref) && (
+        <ConnectInstantly
+          whatsappUrl={whatsappUrl}
+          callHref={callHref}
+          copy={{
+            heading: connect.heading ?? "Prefer a *quick chat?*",
+            subheading: connect.subheading ?? "",
+            message: connect.message ?? "Hey, choose how you'd like to connect with WeSee.",
+            footnote: connect.footnote ?? "",
+          }}
+        />
       )}
     </div>
   );

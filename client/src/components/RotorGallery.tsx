@@ -34,8 +34,16 @@ interface CategoryLabel {
   angle: number;
 }
 
+/** "We are *WeSee.*" → plain text before, the gold part, and any text after. */
+function headingParts(text: string) {
+  const m = text.match(/^([^*]*)\*([^*]+)\*(.*)$/);
+  return m ? { before: m[1], gold: m[2], after: m[3] } : { before: text, gold: "", after: "" };
+}
+
 interface RotorGalleryProps {
   items: RingItem[];
+  /** Desktop fallback heading; *asterisks* mark the gold part. */
+  heading?: string;
   count?: number;
   cardWidth?: number;
   cardHeight?: number;
@@ -247,6 +255,7 @@ function RotorItem({
 
 export default function RotorGallery({
   items,
+  heading = "We are *WeSee.*",
   count = 90,
   cardWidth = 100,
   cardHeight = 80,
@@ -1014,8 +1023,8 @@ export default function RotorGallery({
               margin: 0,
             }}
           >
-            We are{" "}
-            <em
+            {headingParts(heading).before}
+            {headingParts(heading).gold && <em
               style={{
                 fontStyle: "italic",
                 fontWeight: 300,
@@ -1027,8 +1036,9 @@ export default function RotorGallery({
                 animation: "textShimmer 5s ease infinite",
               }}
             >
-              WeSee.
-            </em>
+              {headingParts(heading).gold}
+            </em>}
+            {headingParts(heading).after}
           </h1>
         </div>
       )}

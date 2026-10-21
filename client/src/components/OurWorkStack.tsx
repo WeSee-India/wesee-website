@@ -13,6 +13,14 @@ export type OurWorkStat = { display: string; label: string; sub: string };
 const CARD_TONES = ["ow-card--sand", "ow-card--ink", "ow-card--champagne", "ow-card--ivory"];
 const CARD_TILT = [-4, 3, -2.5, 4.5];
 
+/** "We build AI that works*.*" → three lines of two, two and the rest; a trailing "." becomes the accent. */
+function headingLines(heading: string) {
+  const words = heading.replace(/\*/g, "").trim().split(/\s+/);
+  const last = words.slice(4).join(" ") || words.slice(-1).join(" ");
+  const dot = last.endsWith(".");
+  return { l: words.slice(0, 2), r: words.slice(2, 4), c: dot ? last.slice(0, -1) : last, dot };
+}
+
 /**
  * "We build AI that works." — giant headline pinned in place while stat cards
  * slide up over it, tilted, and the headline blurs behind them.
@@ -22,7 +30,18 @@ const CARD_TILT = [-4, 3, -2.5, 4.5];
  * pin: #page-content keeps a transform from its enter animation, which breaks
  * pinning (position: fixed) and left the viewport blank mid-scroll.
  */
-export default function OurWorkStack({ stats }: { stats: OurWorkStat[] }) {
+export default function OurWorkStack({
+  stats,
+  heading = "We build AI that works*.*",
+  body = "AI agents and automated pipelines for sales, customer engagement and day-to-day operations, each one built around a single business outcome.",
+  cta = { href: "/services", label: "Explore our services" },
+}: {
+  stats: OurWorkStat[];
+  heading?: string;
+  body?: string;
+  cta?: { href: string; label: string } | null;
+}) {
+  const lines = headingLines(heading);
   const reduced = usePrefersReducedMotion();
   const trackRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -75,9 +94,9 @@ export default function OurWorkStack({ stats }: { stats: OurWorkStat[] }) {
       <div ref={trackRef} className="ow-track" style={reduced ? undefined : { height: `${100 + stats.length * 85 + 30}vh` }}>
       <div ref={stageRef} className="ow-stage">
         <h2 ref={bgRef} id="ow-title" className="ow-bg">
-          <span className="ow-bg-line ow-bg-line--l"><span>We</span> <span>build</span></span>
-          <span className="ow-bg-line ow-bg-line--r"><span>AI</span> <span>that</span></span>
-          <span className="ow-bg-line ow-bg-line--c">works<em>.</em></span>
+          <span className="ow-bg-line ow-bg-line--l">{lines.l.map((w, i) => <span key={i}>{i > 0 && " "}{w}</span>)}</span>
+          <span className="ow-bg-line ow-bg-line--r">{lines.r.map((w, i) => <span key={i}>{i > 0 && " "}{w}</span>)}</span>
+          <span className="ow-bg-line ow-bg-line--c">{lines.c}{lines.dot && <em>.</em>}</span>
         </h2>
 
         <div className="ow-cards">
@@ -103,14 +122,14 @@ export default function OurWorkStack({ stats }: { stats: OurWorkStat[] }) {
       </div>
 
       <div className="container ow-outro">
-        <p>
-          AI agents and automated pipelines for sales, customer engagement and day-to-day operations, each one built around a single business outcome.
-        </p>
-        <ParticleWrapper>
-          <Link href="/services" className="ow-cta">
-            Explore our services <span aria-hidden="true">→</span>
-          </Link>
-        </ParticleWrapper>
+        {body && <p>{body}</p>}
+        {cta?.label && (
+          <ParticleWrapper>
+            <Link href={cta.href || "/services"} className="ow-cta">
+              {cta.label.replace(/\s*[→↗]\s*$/, "")} <span aria-hidden="true">→</span>
+            </Link>
+          </ParticleWrapper>
+        )}
       </div>
     </section>
   );

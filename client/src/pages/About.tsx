@@ -1,4 +1,5 @@
 import { imgDims } from "@/data/imageSizes";
+import { useSection } from "@/content";
 import { useEffect, useMemo, useRef, useState } from "react";
 import InteractiveParticles from "@/components/InteractiveParticles";
 
@@ -10,20 +11,31 @@ gsap.registerPlugin(ScrollTrigger);
 
 
 
-const milestones = [
-  { year: "2021", title: "Founded in Japan", desc: "WeSee started as a performance marketing agency with a vision for intelligent automation." },
-  { year: "2022", title: "First AI systems deployed", desc: "Shipped first AI agents and workflow automations for e-commerce and SaaS clients." },
-  { year: "2023", title: "Dubai expansion", desc: "Opened MENA operations to serve regional enterprises and ambitious startups." },
-  { year: "2024", title: "35+ projects, 80+ workflows", desc: "Reached critical mass — 35 full-stack projects and over 80 live automation pipelines." },
-  { year: "2025", title: "Platform capabilities", desc: "Launched in-house AI stack and dedicated research function for applied LLM engineering." },
-];
+type HeroContent = { badge?: string; heading?: string; body?: string };
+type MissionContent = { heading?: string; paragraphs?: string[] };
+type TimelineContent = { heading?: string; milestones?: { year: string; title: string; description?: string }[] };
+type StatsContent = { heading?: string; subheading?: string; stats?: { value: string; label: string; image?: string | null }[] };
+type ValuesContent = { heading?: string; items?: { title: string; description?: string }[] };
 
-const values = [
-  { num: "01", title: "Signal First", desc: "Every engagement begins by finding the real problem — the signal buried beneath the noise." },
-  { num: "02", title: "Build to Own", desc: "We build systems clients own permanently. No vendor lock-in, ever." },
-  { num: "03", title: "Outcome-Driven", desc: "We are hired for results, not deliverables. Our metrics are your metrics." },
-  { num: "04", title: "Ship & Iterate", desc: "We launch fast, measure everything, and continuously refine for maximum performance." },
-];
+/** Renders "*gold*" spans in CMS headings. */
+function renderHeading(text: string) {
+  return text.split(/(\*[^*]+\*)/g).map((part, i) =>
+    part.length > 2 && part.startsWith("*") && part.endsWith("*") ? (
+      <span key={i} style={{
+        fontStyle: "italic", fontWeight: 300, letterSpacing: "-0.05em",
+        background: "linear-gradient(135deg, #B8922E 0%, var(--accent) 48%, #E8C870 100%)",
+        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+        backgroundClip: "text", backgroundSize: "200% 100%",
+        animation: "textShimmer 5s ease infinite",
+        paddingRight: "0.1em",
+      }}>
+        {part.slice(1, -1)}
+      </span>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
 
 function parseStatValue(val: string) {
   const raw = val.trim();
@@ -52,7 +64,7 @@ function AboutStatCard({
   index: number;
   val: string;
   label: string;
-  bgImg: string;
+  bgImg?: string | null;
 }) {
   const meta = useMemo(() => parseStatValue(val), [val]);
   const [display, setDisplay] = useState(val);
@@ -113,7 +125,7 @@ function AboutStatCard({
       className="about-stat-card gsap-reveal"
       style={{ "--i": index } as React.CSSProperties}
     >
-      <img className="about-stat-bg-img" {...imgDims(bgImg)} src={bgImg} alt="" aria-hidden="true" />
+      {bgImg && <img className="about-stat-bg-img" {...imgDims(bgImg)} src={bgImg} alt="" aria-hidden="true" />}
       <div className="about-stat-value">{display}</div>
       <div className="about-stat-label">{label}</div>
     </div>
@@ -135,15 +147,14 @@ export default function About() {
     }
   }, []);
 
-  const stats = useMemo(
-    () => [
-      { val: "35+", label: "Projects Delivered", bgImg: "/aisoftware.jpg" },
-      { val: "80+", label: "Automations Deployed", bgImg: "/aitalent.jpg" },
-      { val: "15K+", label: "Hours Saved Monthly", bgImg: "/digital.webp" },
-      { val: "3", label: "Office Locations", bgImg: "/roi.jpg" },
-    ],
-    []
-  );
+  const hero = useSection<HeroContent>("about", "hero");
+  const mission = useSection<MissionContent>("about", "mission");
+  const timeline = useSection<TimelineContent>("about", "timeline");
+  const statsSection = useSection<StatsContent>("about", "stats");
+  const valuesSection = useSection<ValuesContent>("about", "values");
+  const milestones = timeline?.milestones ?? [];
+  const stats = statsSection?.stats ?? [];
+  const values = valuesSection?.items ?? [];
 
   useEffect(() => {
     const localTriggers: ScrollTrigger[] = [];
@@ -164,7 +175,7 @@ export default function About() {
 
   return (
     <>
-     
+      {hero && (
       <section
         className="about-hero"
         style={{
@@ -224,7 +235,7 @@ export default function About() {
               background: "var(--accent)", display: "inline-block",
               animation: "glowPulse 2.5s ease infinite",
             }} />
-            Founded 2021 · Japan
+            {hero.badge}
           </div>
 
           <div
@@ -242,18 +253,7 @@ export default function About() {
                 animationDelay: "0.15s", margin: 0,
               }}
             >
-              {" "}
-              <span style={{
-                fontStyle: "italic", fontWeight: 300, letterSpacing: "-0.05em",
-                background: "linear-gradient(135deg, #B8922E 0%, var(--accent) 48%, #E8C870 100%)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                backgroundClip: "text", backgroundSize: "200% 100%",
-                animation: "textShimmer 5s ease infinite",
-                paddingRight: "0.1em",
-              }}>
-                WeSee
-              </span>
-              {" "} beyond the obvious.
+              {hero.heading ? renderHeading(hero.heading) : null}
             </h1>
 
             <p 
@@ -264,38 +264,39 @@ export default function About() {
                 animationDelay: "0.25s",
               }}
             >
-              India's leading AI automation agency  a cross-functional team of AI engineers, operators, and growth strategists building the intelligent systems modern business runs on.
+              {hero.body}
             </p>
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════ MISSION ══════════════ */}
+      {mission && (
       <section className="ab-mission" aria-labelledby="ab-mission-title">
         <div className="container">
           <div className="ab-mission-head">
             <div className="gsap-reveal">
               <span className="ab-kicker">Our mission</span>
-              <h2 id="ab-mission-title" className="ab-title">Automation that changes how business works.</h2>
+              <h2 id="ab-mission-title" className="ab-title">{mission.heading}</h2>
             </div>
             <div className="ab-mission-copy gsap-reveal">
-              <p className="ab-lead">
-                At WeSee, we believe the gap between great companies and average ones is increasingly determined by how intelligently they operate. We exist to close that gap — using AI and automation to give ambitious businesses the operational leverage that was once only available to tech giants.
-              </p>
-              <p>
-                Every system we build is designed to eliminate manual work, accelerate decision-making, and create compounding business value that grows with our clients.
-              </p>
+              {(mission.paragraphs ?? []).map((p, i) => (
+                <p key={i} className={i === 0 ? "ab-lead" : undefined}>{p}</p>
+              ))}
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════ TIMELINE ══════════════ */}
+      {timeline && (
       <section className="ab-timeline" aria-labelledby="ab-timeline-title">
         <div className="container ab-timeline-grid">
           <div className="ab-timeline-head gsap-reveal">
             <span className="ab-kicker">Our story</span>
-            <h2 id="ab-timeline-title" className="ab-title">Building for the long run.</h2>
+            <h2 id="ab-timeline-title" className="ab-title">{timeline.heading}</h2>
             <p>From a performance marketing agency in Japan to an applied AI studio across three offices.</p>
           </div>
 
@@ -313,23 +314,25 @@ export default function About() {
                     {m.title}
                     {i === milestones.length - 1 && <span className="ab-rail-now">Now</span>}
                   </h3>
-                  <p>{m.desc}</p>
+                  <p>{m.description}</p>
                 </div>
               </li>
             ))}
           </ol>
         </div>
       </section>
+      )}
 
-      {/* ══════════════ STATS — dark ══════════════ */}
+      {/* ══════════════ STATS, dark ══════════════ */}
+      {statsSection && (
       <section className="section-pad about-impact-section" style={{
         background: "var(--ink)",
         position: "relative", overflow: "hidden",
       }}>
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
           <div className="about-impact-head gsap-reveal pb-10">
-            <h2 className="about-impact-title">The Impact We've Delivered</h2>
-            <p className="about-impact-subtitle">Real results from the systems we build</p>
+            <h2 className="about-impact-title">{statsSection.heading}</h2>
+            {statsSection.subheading && <p className="about-impact-subtitle">{statsSection.subheading}</p>}
           </div>
           <div className="about-impact-grid" style={{
             display: "grid",
@@ -337,18 +340,20 @@ export default function About() {
             gap: 16,
           }}>
             {stats.map((s, i) => (
-              <AboutStatCard key={s.label} index={i} val={s.val} label={s.label} bgImg={s.bgImg} />
+              <AboutStatCard key={s.label} index={i} val={s.value} label={s.label} bgImg={s.image} />
             ))}
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════ VALUES ══════════════ */}
+      {valuesSection && (
       <section className="section-pad" style={{ background: "var(--paper-dark)" }}>
         <div className="container">
           <div className="about-mobile-center-block">
             <h2 className="section-heading gsap-reveal about-mobile-center-title" style={{ marginBottom: 52, marginTop: 0 }}>
-              How we operate.
+              {valuesSection.heading}
             </h2>
           </div>
 
@@ -362,14 +367,14 @@ export default function About() {
                   opacity: 0.035, lineHeight: 1, userSelect: "none",
                   letterSpacing: "-0.06em", pointerEvents: "none",
                 }}>
-                  {v.num}
+                  {String(i + 1).padStart(2, "0")}
                 </div>
 
                 <div style={{
                   fontSize: 10, fontWeight: 600, letterSpacing: "0.14em",
                   color: "var(--accent)", textTransform: "uppercase", marginBottom: 14,
                 }}>
-                  {v.num}
+                  {String(i + 1).padStart(2, "0")}
                 </div>
                 <h3 style={{
                   fontSize: 18, fontWeight: 550, color: "var(--ink)",
@@ -378,13 +383,15 @@ export default function About() {
                   {v.title}
                 </h3>
                 <p style={{ fontSize: 14, color: "var(--ink-50)", lineHeight: 1.7, margin: 0 }}>
-                  {v.desc}
+                  {v.description}
                 </p>
               </div>
             ))}
           </div>
         </div>
       </section>
+      )}
+
     </>
   );
 }

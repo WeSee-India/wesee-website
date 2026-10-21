@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, useSearch } from "wouter";
-import { services } from "@/data/services";
+import type { Service } from "@/data/services";
+import { useServices } from "@/data/useServices";
 import { track } from "@/lib/analytics";
+import { useSection } from "@/content";
 
 const fieldLabel: CSSProperties = {
   display: "block",
@@ -36,6 +38,28 @@ const linkRust = "#A0522D";
 const errorRed = "#9B2C2C";
 const CONTACT_EMAIL = "harsh.khanna@weseegpt.com";
 
+/** Copy from the CMS ("book" page); these defaults apply only where a field is empty. */
+type BookHeader = { heading?: string; body?: string };
+type BookExpect = { kicker?: string; items?: string[] };
+type BookInfo = { chips?: string[]; email?: string };
+type BookForm = { kicker?: string; heading?: string };
+
+const DEFAULT_HEADING = "Let's map the *signal* inside your business.";
+const DEFAULT_BODY =
+  "In 30 minutes, we'll understand your current systems, identify your highest-leverage automation opportunities, and outline a clear path to implementation.";
+const DEFAULT_EXPECT_ITEMS = [
+  "Quick walkthrough of your current tools, workflows, and bottlenecks.",
+  "Identify 2 to 3 concrete automation or AI-agent opportunities.",
+  "Discuss feasibility, timelines, and potential ROI.",
+  "Decide together on next steps, if it makes sense for both sides.",
+];
+const DEFAULT_CHIPS = ["30 min discovery", "Free. No obligation."];
+
+/** Splits "text *highlight* text" into parts; highlighted parts get the gold treatment. */
+function splitGold(text: string): { text: string; gold: boolean }[] {
+  return text.split("*").map((t, i) => ({ text: t, gold: i % 2 === 1 })).filter((p) => p.text !== "");
+}
+
 type FieldKey = "name" | "email" | "phone" | "businessType" | "message";
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
@@ -55,12 +79,13 @@ function validate(v: Record<FieldKey, string>): FieldErrors {
 }
 
 /** Service names for the preselect, grouped by category, in catalogue order. */
-const serviceGroups = services.reduce<{ category: string; items: { slug: string; name: string }[] }[]>((acc, s) => {
+const groupServices = (services: Service[]) =>
+  services.reduce<{ category: string; items: { slug: string; name: string }[] }[]>((acc, s) => {
   const group = acc.find((g) => g.category === s.category);
-  if (group) group.items.push({ slug: s.slug, name: s.name });
-  else acc.push({ category: s.category, items: [{ slug: s.slug, name: s.name }] });
-  return acc;
-}, []);
+    if (group) group.items.push({ slug: s.slug, name: s.name });
+    else acc.push({ category: s.category, items: [{ slug: s.slug, name: s.name }] });
+    return acc;
+  }, []);
 
 const focusStyle = (e: { target: HTMLElement }) => {
   e.target.style.borderColor = "rgba(201,168,76,0.45)";
@@ -131,7 +156,22 @@ function TextField({ field, label, value, onChange, error, hint, multiline, type
 }
 
 export default function BookCall() {
+  const services = useServices();
+  const serviceGroups = useMemo(() => groupServices(services), [services]);
   const search = useSearch();
+  const headerSection = useSection<BookHeader>("book", "header");
+  const expectSection = useSection<BookExpect>("book", "expect");
+  const infoSection = useSection<BookInfo>("book", "info");
+  const formSection = useSection<BookForm>("book", "form");
+  const header = { heading: headerSection?.heading || DEFAULT_HEADING, body: headerSection?.body || DEFAULT_BODY };
+  const headingParts = splitGold(header.heading);
+  const expect = {
+    kicker: expectSection?.kicker || "In this call",
+    items: expectSection?.items?.length ? expectSection.items : DEFAULT_EXPECT_ITEMS,
+  };
+  const chips = infoSection?.chips?.length ? infoSection.chips : DEFAULT_CHIPS;
+  const contactEmail = infoSection?.email || CONTACT_EMAIL;
+  const formHead = { kicker: formSection?.kicker || "Contact us", heading: formSection?.heading || "Request a discovery call" };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -358,22 +398,27 @@ export default function BookCall() {
                   margin: 0,
                 }}
               >
-                Let&apos;s map the{" "}
-                <span
-                  style={{
-                    fontStyle: "italic",
-                    fontWeight: 288,
-                    background:
-                      "linear-gradient(110deg, #9C7A1E 0%, #C9A84C 45%, #E8C870 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    paddingRight: "8px",
-                    backgroundClip: "text",
-                  }}
-                >
-                  signal
-                </span>{" "}
-                inside your business.
+                {headingParts.map((part, i) =>
+                  part.gold ? (
+                    <span
+                      key={i}
+                      style={{
+                        fontStyle: "italic",
+                        fontWeight: 288,
+                        background:
+                          "linear-gradient(110deg, #9C7A1E 0%, #C9A84C 45%, #E8C870 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        paddingRight: "8px",
+                        backgroundClip: "text",
+                      }}
+                    >
+                      {part.text}
+                    </span>
+                  ) : (
+                    <Fragment key={i}>{part.text}</Fragment>
+                  ),
+                )}
               </h1>
               <p
                 style={{
@@ -384,9 +429,7 @@ export default function BookCall() {
                   maxWidth: 520,
                 }}
               >
-                In 30 minutes, we&apos;ll understand your current systems, identify
-                your highest–leverage automation opportunities, and outline a clear
-                path to implementation.
+                {header.body}
               </p>
             </div>
 
@@ -421,7 +464,7 @@ export default function BookCall() {
                     marginBottom: 10,
                   }}
                 >
-                  In this call
+                  {expect.kicker}
                 </div>
                 <ul
                   style={{
@@ -435,12 +478,7 @@ export default function BookCall() {
                     color: "rgba(17,19,23,0.70)",
                   }}
                 >
-                  {[
-                    "Quick walkthrough of your current tools, workflows, and bottlenecks.",
-                    "Identify 2–3 concrete automation or AI-agent opportunities.",
-                    "Discuss feasibility, timelines, and potential ROI.",
-                    "Decide together on next steps—if it makes sense for both sides.",
-                  ].map((item) => (
+                  {expect.items.map((item) => (
                     <li
                       key={item}
                       style={{
@@ -492,35 +530,26 @@ export default function BookCall() {
                     gap: 14,
                   }}
                 >
-                  <span
-                    style={{
-                      fontWeight: 520,
-                      fontSize: 13,
-                      padding: "5px 10px",
-                      borderRadius: 999,
-                      background: "rgba(17,19,23,0.06)",
-                      color: "rgba(17,19,23,0.75)",
-                    }}
-                  >
-                    30 min discovery
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: 520,
-                      fontSize: 13,
-                      padding: "5px 10px",
-                      borderRadius: 999,
-                      background: "rgba(201,168,76,0.10)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    Free. No obligation.
-                  </span>
+                  {chips.map((chip, i) => (
+                    <span
+                      key={`${i}-${chip}`}
+                      style={{
+                        fontWeight: 520,
+                        fontSize: 13,
+                        padding: "5px 10px",
+                        borderRadius: 999,
+                        background: i === 0 ? "rgba(17,19,23,0.06)" : "rgba(201,168,76,0.10)",
+                        color: i === 0 ? "rgba(17,19,23,0.75)" : "var(--accent)",
+                      }}
+                    >
+                      {chip}
+                    </span>
+                  ))}
                 </div>
                 <div>
                   Prefer email instead?{" "}
                   <a
-                    href="mailto:harsh.khanna@weseegpt.com"
+                    href={`mailto:${contactEmail}`}
                     style={{
                       color: "var(--ink)",
                       textDecoration: "none",
@@ -528,7 +557,7 @@ export default function BookCall() {
                       paddingBottom: 1,
                     }}
                   >
-                    harsh.khanna@weseegpt.com
+                    {contactEmail}
                   </a>
                 </div>
                 <div style={{ marginTop: 4 }}>
@@ -575,7 +604,7 @@ export default function BookCall() {
                   marginBottom: 6,
                 }}
               >
-                Contact us
+                {formHead.kicker}
               </div>
               <h2
                 style={{
@@ -586,7 +615,7 @@ export default function BookCall() {
                   color: "var(--ink)",
                 }}
               >
-                Request a discovery call
+                {formHead.heading}
               </h2>
 
               <form onSubmit={handleSubmit} onFocusCapture={trackFormStart} noValidate aria-busy={formState === "sending"} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -668,8 +697,8 @@ export default function BookCall() {
                         {formError ? (
                           <>
                             {formError}{" "}
-                            <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: errorRed, fontWeight: 600 }}>
-                              {CONTACT_EMAIL}
+                            <a href={`mailto:${contactEmail}`} style={{ color: errorRed, fontWeight: 600 }}>
+                              {contactEmail}
                             </a>
                           </>
                         ) : (

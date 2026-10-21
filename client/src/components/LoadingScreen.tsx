@@ -179,7 +179,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
         transition: "opacity 0.5s ease 0.3s",
       }}>
         <span style={{ fontSize: 11, color: "rgba(17,19,23,0.18)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          WeSee — {new Date().getFullYear()}
+          WeSee · {new Date().getFullYear()}
         </span>
         <span style={{ fontSize: 11, color: "rgba(17,19,23,0.18)", letterSpacing: "0.1em" }}>
           Loading assets

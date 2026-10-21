@@ -17,10 +17,13 @@ export type * from "./types";
 const API = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
 
 let snapshot = bundled as unknown as ContentSnapshot;
+/** Services from the live snapshot; null until it arrives (pages use the bundled catalogue until then). */
+let liveServices: unknown[] | null = null;
 const listeners = new Set<() => void>();
 
-function set(next: ContentSnapshot) {
+function set(next: ContentSnapshot, services: unknown[] | null = liveServices) {
   snapshot = next;
+  liveServices = services;
   listeners.forEach((l) => l());
 }
 
@@ -39,6 +42,11 @@ export function useCollection<K extends keyof Collections>(key: K): Collections[
 
 export function useSettings<K extends keyof Settings>(key: K): Settings[K] {
   return useSnapshot().settings[key];
+}
+
+/** The raw service catalogue from the live snapshot, or null before it loads. See data/useServices.ts. */
+export function useLiveServices(): unknown[] | null {
+  return useSyncExternalStore(subscribe, () => liveServices, () => liveServices);
 }
 
 export function usePage(key: string): Page | undefined {
@@ -97,12 +105,14 @@ function sync() {
 
   void Promise.all([live, preview]).then(([fresh, draft]) => {
     let next = snapshot;
+    let services = liveServices;
     if (fresh && fresh.version !== snapshot.version) {
-      // Services ship in their own chunk; the shell snapshot never carries them.
-      const { services: _services, ...collections } = fresh.collections;
+      // Services ship in their own chunk and are read through useLiveServices(), not the shell snapshot.
+      const { services: freshServices, ...collections } = fresh.collections;
       next = { ...fresh, collections: collections as Collections };
+      if (Array.isArray(freshServices)) services = freshServices;
     }
     if (draft) next = applyPreview(next, draft);
-    if (next !== snapshot) set(next);
+    if (next !== snapshot || services !== liveServices) set(next, services);
   });
 }

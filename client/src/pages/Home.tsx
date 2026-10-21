@@ -1,6 +1,6 @@
 import { useCollection, useSection, type Link as ContentLink } from "@/content";
 import { imgDims } from "@/data/imageSizes";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import HoverParticles from "@/components/HoverParticles";
 import ParticleWrapper from "@/components/ParticleWrapper";
@@ -8,13 +8,14 @@ import InteractiveParticles from "@/components/InteractiveParticles";
 import OurWorkStack from "@/components/OurWorkStack";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { categories, services as allServices } from "@/data/services";
+import type { Category } from "@/data/services";
+import { useServiceCategories, useServices } from "@/data/useServices";
 import { useFinePointer } from "@/hooks/useFinePointer";
 
 gsap.registerPlugin(ScrollTrigger);
 
 /* ─── Dynamic hero words ──────────────────────────────────────── */
-const HERO_WORDS = [
+const DEFAULT_HERO_WORDS = [
   "growth",
   "revenue",
   "operations",
@@ -35,16 +36,17 @@ type ServiceCategoryRow = {
   href: string;
 };
 
-const serviceCategories: ServiceCategoryRow[] = categories.map((c) => ({
-  num: String(c.id).padStart(2, "0"),
-  categoryId: c.id,
-  name: c.name,
-  desc: c.summary,
-  href: `/services?category=${c.id}`,
-}));
+const toCategoryRows = (categories: Category[]): ServiceCategoryRow[] =>
+  categories.map((c) => ({
+    num: String(c.id).padStart(2, "0"),
+    categoryId: c.id,
+    name: c.name,
+    desc: c.summary,
+    href: `/services?category=${c.id}`,
+  }));
 
 type ClientLogo = { name: string; logoSrc: string; h?: number; w?: number };
-const clients: ClientLogo[] = [
+const DEFAULT_CLIENTS: ClientLogo[] = [
   { name: "U-Factor", logoSrc: "/client/ufactor.webp", h: 24, w: 150 },
   { name: "Tavola", logoSrc: "/client/tavola.webp", h: 24, w: 150 },
   { name: "Factorylo", logoSrc: "/client/factorylo.webp", h: 24, w: 150 },
@@ -63,19 +65,39 @@ const clients: ClientLogo[] = [
   { name: "FintechNow", logoSrc: "/client/fintech.webp", h: 52, w: 52 },
 ];
 
-const stats = [
+const DEFAULT_STATS = [
   { display: "35+", label: "Projects Delivered", sub: "End-to-end AI systems shipped" },
   { display: "100+", label: "Automations Deployed", sub: "Workflows running 24/7" },
   { display: "15K+", label: "Hours Saved Monthly", sub: "Manual work eliminated" },
   { display: "50+", label: "Efficiency Increase", sub: "Productivity improvements across clients." },
 ];
 
-const features = [
+const DEFAULT_FEATURES = [
   { icon: "◆", title: "AI Agents", desc: "Intelligent AI agents that understand requests, make decisions, and take actions across your business systems." },
   { icon: "⟲", title: "Workflow Automation", desc: "End to end automation that removes manual work, connects your tools, and keeps operations running around the clock." },
   { icon: "◎", title: "Growth Systems", desc: "Data driven marketing and revenue systems designed to attract customers, convert demand, and scale growth." },
   { icon: "⬡", title: "Infrastructure", desc: "Reliable cloud, data, and system architecture that supports your business operations and keeps everything running smoothly." },
 ];
+
+/* Home page sections from the CMS. The constants above are used only where a field is empty. */
+type HeroSection = {
+  badge?: string;
+  headlinePrefix?: string;
+  rotatingWords?: string[];
+  subheading?: string;
+  primaryCta?: ContentLink | null;
+  miniStats?: { value: string; label: string }[];
+};
+type FeaturesSection = { heading?: string; items?: { icon?: string; title?: string; description?: string }[] };
+type WorkSection = { heading?: string; body?: string; cta?: ContentLink | null; stats?: { display: string; label: string; sub: string }[] };
+type AboutSection = { eyebrow?: string; heading?: string; body?: string; steps?: { title: string; body: string }[] };
+type ServicesSection = { heading?: string; link?: ContentLink | null; popoverTitle?: string };
+type ClientsSection = { heading?: string; logos?: { name: string; logo: string; width?: number; height?: number }[] };
+type CtaSection = { eyebrow?: string; heading?: string; body?: string; button?: ContentLink | null };
+
+/** Splits "text *highlight* text" into parts; highlighted parts get the gold treatment. */
+const goldParts = (text: string) =>
+  text.split("*").map((t, i) => ({ text: t, gold: i % 2 === 1 })).filter((p) => p.text !== "");
 
 type FaqSection = { eyebrow?: string; heading?: string; moreText?: string; moreLink?: ContentLink | null };
 
@@ -83,6 +105,38 @@ type FaqSection = { eyebrow?: string; heading?: string; moreText?: string; moreL
 
 export default function Home() {
   const finePointer = useFinePointer();
+  const allServices = useServices();
+  const categories = useServiceCategories();
+  const serviceCategories = useMemo(() => toCategoryRows(categories), [categories]);
+  const hero = useSection<HeroSection>("home", "hero");
+  const featuresSection = useSection<FeaturesSection>("home", "features");
+  const workSection = useSection<WorkSection>("home", "work");
+  const aboutSection = useSection<AboutSection>("home", "about");
+  const servicesSection = useSection<ServicesSection>("home", "services");
+  const clientsSection = useSection<ClientsSection>("home", "clients");
+  const ctaSection = useSection<CtaSection>("home", "cta");
+  const heroWords = useMemo(
+    () => (hero?.rotatingWords?.filter(Boolean).length ? hero.rotatingWords.filter(Boolean) : DEFAULT_HERO_WORDS),
+    [hero],
+  );
+  const clients = useMemo<ClientLogo[]>(() => {
+    const logos = clientsSection?.logos ?? [];
+    return logos.length > 0
+      ? logos.map((l) => ({ name: l.name, logoSrc: l.logo, h: l.height, w: l.width }))
+      : DEFAULT_CLIENTS;
+  }, [clientsSection]);
+  const features = featuresSection?.items?.length
+    ? featuresSection.items.map((f) => ({ icon: f.icon ?? "", title: f.title ?? "", desc: f.description ?? "" }))
+    : DEFAULT_FEATURES;
+  const stats = workSection?.stats?.length ? workSection.stats : DEFAULT_STATS;
+  const aboutSteps = aboutSection?.steps?.length
+    ? aboutSection.steps
+    : [
+        { title: "Discover & Audit", body: "Map workflows, identify bottlenecks, find the highest leverage automation opportunities." },
+        { title: "Design & Build", body: "Our AI engineers craft precise, scalable systems custom-built, not out-of-the-box." },
+        { title: "Deploy & Scale", body: "Launch, monitor, and continuously improve from first automation to enterprise scale." },
+        { title: "Owned Results", body: "You own every workflow, agent, and dataset. No vendor lock in, ever." },
+      ];
   const statsRef = useRef<HTMLDivElement>(null);
   const [counted, setCounted] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
@@ -179,7 +233,7 @@ export default function Home() {
     const fallbackMap: Array<number | null> = Array.from({ length: total }, () => null);
     for (let i = 0; i < clients.length; i++) fallbackMap[fallbackCells[i]] = i;
     return fallbackMap;
-  }, [clientGridConfig, clientGridConfig.total]);
+  }, [clientGridConfig, clientGridConfig.total, clients.length]);
 
   const serviceNamesByCategoryId = useMemo(() => {
     const map = new Map<number, string[]>();
@@ -189,7 +243,7 @@ export default function Home() {
       map.set(s.categoryId, list);
     }
     return map;
-  }, []);
+  }, [allServices]);
 
   const setSvcHover = (idx: number | null, rowEl?: HTMLElement | null) => {
     if (idx === null || !rowEl) {
@@ -231,7 +285,7 @@ export default function Home() {
   }, [hoveredServiceIdx, svcPopTop]);
   /* Typewriter effect for hero headline word */
   useEffect(() => {
-    const fullWord = HERO_WORDS[wordIndex];
+    const fullWord = heroWords[wordIndex % heroWords.length];
     const typingSpeed = isDeleting ? 60 : 120;      // ms per character
     const pauseAfterFull = 1400;                    // pause when word fully typed
     const pauseAfterDelete = 500;                   // pause when word fully deleted
@@ -245,7 +299,7 @@ export default function Home() {
     } else if (isDeleting && typedText === "") {
       timeout = window.setTimeout(() => {
         setIsDeleting(false);
-        setWordIndex(prev => (prev + 1) % HERO_WORDS.length);
+        setWordIndex(prev => (prev + 1) % heroWords.length);
       }, pauseAfterDelete);
     } else {
       timeout = window.setTimeout(() => {
@@ -255,7 +309,7 @@ export default function Home() {
     }
 
     return () => window.clearTimeout(timeout);
-  }, [typedText, isDeleting, wordIndex]);
+  }, [typedText, isDeleting, wordIndex, heroWords]);
 
   const clientRevealOrder = useMemo(() => {
     // Reveal order based on shuffled *grid cell positions* that contain logos.
@@ -389,7 +443,7 @@ export default function Home() {
             textAlign: "center",
           }}>
           {/* Pill badge */}
-          {!isTouchDevice && (
+          {!isTouchDevice && (hero?.badge ?? "") !== "" && (
             <div
               className="fade-up"
               style={{
@@ -413,7 +467,7 @@ export default function Home() {
                 background: "rgba(201,168,76,0.15)",
                 fontSize: 10, color: "var(--accent)",
               }}>✦</span>
-              AI Agents That Work For You 24/7
+              {hero?.badge}
             </div>
           )}
 
@@ -434,9 +488,7 @@ export default function Home() {
             {/* "WeSee your [word] systems." — on mobile: word on second line, slot always reserved */}
             <span className="hero-text-line">
 
-              WeSee
-              {" "}
-              your{" "}
+              {hero?.headlinePrefix}{" "}
               <br className="hero-br-mobile" aria-hidden="true" />
               {/* Word slot: min-width reserves space so layout never jumps when word is empty */}
               <span className="hero-word-slot">
@@ -514,10 +566,11 @@ export default function Home() {
               animationDelay: "0.27s",
             }}
           >
-            WeSee is an AI automation and software studio that builds custom AI agents, workflow automation, and web platforms for growing businesses.
+            {hero?.subheading}
           </p>
 
           {/* CTA row */}
+          {hero?.primaryCta?.label && (
           <div
             className="fade-up home-hero-cta"
             style={{
@@ -528,7 +581,7 @@ export default function Home() {
           >
             <ParticleWrapper>
               <Link
-                href="/services"
+                href={hero.primaryCta.href}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 26px",
@@ -552,12 +605,14 @@ export default function Home() {
                   (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                 }}
               >
-                Explore Services
+                {hero.primaryCta.label}
               </Link>
             </ParticleWrapper>
           </div>
+          )}
 
           {/* Mini stat row */}
+          {!!hero?.miniStats?.length && (
           <div
             className="fade-up home-hero-mini-stats"
             style={{
@@ -566,11 +621,7 @@ export default function Home() {
               animationDelay: "0.44s",
             }}
           >
-            {[
-              { val: "35+", label: "Projects" },
-              { val: "100+", label: "Automations" },
-              { val: "15K+", label: "Hours Saved " },
-            ].map((s) => (
+            {hero.miniStats.map((s) => (
               <div key={s.label} className="home-hero-mini-stat" style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 padding: "clamp(10px, 2vw, 14px) clamp(14px, 3vw, 24px)",
@@ -584,7 +635,7 @@ export default function Home() {
                 maxWidth: 170,
               }}>
                 <span style={{ fontSize: 22, fontWeight: 650, color: "var(--ink)", letterSpacing: "-0.045em", lineHeight: 1 }}>
-                  {s.val}
+                  {s.value}
                 </span>
                 <span style={{ fontSize: 10.5, color: "rgba(17,19,23,0.35)", marginTop: 4, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
                   {s.label}
@@ -592,6 +643,7 @@ export default function Home() {
               </div>
             ))}
           </div>
+          )}
         </div>
 
         {/* Scroll hint */}
@@ -606,18 +658,21 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════ WHAT WE DO ══════════════════════════ */}
+      {featuresSection && (
       <section className="section-pad" style={{ background: "var(--paper-dark)" }}>
         <div className="container">
           {/* Header */}
+          {featuresSection && (
           <div className="sr" style={{ textAlign: "center", marginBottom: 52 }}>
             <h2 style={{
               fontSize: "clamp(30px, 3.8vw, 50px)", fontWeight: 450,
               letterSpacing: "-0.03em", color: "var(--ink)",
               lineHeight: 1.1, maxWidth: "30ch", margin: "0 auto",
             }}>
-              End-to-end automation for modern businesses.
+              {featuresSection.heading}
             </h2>
           </div>
+          )}
 
           {/* 4 feature cards */}
           <div style={{
@@ -675,11 +730,15 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════ OUR WORK ══════════════════════════ */}
-      <OurWorkStack stats={stats} />
+      {workSection && (
+        <OurWorkStack stats={stats} heading={workSection.heading || undefined} body={workSection.body || undefined} cta={workSection.cta === undefined ? undefined : workSection.cta} />
+      )}
 
       {/* ══════════════════════════ ABOUT / DARK ══════════════════════════ */}
+      {aboutSection && (
       <section className="section-pad" style={{
         background: "var(--ink)",
         position: "relative", overflow: "clip",
@@ -708,14 +767,15 @@ export default function Home() {
               textTransform: "uppercase", color: "rgba(255,255,255,0.28)",
               display: "block", marginBottom: 28,
             }}>
-              Who we are
+              {aboutSection?.eyebrow}
             </span>
             <h2 className="sr" style={{
               fontSize: "clamp(32px, 4.5vw, 60px)", fontWeight: 400,
               letterSpacing: "-0.035em", lineHeight: 1.15, color: "#FFFFFF", margin: 0,
             }}>
-              Every business has a{" "}
-              <em style={{
+              {goldParts(aboutSection?.heading ?? "").map((part, i) =>
+                part.gold ? (
+                  <em key={i} style={{
                 fontStyle: "italic", fontWeight: 300,
                 background: "linear-gradient(110deg, #9C7A1E 0%, #C9A84C 45%, #E8C870 100%)",
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
@@ -725,26 +785,24 @@ export default function Home() {
                 paddingBottom: "0.05em",
                 marginRight: "-0.2em",
               }}>
-                signal
-              </em>{" "}
-              waiting to be found.
+                    {part.text}
+                  </em>
+                ) : (
+                  <Fragment key={i}>{part.text}</Fragment>
+                ),
+              )}
             </h2>
             <p className="sr" style={{
               fontSize: 16, color: "rgba(255,255,255,0.38)",
               lineHeight: 1.82, marginTop: 26,
             }}>
-              At WeSee, every engagement begins with finding the signal the unique automation opportunity hidden within every client's operations. It requires deep discovery, rigorous analysis, and bold thinking to uncover. Our job is to find it, amplify it, and build intelligent systems around it.
+              {aboutSection?.body}
             </p>
           </div>
 
           {/* 4-step process grid */}
           <div className="home-about-steps" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            {[
-              { num: "01", title: "Discover & Audit", body: "Map workflows, identify bottlenecks, find the highest leverage automation opportunities." },
-              { num: "02", title: "Design & Build", body: "Our AI engineers craft precise, scalable systems custom-built, not out-of-the-box." },
-              { num: "03", title: "Deploy & Scale", body: "Launch, monitor, and continuously improve from first automation to enterprise scale." },
-              { num: "04", title: "Owned Results", body: "You own every workflow, agent, and dataset. No vendor lock in, ever." },
-            ].map((step, i) => (
+            {aboutSteps.map((step, i) => (
               <div key={i} className="sr" style={{
                 padding: "28px 26px",
                 background: "rgba(255,255,255,0.04)",
@@ -758,7 +816,7 @@ export default function Home() {
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
               >
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.15em", color: "var(--accent)", marginBottom: 14 }}>
-                  ({step.num})
+                  ({String(i + 1).padStart(2, "0")})
                 </div>
                 <div style={{ fontSize: 15.5, fontWeight: 550, color: "#FFFFFF", letterSpacing: "-0.02em", marginBottom: 10 }}>
                   {step.title}
@@ -771,8 +829,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════ SERVICES ══════════════════════════ */}
+      {servicesSection && (
       <section className="section-pad home-services" style={{ background: "var(--paper)" }}>
         <div className="container">
           <div className="home-services-head" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 48 }}>
@@ -784,11 +844,12 @@ export default function Home() {
                   letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
                 }}
               >
-                Built for Growth. Powered by AI. Driven by Automation.
+                {servicesSection?.heading}
               </h2>
             </div>
+            {servicesSection?.link?.label && (
             <ParticleWrapper>
-              <Link href="/services" className="sr" style={{
+              <Link href={servicesSection.link.href} className="sr" style={{
                 fontSize: 13, fontWeight: 500, color: "rgba(17,19,23,0.48)",
                 textDecoration: "none",
                 borderBottom: "1px solid rgba(17,19,23,0.15)", paddingBottom: 2,
@@ -797,9 +858,10 @@ export default function Home() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--ink)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(17,19,23,0.48)"; }}
               >
-                View all →
+                {servicesSection.link.label}
               </Link>
             </ParticleWrapper>
+            )}
           </div>
 
           <div
@@ -873,7 +935,7 @@ export default function Home() {
                     role="tooltip"
                     style={{ top: svcPopTop, right: 0 }}
                   >
-                    <div className="svc-pop-title">Included services</div>
+                    <div className="svc-pop-title">{servicesSection?.popoverTitle || "Included services"}</div>
                     <ul className="svc-pop-list">
                       {shown.map((n) => (
                         <li key={n}>{n}</li>
@@ -889,8 +951,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════ CLIENTS FLOATING GRID ══════════════════════════ */}
+      {clientsSection && (
       <section
         ref={(node) => {
           clientsSectionRef.current = node;
@@ -904,7 +968,7 @@ export default function Home() {
               fontSize: "clamp(28px, 3.5vw, 46px)", fontWeight: 450,
               letterSpacing: "-0.03em", marginTop: 0, lineHeight: 1.1,
             }}>
-              We partner with ambitious businesses.
+              {clientsSection?.heading}
             </h2>
           </div>
         </div>
@@ -960,6 +1024,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════ FAQ (visible text, no schema) ══════════════════════════ */}
       {faqSection && faqs.length > 0 && (
@@ -1025,6 +1090,7 @@ export default function Home() {
       )}
 
       {/* ══════════════════════════ DARK CTA ══════════════════════════ */}
+      {ctaSection && (
       <section className="section-pad home-dark-cta" style={{
         background: "var(--ink)", textAlign: "center",
         position: "relative", overflow: "clip",
@@ -1048,7 +1114,7 @@ export default function Home() {
           <span className="sr" style={{
             fontSize: 10, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase",
             color: "var(--accent)", display: "block", marginBottom: 24,
-          }}>Get started</span>
+          }}>{ctaSection?.eyebrow}</span>
 
           <h2 className="sr" style={{
             fontSize: "clamp(36px, 5.5vw, 68px)",
@@ -1056,8 +1122,9 @@ export default function Home() {
             lineHeight: 1.15, color: "#FFFFFF",
             margin: "0 auto", maxWidth: "18ch",
           }}>
-            Build a business {" "}
-            <em style={{
+            {goldParts(ctaSection?.heading ?? "").map((part, i) =>
+              part.gold ? (
+                <em key={i} style={{
               fontStyle: "italic", fontWeight: 300, letterSpacing: "-0.05em",
               background: "linear-gradient(110deg, #9C7A1E 0%, #C9A84C 45%, #E8C870 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
@@ -1065,19 +1132,25 @@ export default function Home() {
               display: "inline-block",
               paddingRight: "0.32em",
               paddingLeft: "0.04em",
-            }}>that runs itself.</em>
+            }}>{part.text}</em>
+              ) : (
+                <Fragment key={i}>{part.text}</Fragment>
+              ),
+            )}
           </h2>
 
           <p className="sr" style={{
             fontSize: 16, color: "rgba(255,255,255,0.35)",
             marginTop: 22, maxWidth: 500, marginInline: "auto", lineHeight: 1.80,
           }}>
-            AI-powered workflows designed to remove bottlenecks and unlock scale for your business.          </p>
+            {ctaSection?.body}
+          </p>
 
+          {ctaSection?.button?.label && (
           <div className="sr" style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 44, flexWrap: "wrap" }}>
             <ParticleWrapper>
               <a
-                href="mailto:careers@weseegpt.com"
+                href={ctaSection.button.href}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "13px 24px",
@@ -1097,12 +1170,14 @@ export default function Home() {
                   (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.60)";
                 }}
               >
-                careers@weseegpt.com
+                {ctaSection.button.label}
               </a>
             </ParticleWrapper>
           </div>
+          )}
         </div>
       </section>
+      )}
 
       {/* Chat Widget Container */}
       <div
