@@ -261,8 +261,11 @@ export async function restorePageRevision(id: string, revisionId: string, userId
 
 /** Create any missing built-in pages and sections (new code may add sections). Existing content is never touched. */
 export async function ensureSystemPages(defaults: Record<string, Record<string, Record<string, unknown>>> = {}) {
+  // Runs on every serverless cold start: one read for all pages, writes only when something is missing.
+  const existing = await prisma.page.findMany({ where: { key: { in: systemPages.map((p) => p.key) } }, include: { sections: { select: { key: true } } } });
+  const byKey = new Map(existing.map((p) => [p.key, p]));
   for (const def of systemPages) {
-    let page = await prisma.page.findUnique({ where: { key: def.key }, include: { sections: true } });
+    let page = byKey.get(def.key);
     if (!page) {
       page = await prisma.page.create({
         data: { key: def.key, path: def.path, title: def.title, kind: "SYSTEM", status: "PUBLISHED", publishedAt: new Date() },

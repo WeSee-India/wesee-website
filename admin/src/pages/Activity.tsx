@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { auditQuery } from "@/lib/queries";
 import { formatDateTime } from "@/lib/format";
 import { LogIn, ShieldAlert } from "lucide-react";
 import { Avatar, Button, cx, ErrorState, ListSkeleton, PageHeader, SegmentedControl } from "@/components/ui";
@@ -31,10 +31,7 @@ const PAGE = 50;
 export default function Activity() {
   const [action, setAction] = useState("");
   const [skip, setSkip] = useState(0);
-  const q = useQuery({
-    queryKey: ["audit", action, skip],
-    queryFn: () => api<{ items: Entry[]; total: number }>(`/api/admin/audit?take=${PAGE}&skip=${skip}${action ? `&action=${action}` : ""}`),
-  });
+  const q = useQuery(auditQuery<{ items: Entry[]; total: number }>(action, skip, PAGE));
 
   return (
     <>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link, useSearch } from "wouter";
 import { api } from "@/lib/api";
+import { categoryOptionsQuery, collectionQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { formatDate, timeAgo } from "@/lib/format";
 import { plain, useSchema } from "@/lib/schema";
@@ -37,16 +38,8 @@ export default function CollectionList({ collectionKey }: { collectionKey: strin
   const [status, setStatus] = useState<Filter>(FILTERS.find((f) => f.key === params.get("status"))?.key ?? "all");
   const [q, setQ] = useState("");
 
-  const list = useQuery({
-    queryKey: ["collection", collectionKey, status, q],
-    queryFn: () => api<{ items: Item[]; total: number }>(`/api/admin/collections/${collectionKey}?take=500&status=${status}${q ? `&q=${encodeURIComponent(q)}` : ""}`),
-    enabled: !!def,
-  });
-  const cats = useQuery({
-    queryKey: ["collection", "serviceCategories", "options"],
-    queryFn: () => api<{ items: Item[] }>("/api/admin/collections/serviceCategories?take=500"),
-    enabled: collectionKey === "services",
-  });
+  const list = useQuery({ ...collectionQuery<{ items: Item[]; total: number }>(collectionKey, status, q), enabled: !!def });
+  const cats = useQuery({ ...categoryOptionsQuery<{ items: Item[] }>(), enabled: collectionKey === "services" });
   const categoryNames = new Map((cats.data?.items ?? []).map((c) => [Number(c.values.number), String(c.values.name)]));
 
   if (schema.isLoading) return <Spinner />;

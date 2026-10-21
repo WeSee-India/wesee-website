@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
+import { usersQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
 import type { Role } from "@/lib/types";
@@ -27,7 +28,7 @@ const ROLE_HELP: Record<Role, string> = {
 export default function Users() {
   const { user: me } = useAuth();
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["users"], queryFn: () => api<AdminUser[]>("/api/admin/users") });
+  const q = useQuery(usersQuery<AdminUser[]>());
   const [editing, setEditing] = useState<AdminUser | "new" | null>(null);
 
   const update = async (u: AdminUser, body: object, message: string) => {

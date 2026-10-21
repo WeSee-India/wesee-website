@@ -281,9 +281,12 @@ export async function restoreRevision(def: CollectionDef, id: string, revisionId
 }
 
 export async function statusCounts(def: CollectionDef) {
-  const groups = await delegate(def).groupBy({ by: ["status"], _count: { _all: true } });
-  const pending = def.publishable ? await delegate(def).count({ where: { status: "PUBLISHED", NOT: { draft: { equals: Prisma.DbNull } } } }) : 0;
-  const scheduled = def.publishable ? await delegate(def).count({ where: { status: "PUBLISHED", publishedAt: { gt: new Date() } } }) : 0;
+  const d = delegate(def);
+  const [groups, pending, scheduled] = await Promise.all([
+    d.groupBy({ by: ["status"], _count: { _all: true } }),
+    def.publishable ? d.count({ where: { status: "PUBLISHED", NOT: { draft: { equals: Prisma.DbNull } } } }) : 0,
+    def.publishable ? d.count({ where: { status: "PUBLISHED", publishedAt: { gt: new Date() } } }) : 0,
+  ]);
   const by = Object.fromEntries(groups.map((g) => [g.status, g._count._all]));
   return { draft: by.DRAFT ?? 0, published: (by.PUBLISHED ?? 0) - scheduled, scheduled, pending };
 }

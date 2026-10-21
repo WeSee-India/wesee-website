@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { api, API_BASE } from "@/lib/api";
+import { mediaQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import type { MediaAsset } from "@/lib/types";
@@ -29,10 +30,7 @@ export default function Media() {
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  const list = useQuery({
-    queryKey: ["media", "library", q, type],
-    queryFn: () => api<{ items: MediaAsset[]; total: number }>(`/api/admin/media?take=200${q ? `&q=${encodeURIComponent(q)}` : ""}${type ? `&type=${type}` : ""}`),
-  });
+  const list = useQuery(mediaQuery<{ items: MediaAsset[]; total: number }>(q, type));
 
   const upload = async (files: FileList | File[]) => {
     if (!can("media.upload")) return;

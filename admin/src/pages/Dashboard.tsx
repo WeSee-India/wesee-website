@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, BookOpen, Briefcase, CalendarClock, CheckCircle2, ChevronRight, CircleDashed, Clock, FileText, FolderKanban, Home, Image, ImagePlus, RefreshCw, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "wouter";
-import { api } from "@/lib/api";
+import { dashboardQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import { navGroups } from "@/components/nav";
@@ -85,7 +85,7 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const q = useQuery({ queryKey: ["dashboard"], queryFn: () => api<DashboardData>("/api/admin/dashboard") });
+  const q = useQuery(dashboardQuery<DashboardData>());
   const d = q.data;
 
   const sum = (k: "draft" | "published" | "scheduled" | "pending") => d?.counts.reduce((n, c) => n + c[k], 0) ?? 0;
