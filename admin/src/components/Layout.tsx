@@ -1,7 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight, ExternalLink, LogOut, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { prefetchFor } from "@/lib/queries";
 import { useSchema } from "@/lib/schema";
 import { confirmLeave } from "@/lib/unsaved";
 import { CommandMenu } from "./CommandMenu";
@@ -15,12 +17,17 @@ function guard(e: React.MouseEvent, then?: () => void) {
 
 function NavLink({ item, onNavigate }: { item: NavItem; onNavigate(): void }) {
   const [location] = useLocation();
+  const qc = useQueryClient();
   const active = isActive(item.href, location);
   const Icon = item.icon;
+  // Start fetching the screen's data on hover, so it's usually ready by the click.
+  const prefetch = () => prefetchFor(qc, item.href);
   return (
     <Link
       href={item.href}
       onClick={(e) => guard(e, onNavigate)}
+      onMouseEnter={prefetch}
+      onFocus={prefetch}
       aria-current={active ? "page" : undefined}
       className={cx(
         "group relative flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",

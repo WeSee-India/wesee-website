@@ -88,12 +88,14 @@ export async function loadSession(req: Request, _res: Response, next: NextFuncti
   const { isActive: _active, ...user } = session.user;
   req.user = user;
 
-  // Sliding expiry, written at most once a minute.
+  // Sliding expiry, written at most once a minute. Not awaited: the request doesn't depend on it.
   if (Date.now() - session.lastSeenAt.getTime() > 60_000) {
-    await prisma.session.update({
-      where: { id: session.id },
-      data: { lastSeenAt: new Date(), expiresAt: new Date(Date.now() + config.SESSION_TTL_HOURS * 3600 * 1000) },
-    });
+    prisma.session
+      .updateMany({
+        where: { id: session.id },
+        data: { lastSeenAt: new Date(), expiresAt: new Date(Date.now() + config.SESSION_TTL_HOURS * 3600 * 1000) },
+      })
+      .catch(() => undefined);
   }
   next();
 }

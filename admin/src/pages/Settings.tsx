@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { api, ApiError } from "@/lib/api";
+import { settingsQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { useSchema } from "@/lib/schema";
 import type { SettingDef, Values } from "@/lib/types";
@@ -12,7 +13,7 @@ import { Button, Card, cx, ErrorState, PageHeader, Spinner } from "@/components/
 
 export default function Settings({ settingKey }: { settingKey?: string }) {
   const schema = useSchema();
-  const all = useQuery({ queryKey: ["settings"], queryFn: () => api<Record<string, Values>>("/api/admin/settings") });
+  const all = useQuery(settingsQuery<Record<string, Values>>());
   if (schema.isLoading || all.isLoading) return <Spinner />;
   if (all.error) return <ErrorState error={all.error} retry={() => all.refetch()} />;
   const defs = schema.data!.settings;

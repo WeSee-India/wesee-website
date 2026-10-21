@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 import { api, ApiError } from "@/lib/api";
+import { pagesQuery } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
 import type { AdminPage } from "@/lib/types";
@@ -11,7 +12,7 @@ import { Badge, Button, EmptyState, ErrorState, FieldShell, Input, ListSkeleton,
 
 export default function PagesList() {
   const { can } = useAuth();
-  const q = useQuery({ queryKey: ["pages"], queryFn: () => api<AdminPage[]>("/api/admin/pages") });
+  const q = useQuery(pagesQuery<AdminPage[]>());
   const [open, setOpen] = useState(false);
 
   const group = (kind: AdminPage["kind"]) => q.data?.filter((p) => p.kind === kind) ?? [];
