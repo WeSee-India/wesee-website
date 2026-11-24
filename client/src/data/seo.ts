@@ -288,6 +288,7 @@ export function getSitemapEntries(): { path: string; priority: number }[] {
   return [
     ...getAllIndexableRoutes().map((path) => ({ path, priority: priority(path) })),
     { path: "/landing", priority: 0.5 },
+    { path: "/uae-e-invoicing", priority: 0.6 },
     { path: "/privacy", priority: 0.3 },
     { path: "/terms", priority: 0.3 },
   ];

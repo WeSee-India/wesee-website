@@ -10,6 +10,14 @@
       "destination": "/landing/index.html"
     },
     {
+      "source": "/uae-e-invoicing",
+      "destination": "/uae-e-invoicing/index.html"
+    },
+    {
+      "source": "/uae-e-invoicing/for/:name",
+      "destination": "/uae-e-invoicing/index.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/landing/privacy.html"
     },

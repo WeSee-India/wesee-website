@@ -40,6 +40,11 @@ function vitePluginLandingPage(): Plugin {
             return;
           }
         }
+        if (url === "/uae-e-invoicing" || url === "/uae-e-invoicing/" || url.startsWith("/uae-e-invoicing/for/")) {
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          fs.createReadStream(path.join(PROJECT_ROOT, "public", "uae-e-invoicing", "index.html")).pipe(res);
+          return;
+        }
         if (url === "/landing/privacy.html") {
           res.writeHead(301, { Location: "/privacy" });
           res.end();
